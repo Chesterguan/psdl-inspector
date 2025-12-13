@@ -42,7 +42,50 @@ PSDL Inspector helps research and clinical teams convert hidden decisions into r
 
 ## Getting Started
 
-*Coming soon*
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+
+### Backend Setup
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8200
+```
+
+The API will be available at http://localhost:8200
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The app will be available at http://localhost:9806
+
+### Development
+
+Run both backend and frontend:
+
+```bash
+# Terminal 1 - Backend
+cd backend && uvicorn app.main:app --reload --port 8200
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, Tailwind CSS, CodeMirror 6
+- **Backend**: FastAPI, Python, Pydantic
+- **Validation**: JSON Schema, PSDL semantic validation
 
 ## License
 
