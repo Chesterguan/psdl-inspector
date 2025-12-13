@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { FileUp, Play, RefreshCw } from 'lucide-react';
-import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton } from '@/components';
+import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton, DAGView, AuditPanel } from '@/components';
 import { api, ValidationResponse, OutlineResponse, ExportResponse } from '@/lib/api';
 
 // Sample scenario for demo
@@ -53,7 +53,7 @@ logic:
     description: "AKI Stage 2 - Progressing kidney injury"
 `;
 
-type TabType = 'validation' | 'outline' | 'canonical';
+type TabType = 'validation' | 'outline' | 'dag' | 'audit' | 'canonical';
 
 export default function Home() {
   const [content, setContent] = useState(SAMPLE_SCENARIO);
@@ -143,6 +143,8 @@ export default function Home() {
   const tabs: { id: TabType; label: string }[] = [
     { id: 'validation', label: 'Validation' },
     { id: 'outline', label: 'Outline' },
+    { id: 'dag', label: 'DAG' },
+    { id: 'audit', label: 'Audit' },
     { id: 'canonical', label: 'Canonical' },
   ];
 
@@ -254,6 +256,16 @@ export default function Home() {
 
             {activeTab === 'outline' && (
               <OutlineTree outline={outlineResult} isLoading={isLoadingOutline} />
+            )}
+
+            {activeTab === 'dag' && (
+              <div className="h-full min-h-[500px]">
+                <DAGView outline={outlineResult} />
+              </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <AuditPanel bundle={exportResult} loading={isLoadingExport} />
             )}
 
             {activeTab === 'canonical' && (
