@@ -69,6 +69,9 @@ class LogicOutline(BaseModel):
     depends_on: List[str] = Field(
         default_factory=list, description="Trends/logic this rule depends on"
     )
+    operators: List[str] = Field(
+        default_factory=list, description="Boolean operators (AND, OR, NOT)"
+    )
 
 
 class OutlineRequest(BaseModel):

@@ -44,6 +44,7 @@ export interface LogicOutline {
   description: string | null;
   recommendation: string | null;
   depends_on: string[];
+  operators: string[];
 }
 
 export interface OutlineResponse {

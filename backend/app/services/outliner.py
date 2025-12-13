@@ -62,6 +62,9 @@ def generate_outline(scenario: PSDLScenario) -> OutlineResponse:
         # psdl-lang parses the terms (dependencies) for us
         depends_on = list(logic.terms) if logic.terms else []
 
+        # Get operators from psdl-lang (AND, OR, NOT)
+        operators = list(logic.operators) if hasattr(logic, 'operators') and logic.operators else []
+
         logic_outline = LogicOutline(
             name=name,
             expr=logic.expr,
@@ -69,6 +72,7 @@ def generate_outline(scenario: PSDLScenario) -> OutlineResponse:
             description=logic.description,
             recommendation=None,  # Future: could add to psdl-lang
             depends_on=depends_on,
+            operators=operators,
         )
         logic_list.append(logic_outline)
 

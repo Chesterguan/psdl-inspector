@@ -5,16 +5,11 @@ import { FileUp, Play, RefreshCw } from 'lucide-react';
 import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton, DAGView, AuditPanel } from '@/components';
 import { api, ValidationResponse, OutlineResponse, ExportResponse } from '@/lib/api';
 
-// Sample scenario for demo
+// Sample scenario for demo (compatible with PyPI psdl-lang 0.2.x)
 const SAMPLE_SCENARIO = `# PSDL Example: AKI Early Detection
 scenario: AKI_Early_Detection
 version: "0.1.0"
 description: "Detect early signs of Acute Kidney Injury"
-
-audit:
-  intent: "Detect AKI using KDIGO criteria"
-  rationale: "Early detection enables intervention before irreversible damage"
-  provenance: "KDIGO 2012 Clinical Practice Guideline"
 
 signals:
   Cr:
@@ -33,24 +28,29 @@ trends:
     expr: delta(Cr, 48h) >= 0.3
     description: "Creatinine rise >= 0.3 mg/dL in 48 hours"
 
-  cr_elevated:
-    expr: last(Cr) >= 1.5
-    description: "Current creatinine >= 1.5 mg/dL"
+  cr_high:
+    expr: delta(Cr, 24h) >= 0.5
+    description: "High creatinine rise in 24 hours"
 
-  cr_rapid_rise:
-    expr: slope(Cr, 24h) > 0.1
-    description: "Rapid creatinine increase"
+  bun_rising:
+    expr: delta(BUN, 48h) >= 5
+    description: "BUN rising over 48 hours"
 
 logic:
   aki_stage1:
-    expr: cr_rising OR cr_elevated
+    expr: cr_rising
     severity: medium
     description: "AKI Stage 1 - Early kidney injury"
 
   aki_stage2:
-    expr: aki_stage1 AND cr_rapid_rise
+    expr: cr_rising AND cr_high
     severity: high
-    description: "AKI Stage 2 - Progressing kidney injury"
+    description: "AKI Stage 2 - Progressing injury"
+
+  renal_concern:
+    expr: aki_stage1 AND bun_rising
+    severity: high
+    description: "Combined renal function concern"
 `;
 
 type TabType = 'validation' | 'outline' | 'dag' | 'audit' | 'canonical';
