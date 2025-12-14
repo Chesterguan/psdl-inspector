@@ -3,23 +3,23 @@
 import { useState, useCallback, useEffect } from 'react';
 import { FileUp, Play, RefreshCw } from 'lucide-react';
 import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton, DAGView, AuditPanel } from '@/components';
-import { api, ValidationResponse, OutlineResponse, ExportResponse } from '@/lib/api';
+import { api, ValidationResponse, OutlineResponse, ExportResponse, VersionInfo } from '@/lib/api';
 
-// Sample scenario for demo (compatible with PyPI psdl-lang 0.2.x)
+// Sample scenario for demo (psdl-lang 0.3.x uses 'ref' and 'when')
 const SAMPLE_SCENARIO = `# PSDL Example: AKI Early Detection
 scenario: AKI_Early_Detection
-version: "0.1.0"
+version: "0.3.0"
 description: "Detect early signs of Acute Kidney Injury"
 
 signals:
   Cr:
-    source: creatinine
+    ref: creatinine
     concept_id: 3016723
     unit: mg/dL
     domain: measurement
 
   BUN:
-    source: blood_urea_nitrogen
+    ref: blood_urea_nitrogen
     concept_id: 3013682
     unit: mg/dL
 
@@ -38,17 +38,17 @@ trends:
 
 logic:
   aki_stage1:
-    expr: cr_rising
+    when: cr_rising
     severity: medium
     description: "AKI Stage 1 - Early kidney injury"
 
   aki_stage2:
-    expr: cr_rising AND cr_high
+    when: cr_rising AND cr_high
     severity: high
     description: "AKI Stage 2 - Progressing injury"
 
   renal_concern:
-    expr: aki_stage1 AND bun_rising
+    when: aki_stage1 AND bun_rising
     severity: high
     description: "Combined renal function concern"
 `;
@@ -58,6 +58,9 @@ type TabType = 'validation' | 'outline' | 'dag' | 'audit' | 'canonical';
 export default function Home() {
   const [content, setContent] = useState(SAMPLE_SCENARIO);
   const [activeTab, setActiveTab] = useState<TabType>('validation');
+
+  // Version info
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
 
   // API state
   const [validationResult, setValidationResult] = useState<ValidationResponse | null>(null);
@@ -135,8 +138,9 @@ export default function Home() {
     setApiError(null);
   }, []);
 
-  // Auto-validate on first load
+  // Fetch version info and auto-validate on first load
   useEffect(() => {
+    api.getVersion().then(setVersionInfo).catch(console.error);
     handleValidate();
   }, []);
 
@@ -159,7 +163,13 @@ export default function Home() {
               Validate, analyze, and export PSDL scenarios
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {versionInfo && (
+              <div className="text-xs text-gray-500 text-right">
+                <div>Inspector v{versionInfo.inspector}</div>
+                <div>psdl-lang v{versionInfo.psdl_lang}</div>
+              </div>
+            )}
             <ExportButton
               exportData={exportResult}
               scenarioName={outlineResult?.scenario || 'scenario'}

@@ -69,11 +69,24 @@ export interface ExportResponse {
   summary: string;
 }
 
+export interface VersionInfo {
+  inspector: string;
+  psdl_lang: string;
+}
+
 class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string = API_BASE) {
     this.baseUrl = baseUrl;
+  }
+
+  async getVersion(): Promise<VersionInfo> {
+    const response = await fetch(`${this.baseUrl}/api/version`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
   }
 
   async validate(content: string): Promise<ValidationResponse> {

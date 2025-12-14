@@ -1,65 +1,65 @@
 # PSDL Inspector
 
-A governance tool for creating, reviewing, and auditing [PSDL](https://github.com/Chesterguan/PSDL) (Patient Scenario Definition Language) scenarios.
+**Governance middleware for clinical scenarios.**
 
-## Overview
+PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Chesterguan/PSDL) (Patient Scenario Definition Language) scenarios, producing audit-ready bundles for regulatory compliance.
 
-PSDL Inspector helps research and clinical teams convert hidden decisions into readable, reproducible, and auditable assets. It provides organizational governance for the correctness and auditability of PSDL-defined scenarios.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PSDL ECOSYSTEM                            │
+│                                                              │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │
+│  │  AUTHORING  │ →  │  INSPECTOR  │ →  │    PLATFORM     │  │
+│  │  (YAML)     │    │ (Certify)   │    │   (Execute)     │  │
+│  └─────────────┘    └─────────────┘    └─────────────────┘  │
+│                                                              │
+│  psdl-lang          psdl-inspector     (your runtime)       │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## Features
+## What Inspector Does
 
-### Core (Community)
-- **View & Review** — Browse and inspect PSDL scenarios
-- **Semantic Outline** — Structured navigation of scenario logic
-- **Validation & Lint** — Catch errors and enforce best practices
-- **Canonical Rendering** — Stable output with diff support
-- **Audit Bundle Export** — Generate packages for IRB and administrative review
+| Feature | Description |
+|---------|-------------|
+| **Validate** | Real-time syntax and semantic validation via psdl-lang |
+| **Visualize** | DAG view of signal → trend → logic dependencies |
+| **Outline** | Semantic tree navigation of scenario structure |
+| **Certify** | Generate checksummed audit bundles |
+| **Export** | IRB-ready documentation with human-readable summaries |
 
-### Pro
-- Scenario Registry
-- Version History with Semantic Diff
-- Comments & Review Notes
-- Approval/Denial Workflow States
-- Extended asset management (ValueSets, runtime configs, adapters)
+## What Inspector Does NOT Do
 
-### Team / Organization
-- Project and team separation
-- Reviewer and approver roles
-- Approval workflows
-- Human-friendly audit reports with semantic definitions
+- ❌ Connect to patient data (EHR, OMOP, FHIR)
+- ❌ Execute scenarios in production
+- ❌ Send clinical alerts
+- ❌ Run in HIPAA-sensitive environments
 
-### Enterprise
-- SSO integration
-- On-premises / private cloud deployment
-- Audit retention policies
-- IRB-compatible export formats
+Inspector is **governance middleware** — it certifies that algorithms are correct. Execution platforms consume certified bundles to run algorithms safely.
 
-## Why PSDL Inspector?
+## Screenshots
 
-1. **Reduce Definition Risk** — Catch errors before they reach production
-2. **Save IRB Resubmission Time** — Get it right the first time with validation and structured exports
-3. **Govern Your Scenarios** — Treat scenario definitions as organizational assets with proper version control and approval workflows
+*Coming soon*
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
 - Node.js 18+
 
-### Backend Setup
+### 1. Backend Setup
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8200
 ```
 
-The API will be available at http://localhost:8200
+API available at http://localhost:8200
 
-### Frontend Setup
+### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -67,30 +67,133 @@ npm install
 npm run dev
 ```
 
-The app will be available at http://localhost:9806
+App available at http://localhost:9806
 
-### Development
+### 3. Open in Browser
 
-Run both backend and frontend:
+Navigate to http://localhost:9806 to start inspecting scenarios.
 
-```bash
-# Terminal 1 - Backend
-cd backend && uvicorn app.main:app --reload --port 8200
+## Features
 
-# Terminal 2 - Frontend
-cd frontend && npm run dev
+### Validation Engine
+- Syntax validation (YAML parsing)
+- Semantic validation (reference checks, type validation)
+- Real-time error highlighting in editor
+
+### Semantic Outline
+- Tree view of signals, trends, and logic
+- Dependency tracking (what uses what)
+- Click to navigate to definitions
+
+### DAG Visualization
+- Mermaid.js graph of scenario logic flow
+- AND/OR gate visualization
+- Signal → Trend → Logic dependencies
+
+### Audit Bundle Export
+- JSON export with full metadata
+- SHA-256 checksum for integrity
+- Human-readable summary for IRB review
+- Audit trail fields (intent, rationale, provenance)
+
+## Architecture
+
 ```
+┌─────────────────────────────────────────────────────────┐
+│                   Frontend (Next.js)                     │
+│  ┌─────────┐  ┌──────────┐  ┌────────┐  ┌────────────┐  │
+│  │ Editor  │→ │ Validate │→ │ Outline│→ │ Export     │  │
+│  │ Panel   │  │ Display  │  │ + DAG  │  │ Bundle     │  │
+│  └─────────┘  └──────────┘  └────────┘  └────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │ REST API
+┌────────────────────────▼────────────────────────────────┐
+│                   Backend (FastAPI)                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │
+│  │ /validate   │  │ /outline    │  │ /export/bundle  │  │
+│  └─────────────┘  └─────────────┘  └─────────────────┘  │
+│                         │                                │
+│              ┌──────────▼──────────┐                     │
+│              │    psdl-lang        │                     │
+│              │  (parse, validate)  │                     │
+│              └─────────────────────┘                     │
+└──────────────────────────────────────────────────────────┘
+```
+
+## API Endpoints
+
+### POST /api/validate
+Validate a PSDL scenario.
+
+### POST /api/outline
+Generate semantic outline with dependencies.
+
+### POST /api/export/bundle
+Export certified audit bundle.
+
+### GET /api/version
+Get Inspector and psdl-lang versions.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, Tailwind CSS, CodeMirror 6
-- **Backend**: FastAPI, Python, Pydantic
-- **Validation**: JSON Schema, PSDL semantic validation
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 14, React 18, Tailwind CSS |
+| Editor | CodeMirror 6 with YAML syntax |
+| Backend | FastAPI, Python 3.11+, Pydantic |
+| Validation | psdl-lang (PyPI) |
+| Visualization | Mermaid.js |
+
+## Certified Audit Bundle
+
+Inspector outputs **Certified Audit Bundles** — the contract between authoring and execution:
+
+```json
+{
+  "bundle_version": "1.0",
+  "certified_at": "2025-12-14T10:30:00Z",
+  "checksum": "sha256:abc123...",
+
+  "scenario": {
+    "name": "AKI_Detection",
+    "version": "0.3.0",
+    "content": "... validated PSDL YAML ..."
+  },
+
+  "validation": {
+    "psdl_lang_version": "0.3.0",
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+
+  "audit": {
+    "intent": "Detect early AKI...",
+    "rationale": "KDIGO guidelines...",
+    "provenance": "doi:10.1038/..."
+  },
+
+  "summary": "Human-readable summary for IRB..."
+}
+```
+
+## Related Projects
+
+- **[PSDL](https://github.com/Chesterguan/PSDL)** — Patient Scenario Definition Language specification
+- **[psdl-lang](https://pypi.org/project/psdl-lang/)** — Python library for parsing and validating PSDL
+
+## Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
 ## License
 
-*TBD*
+MIT License
 
 ---
 
-Built for teams who take clinical scenario governance seriously.
+*Built for teams who take clinical algorithm governance seriously.*

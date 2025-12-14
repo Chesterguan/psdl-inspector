@@ -32,9 +32,10 @@ def generate_outline(scenario: PSDLScenario) -> OutlineResponse:
     # Build signal outlines
     signals: List[SignalOutline] = []
     for name, sig in scenario.signals.items():
+        # psdl-lang 0.3: uses 'ref', but 'source' property provides backward compatibility
         signal = SignalOutline(
             name=name,
-            source=sig.source,
+            source=sig.ref,  # v0.3 uses 'ref' instead of 'source'
             concept_id=sig.concept_id,
             unit=sig.unit,
             domain=str(sig.domain.value) if sig.domain else None,
