@@ -4,4 +4,6 @@ export { default as OutlineTree } from './OutlineTree';
 export { default as CanonicalView } from './CanonicalView';
 export { default as ExportButton } from './ExportButton';
 export { DAGView } from './DAGView';
-export { AuditPanel } from './AuditPanel';
+export { BundlePanel } from './BundlePanel';
+export { default as GovernancePanel } from './GovernancePanel';
+export type { GovernanceData } from './GovernancePanel';

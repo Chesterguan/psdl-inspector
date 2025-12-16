@@ -1,10 +1,10 @@
 'use client';
 
 import { Download } from 'lucide-react';
-import type { ExportResponse } from '@/lib/api';
+import type { CertifiedBundle } from '@/lib/api';
 
 interface ExportButtonProps {
-  exportData: ExportResponse | null;
+  exportData: CertifiedBundle | null;
   scenarioName: string;
   isLoading: boolean;
 }

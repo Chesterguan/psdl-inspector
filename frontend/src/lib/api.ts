@@ -62,11 +62,40 @@ export interface AuditInfo {
   provenance: string | null;
 }
 
-export interface ExportResponse {
-  metadata: Record<string, unknown>;
-  scenario: Record<string, unknown>;
+export interface ValidationResult {
+  psdl_lang_version: string;
+  inspector_version: string;
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationError[];
+}
+
+export interface ScenarioContent {
+  name: string;
+  version: string | null;
+  raw_yaml: string;
+  parsed: Record<string, unknown>;
+}
+
+export interface CertifiedBundle {
+  bundle_version: string;
+  certified_at: string;
+  checksum: string;
+  scenario: ScenarioContent;
+  validation: ValidationResult;
   audit: AuditInfo;
   summary: string;
+}
+
+// Alias for backward compatibility
+export type ExportResponse = CertifiedBundle;
+
+export interface ExportRequest {
+  content: string;
+  format?: string;
+  intent?: string;
+  rationale?: string;
+  provenance?: string;
 }
 
 export interface VersionInfo {
@@ -119,11 +148,11 @@ class ApiClient {
     return response.json();
   }
 
-  async exportBundle(content: string, format: string = 'json'): Promise<ExportResponse> {
+  async exportBundle(request: ExportRequest): Promise<CertifiedBundle> {
     const response = await fetch(`${this.baseUrl}/api/export/bundle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, format }),
+      body: JSON.stringify(request),
     });
 
     if (!response.ok) {
@@ -132,6 +161,21 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  async downloadBundle(request: ExportRequest): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/api/export/download`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
+    return response.blob();
   }
 }
 

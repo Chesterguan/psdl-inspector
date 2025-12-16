@@ -2,13 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { FileUp, Play, RefreshCw } from 'lucide-react';
-import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton, DAGView, AuditPanel } from '@/components';
-import { api, ValidationResponse, OutlineResponse, ExportResponse, VersionInfo } from '@/lib/api';
+import { Editor, ValidationPanel, OutlineTree, CanonicalView, ExportButton, DAGView, BundlePanel, GovernancePanel } from '@/components';
+import { api, ValidationResponse, OutlineResponse, CertifiedBundle, VersionInfo } from '@/lib/api';
 
-// Sample scenario for demo (psdl-lang 0.3.x uses 'ref' and 'when')
+// Sample scenario for demo (psdl-lang 0.3.1 syntax)
 const SAMPLE_SCENARIO = `# PSDL Example: AKI Early Detection
 scenario: AKI_Early_Detection
-version: "0.3.0"
+version: "0.3.1"
 description: "Detect early signs of Acute Kidney Injury"
 
 signals:
@@ -16,7 +16,6 @@ signals:
     ref: creatinine
     concept_id: 3016723
     unit: mg/dL
-    domain: measurement
 
   BUN:
     ref: blood_urea_nitrogen
@@ -24,36 +23,36 @@ signals:
     unit: mg/dL
 
 trends:
-  cr_rising:
-    expr: delta(Cr, 48h) >= 0.3
-    description: "Creatinine rise >= 0.3 mg/dL in 48 hours"
+  cr_delta_48h:
+    expr: delta(Cr, 48h)
+    description: "Creatinine change over 48 hours"
 
-  cr_high:
-    expr: delta(Cr, 24h) >= 0.5
-    description: "High creatinine rise in 24 hours"
+  cr_delta_24h:
+    expr: delta(Cr, 24h)
+    description: "Creatinine change over 24 hours"
 
-  bun_rising:
-    expr: delta(BUN, 48h) >= 5
-    description: "BUN rising over 48 hours"
+  bun_delta_48h:
+    expr: delta(BUN, 48h)
+    description: "BUN change over 48 hours"
 
 logic:
   aki_stage1:
-    when: cr_rising
+    when: cr_delta_48h >= 0.3
     severity: medium
-    description: "AKI Stage 1 - Early kidney injury"
+    description: "AKI Stage 1 - Creatinine rise >= 0.3 mg/dL in 48h"
 
   aki_stage2:
-    when: cr_rising AND cr_high
+    when: cr_delta_48h >= 0.3 AND cr_delta_24h >= 0.5
     severity: high
     description: "AKI Stage 2 - Progressing injury"
 
   renal_concern:
-    when: aki_stage1 AND bun_rising
+    when: aki_stage1 AND bun_delta_48h >= 5
     severity: high
     description: "Combined renal function concern"
 `;
 
-type TabType = 'validation' | 'outline' | 'dag' | 'audit' | 'canonical';
+type TabType = 'validation' | 'outline' | 'dag' | 'bundle' | 'governance' | 'canonical';
 
 export default function Home() {
   const [content, setContent] = useState(SAMPLE_SCENARIO);
@@ -65,7 +64,7 @@ export default function Home() {
   // API state
   const [validationResult, setValidationResult] = useState<ValidationResponse | null>(null);
   const [outlineResult, setOutlineResult] = useState<OutlineResponse | null>(null);
-  const [exportResult, setExportResult] = useState<ExportResponse | null>(null);
+  const [exportResult, setExportResult] = useState<CertifiedBundle | null>(null);
 
   // Loading states
   const [isValidating, setIsValidating] = useState(false);
@@ -74,6 +73,13 @@ export default function Home() {
 
   // Error state
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Governance data (user input for IRB preparation)
+  const [governanceData, setGovernanceData] = useState({
+    clinicalSummary: '',
+    justification: '',
+    riskAssessment: '',
+  });
 
   const handleValidate = useCallback(async () => {
     if (!content.trim()) return;
@@ -92,7 +98,7 @@ export default function Home() {
       if (validation.valid) {
         const [outline, exportData] = await Promise.all([
           api.getOutline(content),
-          api.exportBundle(content),
+          api.exportBundle({ content }),
         ]);
         setOutlineResult(outline);
         setExportResult(exportData);
@@ -148,7 +154,8 @@ export default function Home() {
     { id: 'validation', label: 'Validation' },
     { id: 'outline', label: 'Outline' },
     { id: 'dag', label: 'DAG' },
-    { id: 'audit', label: 'Audit' },
+    { id: 'bundle', label: 'Bundle' },
+    { id: 'governance', label: 'Governance' },
     { id: 'canonical', label: 'Canonical' },
   ];
 
@@ -274,8 +281,18 @@ export default function Home() {
               </div>
             )}
 
-            {activeTab === 'audit' && (
-              <AuditPanel bundle={exportResult} loading={isLoadingExport} />
+            {activeTab === 'bundle' && (
+              <BundlePanel bundle={exportResult} loading={isLoadingExport} />
+            )}
+
+            {activeTab === 'governance' && (
+              <GovernancePanel
+                outline={outlineResult}
+                governanceData={governanceData}
+                onGovernanceChange={setGovernanceData}
+                content={content}
+                isLoading={isLoadingOutline}
+              />
             )}
 
             {activeTab === 'canonical' && (

@@ -1,9 +1,9 @@
 'use client';
 
-import type { ExportResponse } from '@/lib/api';
+import type { CertifiedBundle } from '@/lib/api';
 
 interface CanonicalViewProps {
-  exportData: ExportResponse | null;
+  exportData: CertifiedBundle | null;
   isLoading: boolean;
 }
 
@@ -28,8 +28,9 @@ export default function CanonicalView({ exportData, isLoading }: CanonicalViewPr
     <div className="p-4 font-mono text-sm">
       {/* Metadata header */}
       <div className="mb-4 pb-3 border-b border-gray-700 text-xs text-gray-500">
-        <div>Exported: {exportData.metadata.exported_at as string}</div>
-        <div>Checksum: {exportData.metadata.checksum as string}</div>
+        <div>Certified: {new Date(exportData.certified_at).toLocaleString()}</div>
+        <div>Checksum: {exportData.checksum}</div>
+        <div>psdl-lang: {exportData.validation.psdl_lang_version}</div>
       </div>
 
       {/* Summary */}
