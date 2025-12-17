@@ -1,10 +1,13 @@
 """FastAPI application entry point."""
 
+from dotenv import load_dotenv
+load_dotenv()  # Load .env file before other imports
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from importlib.metadata import version as pkg_version
 
-from app.routers import validate, outline, export
+from app.routers import validate, outline, export, generate
 
 # Get psdl-lang version
 try:
@@ -33,6 +36,7 @@ app.add_middleware(
 app.include_router(validate.router, prefix="/api", tags=["validation"])
 app.include_router(outline.router, prefix="/api", tags=["outline"])
 app.include_router(export.router, prefix="/api", tags=["export"])
+app.include_router(generate.router, prefix="/api", tags=["generate"])
 
 
 @app.get("/")

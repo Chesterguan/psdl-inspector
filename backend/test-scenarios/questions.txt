@@ -1,0 +1,88 @@
+Scenario 1 — IRB-Style Research Intent (Ambiguous but Real)
+
+“We aim to study whether there are identifiable clinical signals preceding an increase in acute kidney injury (AKI) risk among adult ICU patients.
+The study population includes patients aged 18 or older with at least one ICU admission in the past three years.
+Patients with pre-existing end-stage renal disease or chronic dialysis should be excluded.
+The primary observation window is the first 72 hours following ICU admission.”
+
+Why this matters
+
+This is how IRB protocols are actually written
+
+Definitions are intentionally incomplete at this stage
+
+The intent must be preserved even as definitions evolve
+
+PSDL signal
+→ Captures research intent before operationalization
+→ Supports versioning as AKI definitions or ICU criteria change
+
+Scenario 2 — Model Evaluation & Regression Testing
+
+“We want to evaluate whether the performance of the updated AKI prediction model has changed compared to the previous version across specific patient subgroups.
+The evaluation should focus on ICU patients who:
+(1) have a documented history of diabetes,
+(2) received vasoactive medications within 24 hours of ICU admission, or
+(3) underwent contrast imaging within 48 hours prior to ICU admission.
+Model performance will be compared using AUROC and calibration metrics.”
+
+Why this matters
+
+Subgroup definitions are often informal and undocumented
+
+Model comparisons become irreproducible over time
+
+PSDL signal
+→ Encodes evaluation logic as a first-class artifact
+→ Makes subgroup definitions auditable and reusable
+
+Scenario 3 — Temporal & Causal Clinical Pattern
+
+“We are interested in patients who received broad-spectrum antibiotics during hospitalization,
+subsequently developed leukopenia within seven days,
+and were transferred to the ICU within 48 hours after leukopenia onset.
+The goal is to assess whether there exists a clinically actionable intervention window prior to ICU transfer.”
+
+Why this matters
+
+Time order is critical
+
+Traditional cohort queries are fragile and opaque
+
+PSDL signal
+→ Explicit temporal sequencing
+→ Clear state transitions rather than implicit SQL logic
+
+Scenario 4 — Multi-Institution Study Without Data Sharing
+
+“Multiple institutions will apply the same research scenario locally to their own clinical data.
+The objective is to compare ICU medication utilization patterns across sites without sharing patient-level data.
+Each institution may map local data elements to the scenario using equivalent definitions where necessary, while preserving the core scenario logic.”
+
+Why this matters
+
+Protocols are shared, but semantics drift across sites
+
+Reproducibility is often assumed, not verified
+
+PSDL signal
+→ Shares semantic intent instead of data
+→ Enables local mapping with global auditability
+
+Scenario 5 — Synthetic Patient Scenarios for Education or Stress Testing
+
+“We aim to construct a class of synthetic patient scenarios for educational and simulation purposes.
+The scenario represents middle-aged or elderly patients admitted for infection,
+who initially present with stable vital signs,
+followed by gradual multi-organ dysfunction within 48 hours.
+The scenarios should be clinically coherent but must not correspond to any real individual patient.”
+
+Why this matters
+
+Purely generative models lack clinical grounding
+
+Education and safety testing require controlled realism
+
+PSDL signal
+→ Defines clinical plausibility constraints
+→ Serves as guardrails for simulation or LLM-based generation

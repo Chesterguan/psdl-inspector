@@ -63,7 +63,8 @@ export default function Editor({ value, onChange, className = '' }: EditorProps)
       view.destroy();
       viewRef.current = null;
     };
-  }, []); // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - intentionally excluding deps
 
   // Update editor content when value prop changes externally
   useEffect(() => {

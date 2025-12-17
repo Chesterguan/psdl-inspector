@@ -16,6 +16,7 @@ interface GovernancePanelProps {
   onGovernanceChange: (data: GovernanceData) => void;
   content: string;
   isLoading: boolean;
+  compactMode?: boolean;
 }
 
 export default function GovernancePanel({
@@ -24,6 +25,7 @@ export default function GovernancePanel({
   onGovernanceChange,
   content,
   isLoading,
+  compactMode = false,
 }: GovernancePanelProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -77,9 +79,48 @@ export default function GovernancePanel({
     });
   };
 
+  // Compact mode: just show the Word export button
+  if (compactMode) {
+    return (
+      <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <FileText className="w-4 h-4" />
+          IRB Word Document
+        </div>
+
+        {exportError && (
+          <div className="flex items-center gap-2 p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-700 dark:text-red-400 text-xs">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{exportError}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleExportWord}
+          disabled={isExporting || !outline}
+          className={`
+            flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium w-full justify-center
+            transition-colors duration-200
+            ${
+              outline && !isExporting
+                ? 'bg-purple-600 hover:bg-purple-700 text-white cursor-pointer'
+                : 'bg-surface-hover text-muted cursor-not-allowed'
+            }
+          `}
+        >
+          <Download className="w-4 h-4" />
+          {isExporting ? 'Generating...' : 'Export Word (.docx)'}
+        </button>
+        <p className="text-xs text-muted text-center">
+          Editable document for IRB submission
+        </p>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="p-4 text-gray-400 text-sm">
+      <div className="p-4 text-muted text-sm">
         Loading scenario information...
       </div>
     );
@@ -92,44 +133,44 @@ export default function GovernancePanel({
   return (
     <div className="h-full overflow-auto p-4 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-2 text-lg font-semibold text-gray-100">
+      <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
         <FileText className="w-5 h-5" />
         Governance - IRB Preparation
       </div>
 
       {/* Scenario Information (auto-derived) */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
           Scenario Information
         </h3>
-        <div className="bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-700">
+        <div className="bg-surface rounded-lg p-4 space-y-2 border border-border">
           <div className="flex justify-between">
-            <span className="text-gray-400">Name:</span>
-            <span className="font-semibold text-gray-200">
+            <span className="text-muted">Name:</span>
+            <span className="font-semibold text-foreground">
               {outline?.scenario || 'N/A'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Version:</span>
-            <span className="font-mono text-sm text-gray-200">
+            <span className="text-muted">Version:</span>
+            <span className="font-mono text-sm text-foreground">
               {outline?.version || 'N/A'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Data Elements (Signals):</span>
-            <span className="font-mono text-sm text-blue-400">
+            <span className="text-muted">Data Elements (Signals):</span>
+            <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
               {signalsCount} signal{signalsCount !== 1 ? 's' : ''}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Trends:</span>
-            <span className="font-mono text-sm text-purple-400">
+            <span className="text-muted">Trends:</span>
+            <span className="font-mono text-sm text-purple-600 dark:text-purple-400">
               {trendsCount} trend{trendsCount !== 1 ? 's' : ''}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Logic Rules:</span>
-            <span className="font-mono text-sm text-green-400">
+            <span className="text-muted">Logic Rules:</span>
+            <span className="font-mono text-sm text-green-600 dark:text-green-400">
               {logicCount} rule{logicCount !== 1 ? 's' : ''}
             </span>
           </div>
@@ -138,46 +179,46 @@ export default function GovernancePanel({
 
       {/* Documentation (user input) */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
           Documentation
         </h3>
         <div className="space-y-4">
           {/* Clinical Summary */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Clinical Summary <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Clinical Summary <span className="text-red-600 dark:text-red-400">*</span>
             </label>
             <textarea
               value={governanceData.clinicalSummary}
               onChange={(e) => handleFieldChange('clinicalSummary', e.target.value)}
               placeholder="Describe what this algorithm detects and why it matters clinically. What clinical condition or risk is being monitored?"
-              className="w-full h-28 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full h-28 px-3 py-2 bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
 
           {/* Justification */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Justification <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Justification <span className="text-red-600 dark:text-red-400">*</span>
             </label>
             <textarea
               value={governanceData.justification}
               onChange={(e) => handleFieldChange('justification', e.target.value)}
               placeholder="Why is this algorithm needed? What clinical problem does it solve? What is the expected benefit to patient care?"
-              className="w-full h-28 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full h-28 px-3 py-2 bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
 
           {/* Risk Assessment */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Risk Assessment
             </label>
             <textarea
               value={governanceData.riskAssessment}
               onChange={(e) => handleFieldChange('riskAssessment', e.target.value)}
               placeholder="What are the consequences if the algorithm produces false positives or false negatives? What safeguards are in place?"
-              className="w-full h-28 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full h-28 px-3 py-2 bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
         </div>
@@ -185,7 +226,7 @@ export default function GovernancePanel({
 
       {/* Export Error */}
       {exportError && (
-        <div className="flex items-center gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg text-red-400 text-sm">
+        <div className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{exportError}</span>
         </div>
@@ -202,22 +243,22 @@ export default function GovernancePanel({
             ${
               outline && !isExporting
                 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-surface-hover text-muted cursor-not-allowed'
             }
           `}
         >
           <Download className="w-4 h-4" />
           {isExporting ? 'Generating Document...' : 'Export Word Document'}
         </button>
-        <p className="mt-2 text-xs text-gray-500 text-center">
+        <p className="mt-2 text-xs text-muted text-center">
           Generates an editable .docx file for IRB submission preparation
         </p>
       </section>
 
       {/* Info Note */}
-      <section className="bg-blue-900/20 rounded-lg p-4 border border-blue-800/50">
-        <h4 className="text-sm font-semibold text-blue-300 mb-2">About IRB Preparation</h4>
-        <p className="text-sm text-blue-200/80">
+      <section className="bg-blue-100 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-300 dark:border-blue-800/50">
+        <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">About IRB Preparation</h4>
+        <p className="text-sm text-blue-600 dark:text-blue-200/80">
           This tool helps you prepare documentation for Institutional Review Board (IRB)
           submissions. The exported Word document includes algorithm details auto-derived
           from your PSDL specification, combined with your clinical narrative.

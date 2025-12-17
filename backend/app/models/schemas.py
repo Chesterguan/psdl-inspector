@@ -165,3 +165,26 @@ class IRBExportRequest(BaseModel):
 
     content: str = Field(..., description="PSDL scenario content (YAML)")
     governance: GovernanceData = Field(default_factory=GovernanceData)
+
+
+# --- Generation Models ---
+
+
+class GenerateRequest(BaseModel):
+    """Request to generate PSDL scenario from natural language."""
+
+    prompt: str = Field(..., description="Natural language description of the clinical scenario")
+    provider: str = Field("openai", description="LLM provider: 'openai' or 'ollama'")
+    model: Optional[str] = Field(None, description="Optional model override (e.g., 'gpt-4o-mini', 'mistral-small')")
+    max_retries: int = Field(3, ge=0, le=5, description="Max correction attempts if validation fails (0-5)")
+    clinical_context: Optional[str] = Field(None, description="Optional clinical guidelines or reference text to include")
+
+
+class GenerateResponse(BaseModel):
+    """Response from scenario generation."""
+
+    yaml: str = Field(..., description="Generated PSDL YAML")
+    valid: bool = Field(..., description="Whether generated YAML is valid")
+    errors: List[str] = Field(default_factory=list, description="Validation errors")
+    warnings: List[str] = Field(default_factory=list, description="Validation warnings")
+    attempts: int = Field(1, description="Number of generation/correction attempts made")

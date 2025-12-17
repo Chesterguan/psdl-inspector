@@ -41,11 +41,12 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 | Feature | Description |
 |---------|-------------|
+| **Generate** | AI-assisted scenario creation with OpenAI or local Ollama |
 | **Validate** | Real-time syntax and semantic validation via psdl-lang |
-| **Visualize** | DAG view of signal → trend → logic dependencies |
+| **Visualize** | Interactive DAG view with ReactFlow (signal → trend → logic) |
 | **Outline** | Semantic tree navigation of scenario structure |
 | **Bundle** | Generate checksummed certified bundles |
-| **Governance** | IRB preparation with Word document export |
+| **Export** | IRB preparation with AI-enriched Word document export |
 
 ## What Inspector Does NOT Do
 
@@ -95,7 +96,21 @@ npm run dev
 
 App available at http://localhost:9806
 
-### 4. Verify Installation
+### 4. Configure AI (Optional)
+
+For AI-assisted scenario generation:
+
+```bash
+# Option 1: OpenAI (recommended - fast, accurate)
+export OPENAI_API_KEY="sk-your-key-here"
+
+# Option 2: Local Ollama (private, no API key needed)
+brew install ollama
+ollama serve
+ollama pull mistral-small
+```
+
+### 5. Verify Installation
 
 Navigate to http://localhost:9806. The header should display:
 ```
@@ -103,55 +118,59 @@ Inspector v0.1.0
 psdl-lang v0.3.1
 ```
 
-## UI Tabs
+## Wizard Workflow
 
-### Validation
-- Real-time syntax and semantic validation
-- Error highlighting in editor
-- Powered by psdl-lang parser
+PSDL Inspector uses a 3-step wizard workflow:
 
-### Outline
-- Tree view of signals, trends, and logic
-- Dependency tracking (depends_on / used_by)
+### Step 1: Input
+- **Generate Tab**: AI-assisted scenario creation from natural language
+  - OpenAI GPT-4o-mini (cloud, recommended)
+  - Ollama (local, privacy-preserving)
+  - Auto-validation and error correction
+  - Optional clinical context for accurate thresholds
+- **Editor**: Manual YAML editing with CodeMirror
+- **Validation Panel**: Real-time syntax and semantic validation
 
-### DAG
-- Mermaid.js graph of scenario logic flow
-- AND/OR gate visualization
-- Signal → Trend → Logic dependency chain
+### Step 2: Preview
+- **Outline**: Tree view of signals, trends, and logic with dependency tracking
+- **DAG**: Interactive ReactFlow graph visualization
+  - Custom node shapes (parallelogram, rounded rect, diamond, hexagon)
+  - Severity-based coloring for logic nodes
+  - Node details panel on hover
+- **Bundle**: Certified audit bundle preview with checksum and governance checklist
 
-### Bundle
-- Certified audit bundle with SHA-256 checksum
-- Version information and validation results
-- Governance checklist
-
-### Governance
-- IRB preparation documentation
-- Auto-derived scenario information
-- User input: clinical summary, justification, risk assessment
-- **Word document export** for IRB submission
+### Step 3: Export
+- **Governance Documentation**: Clinical summary, justification, risk assessment
+- **JSON Bundle**: Checksummed certified audit bundle for downstream systems
+- **Word Document**: AI-enriched IRB documentation with:
+  - Executive summary and clinical background
+  - Algorithm overview and data elements
+  - Safety considerations and limitations
+  - Technical appendix
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   Frontend (Next.js)                    │
-│  ┌─────────┐  ┌──────────┐  ┌────────┐  ┌───────────┐  │
-│  │ Editor  │→ │ Validate │→ │ Outline│→ │ Export    │  │
-│  │ Panel   │  │ Display  │  │ + DAG  │  │ Bundle    │  │
-│  └─────────┘  └──────────┘  └────────┘  └───────────┘  │
-└────────────────────────┬────────────────────────────────┘
-                         │ REST API
-┌────────────────────────▼────────────────────────────────┐
-│                   Backend (FastAPI)                     │
-│  ┌─────────────┐  ┌─────────────┐  ┌────────────────┐  │
-│  │ /validate   │  │ /outline    │  │ /export/bundle │  │
-│  └─────────────┘  └─────────────┘  └────────────────┘  │
-│                         │                               │
-│              ┌──────────▼──────────┐                    │
-│              │    psdl-lang        │                    │
-│              │  (PyPI package)     │                    │
-│              └─────────────────────┘                    │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Frontend (Next.js)                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐   │
+│  │ Generate │→ │ Editor   │→ │ Preview  │→ │    Export     │   │
+│  │ (AI)     │  │ (YAML)   │  │ DAG/Tree │  │ Bundle + Word │   │
+│  └──────────┘  └──────────┘  └──────────┘  └───────────────┘   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ REST API
+┌────────────────────────────▼────────────────────────────────────┐
+│                     Backend (FastAPI)                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │
+│  │ /generate    │  │ /validate    │  │ /export/bundle     │    │
+│  │ /outline     │  │              │  │ /export/irb-doc    │    │
+│  └──────────────┘  └──────────────┘  └────────────────────┘    │
+│         │                 │                    │                │
+│  ┌──────▼──────┐  ┌───────▼───────┐  ┌────────▼─────────┐      │
+│  │  OpenAI /   │  │   psdl-lang   │  │   python-docx    │      │
+│  │   Ollama    │  │  (validation) │  │  (Word export)   │      │
+│  └─────────────┘  └───────────────┘  └──────────────────┘      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## API Reference
@@ -165,6 +184,27 @@ Returns version information.
 }
 ```
 
+### GET /api/generate/status
+Check LLM provider availability.
+```json
+{
+  "openai": { "available": true, "model": "gpt-4o-mini" },
+  "ollama": { "available": true, "model": "mistral-small", "models": [...] },
+  "default_provider": "openai"
+}
+```
+
+### POST /api/generate/scenario
+Generate PSDL scenario from natural language.
+```json
+{
+  "prompt": "Detect AKI using creatinine changes",
+  "provider": "openai",
+  "max_retries": 3,
+  "clinical_context": "KDIGO criteria..."
+}
+```
+
 ### POST /api/validate
 Validate a PSDL scenario.
 
@@ -175,7 +215,7 @@ Generate semantic outline with dependency tracking.
 Export certified audit bundle with checksum.
 
 ### POST /api/export/irb-document
-Export Word document for IRB preparation.
+Export AI-enriched Word document for IRB preparation.
 
 ## Certified Audit Bundle
 
@@ -215,9 +255,10 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
 |-----------|------------|
 | Frontend | Next.js 14, React 18, Tailwind CSS |
 | Editor | CodeMirror 6 |
+| Visualization | ReactFlow, dagre (auto-layout) |
 | Backend | FastAPI, Python 3.9+ |
 | Validation | psdl-lang 0.3.1 |
-| Visualization | Mermaid.js |
+| AI Generation | OpenAI GPT-4o-mini, Ollama |
 | Document Export | python-docx |
 
 ## Related Projects
@@ -229,8 +270,10 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
 
 ## Roadmap
 
-- [ ] AI-assisted scenario generation (local LLM via Ollama) - [#1](https://github.com/Chesterguan/psdl-inspector/issues/1)
-- [ ] Editable DAG visualization
+- [x] AI-assisted scenario generation (OpenAI + Ollama) ✅
+- [x] Interactive DAG visualization with ReactFlow ✅
+- [x] AI-enriched IRB Word document export ✅
+- [ ] Editable DAG (visual scenario editing)
 - [ ] Lint rules (best practices, style checks)
 - [ ] Scenario registry with versioning
 - [ ] Semantic diff (structural, not text)

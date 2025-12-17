@@ -36,7 +36,7 @@ export default function ExportButton({ exportData, scenarioName, isLoading }: Ex
         ${
           exportData && !isLoading
             ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-            : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+            : 'bg-surface-hover text-muted cursor-not-allowed'
         }
       `}
     >

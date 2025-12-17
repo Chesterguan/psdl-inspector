@@ -7,3 +7,6 @@ export { DAGView } from './DAGView';
 export { BundlePanel } from './BundlePanel';
 export { default as GovernancePanel } from './GovernancePanel';
 export type { GovernanceData } from './GovernancePanel';
+export { default as GenerationPanel } from './GenerationPanel';
+export { default as ThemeToggle } from './ThemeToggle';
+export { default as Logo } from './Logo';

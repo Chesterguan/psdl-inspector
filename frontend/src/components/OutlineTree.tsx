@@ -24,16 +24,16 @@ function TreeSection({ title, icon, count, children, defaultOpen = true }: TreeS
     <div className="mb-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full text-left hover:bg-gray-800 p-2 rounded"
+        className="flex items-center gap-2 w-full text-left hover:bg-surface-hover p-2 rounded"
       >
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDown className="w-4 h-4 text-muted" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-muted" />
         )}
         {icon}
-        <span className="font-medium">{title}</span>
-        <span className="text-gray-500 text-sm">({count})</span>
+        <span className="font-medium text-foreground">{title}</span>
+        <span className="text-muted text-sm">({count})</span>
       </button>
       {isOpen && <div className="ml-6 mt-1 space-y-1">{children}</div>}
     </div>
@@ -42,19 +42,19 @@ function TreeSection({ title, icon, count, children, defaultOpen = true }: TreeS
 
 function SignalItem({ signal }: { signal: SignalOutline }) {
   return (
-    <div className="p-2 rounded bg-gray-800/50 hover:bg-gray-800">
+    <div className="p-2 rounded bg-surface-hover hover:bg-border">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-blue-400">{signal.name}</span>
+        <span className="font-mono text-blue-600 dark:text-blue-400">{signal.name}</span>
         {signal.unit && (
-          <span className="text-xs text-gray-500">({signal.unit})</span>
+          <span className="text-xs text-muted">({signal.unit})</span>
         )}
       </div>
-      <div className="text-xs text-gray-500 mt-1">
+      <div className="text-xs text-muted mt-1">
         source: {signal.source || 'N/A'}
         {signal.concept_id && ` | concept: ${signal.concept_id}`}
       </div>
       {signal.used_by.length > 0 && (
-        <div className="text-xs text-gray-600 mt-1">
+        <div className="text-xs text-muted mt-1">
           Used by: {signal.used_by.join(', ')}
         </div>
       )}
@@ -64,17 +64,17 @@ function SignalItem({ signal }: { signal: SignalOutline }) {
 
 function TrendItem({ trend }: { trend: TrendOutline }) {
   return (
-    <div className="p-2 rounded bg-gray-800/50 hover:bg-gray-800">
+    <div className="p-2 rounded bg-surface-hover hover:bg-border">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-purple-400">{trend.name}</span>
+        <span className="font-mono text-purple-600 dark:text-purple-400">{trend.name}</span>
       </div>
-      <div className="text-xs font-mono text-gray-400 mt-1 bg-gray-900 p-1 rounded">
+      <div className="text-xs font-mono text-muted mt-1 bg-surface p-1 rounded">
         {trend.expr}
       </div>
       {trend.description && (
-        <div className="text-xs text-gray-500 mt-1">{trend.description}</div>
+        <div className="text-xs text-muted mt-1">{trend.description}</div>
       )}
-      <div className="text-xs text-gray-600 mt-1">
+      <div className="text-xs text-muted mt-1">
         {trend.depends_on.length > 0 && (
           <span>Signals: {trend.depends_on.join(', ')}</span>
         )}
@@ -88,32 +88,32 @@ function TrendItem({ trend }: { trend: TrendOutline }) {
 
 function LogicItem({ logic }: { logic: LogicOutline }) {
   const severityColors: Record<string, string> = {
-    low: 'text-green-400',
-    medium: 'text-yellow-400',
-    high: 'text-orange-400',
-    critical: 'text-red-400',
+    low: 'text-green-600 dark:text-green-400',
+    medium: 'text-yellow-600 dark:text-yellow-400',
+    high: 'text-orange-600 dark:text-orange-400',
+    critical: 'text-red-600 dark:text-red-400',
   };
 
   return (
-    <div className="p-2 rounded bg-gray-800/50 hover:bg-gray-800">
+    <div className="p-2 rounded bg-surface-hover hover:bg-border">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-green-400">{logic.name}</span>
+        <span className="font-mono text-green-600 dark:text-green-400">{logic.name}</span>
         {logic.severity && (
           <span
-            className={`text-xs px-1.5 py-0.5 rounded ${severityColors[logic.severity] || 'text-gray-400'} bg-gray-900`}
+            className={`text-xs px-1.5 py-0.5 rounded ${severityColors[logic.severity] || 'text-muted'} bg-surface`}
           >
             {logic.severity.toUpperCase()}
           </span>
         )}
       </div>
-      <div className="text-xs font-mono text-gray-400 mt-1 bg-gray-900 p-1 rounded">
+      <div className="text-xs font-mono text-muted mt-1 bg-surface p-1 rounded">
         {logic.expr}
       </div>
       {logic.description && (
-        <div className="text-xs text-gray-500 mt-1">{logic.description}</div>
+        <div className="text-xs text-muted mt-1">{logic.description}</div>
       )}
       {logic.depends_on.length > 0 && (
-        <div className="text-xs text-gray-600 mt-1">
+        <div className="text-xs text-muted mt-1">
           Depends on: {logic.depends_on.join(', ')}
         </div>
       )}
@@ -124,7 +124,7 @@ function LogicItem({ logic }: { logic: LogicOutline }) {
 export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
   if (isLoading) {
     return (
-      <div className="p-4 text-gray-400 text-sm">
+      <div className="p-4 text-muted text-sm">
         Generating outline...
       </div>
     );
@@ -132,7 +132,7 @@ export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
 
   if (!outline) {
     return (
-      <div className="p-4 text-gray-500 text-sm">
+      <div className="p-4 text-muted text-sm">
         No outline available. Validate a scenario first.
       </div>
     );
@@ -141,20 +141,20 @@ export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="mb-4 pb-3 border-b border-gray-700">
-        <h2 className="text-lg font-bold">{outline.scenario}</h2>
+      <div className="mb-4 pb-3 border-b border-border">
+        <h2 className="text-lg font-bold text-foreground">{outline.scenario}</h2>
         {outline.version && (
-          <span className="text-sm text-gray-500">v{outline.version}</span>
+          <span className="text-sm text-muted">v{outline.version}</span>
         )}
         {outline.description && (
-          <p className="text-sm text-gray-400 mt-1">{outline.description}</p>
+          <p className="text-sm text-muted mt-1">{outline.description}</p>
         )}
       </div>
 
       {/* Signals */}
       <TreeSection
         title="Signals"
-        icon={<Zap className="w-4 h-4 text-blue-400" />}
+        icon={<Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
         count={outline.signals.length}
       >
         {outline.signals.map((signal) => (
@@ -165,7 +165,7 @@ export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
       {/* Trends */}
       <TreeSection
         title="Trends"
-        icon={<TrendingUp className="w-4 h-4 text-purple-400" />}
+        icon={<TrendingUp className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
         count={outline.trends.length}
       >
         {outline.trends.map((trend) => (
@@ -176,7 +176,7 @@ export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
       {/* Logic */}
       <TreeSection
         title="Logic"
-        icon={<GitBranch className="w-4 h-4 text-green-400" />}
+        icon={<GitBranch className="w-4 h-4 text-green-600 dark:text-green-400" />}
         count={outline.logic.length}
       >
         {outline.logic.map((logic) => (

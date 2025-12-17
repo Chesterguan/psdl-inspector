@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PSDL Inspector Frontend
 
-## Getting Started
+Next.js frontend for PSDL Inspector - the governance middleware for clinical scenarios.
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js 14** - React framework with App Router
+- **React 18** - UI library
+- **Tailwind CSS** - Styling
+- **CodeMirror 6** - YAML editor
+- **ReactFlow** - DAG visualization
+- **dagre** - Automatic graph layout
+- **lucide-react** - Icons
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server (port 9806)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Run linting
+npm run lint
+
+# Type checking
+npx tsc --noEmit
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/
+│   ├── page.tsx          # Main wizard page
+│   ├── layout.tsx        # Root layout with theme provider
+│   └── globals.css       # Global styles + CSS variables
+├── components/
+│   ├── Editor.tsx        # CodeMirror YAML editor
+│   ├── GenerationPanel.tsx # AI scenario generation
+│   ├── ValidationPanel.tsx # Validation display
+│   ├── OutlineTree.tsx   # Semantic tree view
+│   ├── DAGView.tsx       # ReactFlow visualization
+│   ├── BundlePanel.tsx   # Certified bundle preview
+│   ├── GovernancePanel.tsx # IRB documentation
+│   ├── ExportButton.tsx  # Bundle download
+│   ├── CanonicalView.tsx # Canonical summary
+│   ├── ThemeToggle.tsx   # Dark/light mode
+│   └── Logo.tsx          # SVG logo
+├── context/
+│   └── ThemeContext.tsx  # Theme state management
+└── lib/
+    └── api.ts            # Backend API client
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+```bash
+# Backend API URL (default: http://localhost:8200)
+NEXT_PUBLIC_API_URL=http://localhost:8200
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Wizard Workflow
+3-step process: Input → Preview → Export
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### AI Generation
+- OpenAI GPT-4o-mini integration
+- Local Ollama support
+- Auto-validation and error correction
+- Clinical context input
 
-## Deploy on Vercel
+### DAG Visualization
+- Custom node types (Signal, Trend, Gate, Logic)
+- Automatic layout with dagre
+- Severity-based coloring
+- Hover details panel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Theme Support
+- Light and dark modes
+- CSS custom properties for colors
+- Persistent preference
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Integration
+
+The frontend connects to the FastAPI backend at `/api/*`:
+
+- `GET /api/version` - Version info
+- `GET /api/generate/status` - LLM availability
+- `POST /api/generate/scenario` - AI generation
+- `POST /api/validate` - Validation
+- `POST /api/outline` - Semantic outline
+- `POST /api/export/bundle` - Certified bundle
+- `POST /api/export/irb-document` - Word export
+
+*Updated: 2025-12-17*

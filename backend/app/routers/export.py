@@ -114,15 +114,20 @@ async def export_draft(request: ExportRequest) -> CertifiedBundle:
 
 @router.post("/export/irb-document")
 async def export_irb_document(request: IRBExportRequest):
-    """Export Word document for IRB preparation.
+    """Export Word document for IRB preparation with AI enrichment.
 
     Generates an editable .docx file containing:
+    - AI-enriched executive summary and clinical background
     - Algorithm overview (auto-derived from PSDL)
-    - Data elements required
+    - Data elements required with narrative explanation
     - Trend and logic definitions
-    - User-provided governance narrative (clinical summary, justification, risk assessment)
+    - Clinical workflow integration
+    - Safety considerations and limitations
+    - Recommendation for IRB review
+    - Technical appendix
     """
     import psdl
+    from app.services.openai_service import openai_service
 
     # Parse the scenario
     try:
@@ -142,6 +147,7 @@ async def export_irb_document(request: IRBExportRequest):
                 'ref': sig.ref,
                 'unit': sig.unit,
                 'concept_id': sig.concept_id,
+                'description': getattr(sig, 'description', None),
             }
             for name, sig in scenario.signals.items()
         ],
@@ -171,8 +177,21 @@ async def export_irb_document(request: IRBExportRequest):
         'risk_assessment': request.governance.risk_assessment,
     }
 
+    # Try to enrich with AI if OpenAI is configured
+    enriched_content = None
+    if openai_service.is_configured():
+        try:
+            enriched_content = await openai_service.enrich_irb_document(
+                scenario_info, governance_data
+            )
+            # Check if enrichment had an error
+            if enriched_content and enriched_content.get('error'):
+                enriched_content = None  # Fall back to basic document
+        except Exception:
+            enriched_content = None  # Fall back to basic document on any error
+
     # Generate Word document
-    doc_bytes = generate_irb_document(scenario_info, governance_data)
+    doc_bytes = generate_irb_document(scenario_info, governance_data, enriched_content)
 
     filename = f"{scenario.name}_IRB_Documentation.docx"
 

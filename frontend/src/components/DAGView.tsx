@@ -1,7 +1,27 @@
 "use client";
 
-import React, { useEffect, useRef, useMemo } from "react";
-import mermaid from "mermaid";
+import React, { useMemo, useState, useCallback } from "react";
+import {
+  ReactFlow,
+  Node,
+  Edge,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  Handle,
+  Position,
+  MarkerType,
+  NodeMouseHandler,
+} from "@xyflow/react";
+import dagre from "dagre";
+import "@xyflow/react/dist/style.css";
+import { useTheme } from "@/context/ThemeContext";
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface OutlineData {
   scenario: string;
@@ -34,241 +54,563 @@ interface DAGViewProps {
   outline: OutlineData | null;
 }
 
-// Initialize mermaid with dark theme
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "dark",
-  themeVariables: {
-    primaryColor: "#3b82f6",
-    primaryTextColor: "#fff",
-    primaryBorderColor: "#60a5fa",
-    lineColor: "#9ca3af",
-    secondaryColor: "#f59e0b",
-    tertiaryColor: "#22c55e",
-    background: "#111827",
-    mainBkg: "#1f2937",
-    nodeBorder: "#4b5563",
-    clusterBkg: "#374151",
-    titleColor: "#f3f4f6",
-    edgeLabelBackground: "#1f2937",
-  },
-  flowchart: {
-    htmlLabels: true,
-    curve: "basis",
-    nodeSpacing: 50,
-    rankSpacing: 70,
-  },
-});
+// =============================================================================
+// Custom Node Components (without tooltips)
+// =============================================================================
 
-// Check if any logic has complex expressions (multiple operators)
-function hasComplexExpressions(outline: OutlineData): boolean {
-  return outline.logic.some((logic) => logic.operators.length > 1);
+interface NodeData {
+  label: string;
+  sublabel?: string;
+  expr?: string;
+  severity?: string;
+  description?: string;
+  nodeType?: string;
 }
 
-function generateMermaidCode(outline: OutlineData): string {
-  const lines: string[] = ["graph TD"];
+// Signal Node - Parallelogram shape (input)
+function SignalNode({ data }: { data: NodeData }) {
+  return (
+    <div className="relative cursor-pointer">
+      <div
+        className="px-4 py-2 min-w-[120px] text-center rounded-lg border-2 transition-all duration-200
+                   bg-gradient-to-br from-blue-500/20 to-blue-600/30 border-blue-400
+                   hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/20"
+        style={{ transform: "skewX(-6deg)" }}
+      >
+        <div style={{ transform: "skewX(6deg)" }}>
+          <div className="font-semibold text-blue-800 dark:text-blue-100">{data.label}</div>
+          {data.sublabel && (
+            <div className="text-xs text-blue-600 dark:text-blue-300/80 mt-0.5">{data.sublabel}</div>
+          )}
+        </div>
+      </div>
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-2 h-2 !bg-blue-400 !border-blue-300"
+      />
+    </div>
+  );
+}
 
-  // Add subgraph for signals
-  lines.push("  subgraph Signals");
+// Trend Node - Rounded rectangle (computation)
+function TrendNode({ data }: { data: NodeData }) {
+  return (
+    <div className="relative cursor-pointer">
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-2 h-2 !bg-amber-400 !border-amber-300"
+      />
+      <div
+        className="px-4 py-2 min-w-[140px] text-center rounded-xl border-2 transition-all duration-200
+                   bg-gradient-to-br from-amber-500/20 to-orange-600/30 border-amber-400
+                   hover:border-amber-300 hover:shadow-lg hover:shadow-amber-500/20"
+      >
+        <div className="font-semibold text-amber-800 dark:text-amber-100">{data.label}</div>
+        {data.expr && (
+          <div className="text-xs text-amber-600 dark:text-amber-300/80 mt-0.5 font-mono max-w-[160px] truncate">
+            {data.expr}
+          </div>
+        )}
+      </div>
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-2 h-2 !bg-amber-400 !border-amber-300"
+      />
+    </div>
+  );
+}
+
+// Gate Node - Diamond shape (AND/OR)
+function GateNode({ data }: { data: NodeData }) {
+  return (
+    <div className="relative cursor-pointer">
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-2 h-2 !bg-purple-400 !border-purple-300"
+      />
+      <div
+        className="w-12 h-12 flex items-center justify-center border-2 transition-all duration-200
+                   bg-gradient-to-br from-purple-500/30 to-pink-600/30 border-purple-400
+                   hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/20"
+        style={{ transform: "rotate(45deg)", borderRadius: "4px" }}
+      >
+        <span
+          className="font-bold text-purple-800 dark:text-purple-100 text-sm"
+          style={{ transform: "rotate(-45deg)" }}
+        >
+          {data.label}
+        </span>
+      </div>
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-2 h-2 !bg-purple-400 !border-purple-300"
+      />
+    </div>
+  );
+}
+
+// Logic Node - Hexagon shape (decision)
+function LogicNode({ data }: { data: NodeData }) {
+  const severityColors: Record<string, string> = {
+    low: "from-green-500/20 to-emerald-600/30 border-green-400 hover:border-green-300 hover:shadow-green-500/20",
+    medium: "from-yellow-500/20 to-amber-600/30 border-yellow-400 hover:border-yellow-300 hover:shadow-yellow-500/20",
+    high: "from-orange-500/20 to-red-600/30 border-orange-400 hover:border-orange-300 hover:shadow-orange-500/20",
+    critical: "from-red-500/20 to-rose-600/30 border-red-400 hover:border-red-300 hover:shadow-red-500/20",
+  };
+
+  const severityBadgeColors: Record<string, string> = {
+    low: "bg-green-500/30 text-green-700 dark:text-green-300",
+    medium: "bg-yellow-500/30 text-yellow-700 dark:text-yellow-300",
+    high: "bg-orange-500/30 text-orange-700 dark:text-orange-300",
+    critical: "bg-red-500/30 text-red-700 dark:text-red-300",
+  };
+
+  const colorClass = data.severity ? severityColors[data.severity] || severityColors.medium : severityColors.medium;
+  const badgeClass = data.severity ? severityBadgeColors[data.severity] || "" : "";
+
+  return (
+    <div className="relative cursor-pointer">
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-2 h-2 !bg-green-400 !border-green-300"
+      />
+      <div
+        className={`px-4 py-2 min-w-[140px] text-center border-2 transition-all duration-200
+                   bg-gradient-to-br ${colorClass}`}
+        style={{
+          clipPath: "polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%)",
+          padding: "12px 20px",
+        }}
+      >
+        <div className="font-semibold text-foreground">{data.label}</div>
+        {data.severity && (
+          <div className={`text-xs mt-0.5 px-2 py-0.5 rounded-full inline-block ${badgeClass}`}>
+            {data.severity.toUpperCase()}
+          </div>
+        )}
+      </div>
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-2 h-2 !bg-green-400 !border-green-300"
+      />
+    </div>
+  );
+}
+
+// Node types registry
+const nodeTypes = {
+  signal: SignalNode,
+  trend: TrendNode,
+  gate: GateNode,
+  logic: LogicNode,
+};
+
+// =============================================================================
+// Layout with Dagre
+// =============================================================================
+
+const NODE_WIDTH = 150;
+const NODE_HEIGHT = 60;
+
+function getLayoutedElements(
+  nodes: Node[],
+  edges: Edge[],
+  direction = "TB"
+): { nodes: Node[]; edges: Edge[] } {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 60, ranksep: 80 });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - NODE_WIDTH / 2,
+        y: nodeWithPosition.y - NODE_HEIGHT / 2,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+}
+
+// =============================================================================
+// Build Graph from Outline
+// =============================================================================
+
+function buildGraph(outline: OutlineData): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+
+  // Add signal nodes
   outline.signals.forEach((signal) => {
-    const label = signal.unit
-      ? `${signal.name}<br/><small>${signal.source || 'unknown'} (${signal.unit})</small>`
-      : `${signal.name}<br/><small>${signal.source || 'unknown'}</small>`;
-    lines.push(`    ${signal.name}[/"${label}"/]:::signal`);
-  });
-  lines.push("  end");
-
-  // Add subgraph for trends
-  lines.push("  subgraph Trends");
-  outline.trends.forEach((trend) => {
-    const exprShort = trend.expr.length > 30 ? trend.expr.slice(0, 30) + "..." : trend.expr;
-    lines.push(`    ${trend.name}["${trend.name}<br/><small>${exprShort}</small>"]:::trend`);
-  });
-  lines.push("  end");
-
-  // Add subgraph for logic
-  lines.push("  subgraph Logic");
-  outline.logic.forEach((logic) => {
-    const severity = logic.severity ? `[${logic.severity.toUpperCase()}]` : "";
-    // Show the expression in the node for clarity
-    const exprDisplay = logic.expr.length > 25 ? logic.expr.slice(0, 25) + "..." : logic.expr;
-    lines.push(`    ${logic.name}{{"${logic.name} ${severity}<br/><small>${exprDisplay}</small>"}}:::logic`);
-  });
-  lines.push("  end");
-
-  // Add edges from signals to trends
-  outline.trends.forEach((trend) => {
-    trend.depends_on.forEach((dep) => {
-      if (outline.signals.some((s) => s.name === dep)) {
-        lines.push(`  ${dep} --> ${trend.name}`);
-      }
+    const id = `signal-${signal.name}`;
+    nodes.push({
+      id,
+      type: "signal",
+      position: { x: 0, y: 0 },
+      data: {
+        label: signal.name,
+        sublabel: signal.unit ? `${signal.source || "ref"} (${signal.unit})` : signal.source || "ref",
+        description: `Signal: ${signal.name}`,
+        nodeType: "signal",
+      },
     });
   });
 
-  // Add edges from trends/logic to logic WITH gate nodes for AND/OR
-  outline.logic.forEach((logic) => {
-    const deps = logic.depends_on;
-    const operators = logic.operators || [];
+  // Add trend nodes
+  outline.trends.forEach((trend) => {
+    const id = `trend-${trend.name}`;
+    nodes.push({
+      id,
+      type: "trend",
+      position: { x: 0, y: 0 },
+      data: {
+        label: trend.name,
+        expr: trend.expr,
+        description: trend.description || undefined,
+        nodeType: "trend",
+      },
+    });
 
-    // Filter to valid dependencies
-    const validDeps = deps.filter((dep) => {
+    // Add edges from dependencies
+    trend.depends_on.forEach((dep) => {
+      const sourceId = outline.signals.some((s) => s.name === dep)
+        ? `signal-${dep}`
+        : `trend-${dep}`;
+      edges.push({
+        id: `edge-${sourceId}-${id}`,
+        source: sourceId,
+        target: id,
+        animated: false,
+        style: { stroke: "#9ca3af", strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
+      });
+    });
+  });
+
+  // Add logic nodes with gates
+  outline.logic.forEach((logic) => {
+    const logicId = `logic-${logic.name}`;
+
+    // Filter valid dependencies
+    const validDeps = logic.depends_on.filter((dep) => {
       const isTrend = outline.trends.some((t) => t.name === dep);
       const isLogic = outline.logic.some((l) => l.name === dep);
-      return isTrend || isLogic;
+      const isSignal = outline.signals.some((s) => s.name === dep);
+      return isTrend || isLogic || isSignal;
     });
 
-    if (validDeps.length === 0) return;
+    nodes.push({
+      id: logicId,
+      type: "logic",
+      position: { x: 0, y: 0 },
+      data: {
+        label: logic.name,
+        expr: logic.expr,
+        severity: logic.severity || undefined,
+        description: logic.description || undefined,
+        nodeType: "logic",
+      },
+    });
 
-    if (validDeps.length === 1) {
-      // Single dependency - direct connection
-      lines.push(`  ${validDeps[0]} --> ${logic.name}`);
-    } else if (operators.length > 0) {
-      // Multiple dependencies with operator - create gate node
-      const gateId = `gate_${logic.name}`;
-      const op = operators[0]; // Primary operator
+    // If multiple dependencies and has operator, add gate node
+    if (validDeps.length > 1 && logic.operators.length > 0) {
+      const gateId = `gate-${logic.name}`;
+      const op = logic.operators[0];
 
-      // Add gate node (diamond shape for decision)
-      lines.push(`  ${gateId}((${op})):::gate`);
+      nodes.push({
+        id: gateId,
+        type: "gate",
+        position: { x: 0, y: 0 },
+        data: { label: op, nodeType: "gate" },
+      });
 
-      // Connect all dependencies to the gate
+      // Connect deps to gate
       validDeps.forEach((dep) => {
-        lines.push(`  ${dep} --> ${gateId}`);
+        const sourceId = outline.signals.some((s) => s.name === dep)
+          ? `signal-${dep}`
+          : outline.trends.some((t) => t.name === dep)
+          ? `trend-${dep}`
+          : `logic-${dep}`;
+
+        edges.push({
+          id: `edge-${sourceId}-${gateId}`,
+          source: sourceId,
+          target: gateId,
+          animated: false,
+          style: { stroke: "#a78bfa", strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "#a78bfa" },
+        });
       });
 
       // Connect gate to logic
-      lines.push(`  ${gateId} --> ${logic.name}`);
+      edges.push({
+        id: `edge-${gateId}-${logicId}`,
+        source: gateId,
+        target: logicId,
+        animated: true,
+        style: { stroke: "#22c55e", strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e" },
+      });
     } else {
-      // Multiple dependencies, no operator - just connect all
+      // Direct connections
       validDeps.forEach((dep) => {
-        lines.push(`  ${dep} --> ${logic.name}`);
+        const sourceId = outline.signals.some((s) => s.name === dep)
+          ? `signal-${dep}`
+          : outline.trends.some((t) => t.name === dep)
+          ? `trend-${dep}`
+          : `logic-${dep}`;
+
+        edges.push({
+          id: `edge-${sourceId}-${logicId}`,
+          source: sourceId,
+          target: logicId,
+          animated: false,
+          style: { stroke: "#22c55e", strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "#22c55e" },
+        });
       });
     }
   });
 
-  // Add styles
-  lines.push("  classDef signal fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e40af");
-  lines.push("  classDef trend fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#92400e");
-  lines.push("  classDef logic fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#166534");
-  lines.push("  classDef gate fill:#e879f9,stroke:#a855f7,stroke-width:3px,color:#581c87,font-weight:bold");
-
-  return lines.join("\n");
+  return getLayoutedElements(nodes, edges);
 }
 
+// =============================================================================
+// Details Panel Component
+// =============================================================================
+
+interface DetailsPanelProps {
+  node: Node | null;
+}
+
+function DetailsPanel({ node }: DetailsPanelProps) {
+  if (!node) {
+    return (
+      <div className="text-muted text-sm text-center py-4">
+        Hover over a node to see details
+      </div>
+    );
+  }
+
+  const data = node.data as unknown as NodeData;
+  const nodeType = data.nodeType || node.type;
+
+  const typeColors: Record<string, { bg: string; text: string; border: string }> = {
+    signal: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", border: "border-blue-300 dark:border-blue-700" },
+    trend: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", border: "border-amber-300 dark:border-amber-700" },
+    gate: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-300", border: "border-purple-300 dark:border-purple-700" },
+    logic: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-300", border: "border-green-300 dark:border-green-700" },
+  };
+
+  const colors = typeColors[nodeType || "signal"] || typeColors.signal;
+
+  return (
+    <div className={`rounded-lg p-3 border ${colors.bg} ${colors.border}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`font-semibold ${colors.text}`}>{data.label}</span>
+        <span className={`text-xs px-2 py-0.5 rounded ${colors.bg} ${colors.text} uppercase`}>
+          {nodeType}
+        </span>
+      </div>
+
+      {data.sublabel && (
+        <div className="text-sm text-muted mb-2">
+          <span className="text-foreground/70">Source:</span> {data.sublabel}
+        </div>
+      )}
+
+      {data.expr && (
+        <div className="mb-2">
+          <div className="text-xs text-muted uppercase mb-1">Expression</div>
+          <code className="text-xs font-mono bg-surface px-2 py-1 rounded block overflow-x-auto text-foreground">
+            {data.expr}
+          </code>
+        </div>
+      )}
+
+      {data.severity && (
+        <div className="mb-2">
+          <span className="text-xs text-muted uppercase">Severity: </span>
+          <span className={`text-xs font-semibold uppercase ${
+            data.severity === "critical" ? "text-red-600 dark:text-red-400" :
+            data.severity === "high" ? "text-orange-600 dark:text-orange-400" :
+            data.severity === "medium" ? "text-yellow-600 dark:text-yellow-400" :
+            "text-green-600 dark:text-green-400"
+          }`}>
+            {data.severity}
+          </span>
+        </div>
+      )}
+
+      {data.description && (
+        <div>
+          <div className="text-xs text-muted uppercase mb-1">Description</div>
+          <p className="text-sm text-foreground">{data.description}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
 export function DAGView({ outline }: DAGViewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const diagramId = useRef(`mermaid-${Date.now()}`);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
 
-  const mermaidCode = useMemo(() => {
-    if (!outline) return null;
-    return generateMermaidCode(outline);
+  // Generate a stable key based on outline content
+  const flowKey = useMemo(() => {
+    if (!outline) return "empty";
+    const signalNames = outline.signals.map(s => s.name).join(",");
+    const trendNames = outline.trends.map(t => t.name).join(",");
+    const logicNames = outline.logic.map(l => l.name).join(",");
+    return `${outline.scenario}-${signalNames}-${trendNames}-${logicNames}`;
   }, [outline]);
 
-  const showComplexWarning = useMemo(() => {
-    if (!outline) return false;
-    return hasComplexExpressions(outline);
+  const { layoutedNodes, layoutedEdges } = useMemo(() => {
+    if (!outline) return { layoutedNodes: [], layoutedEdges: [] };
+    const { nodes, edges } = buildGraph(outline);
+    return { layoutedNodes: nodes, layoutedEdges: edges };
   }, [outline]);
 
-  useEffect(() => {
-    async function renderDiagram() {
-      if (!containerRef.current || !mermaidCode) return;
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
-      try {
-        // Clear previous content
-        containerRef.current.innerHTML = "";
-
-        // Generate new ID for each render
-        diagramId.current = `mermaid-${Date.now()}`;
-
-        // Render the diagram
-        const { svg } = await mermaid.render(diagramId.current, mermaidCode);
-        containerRef.current.innerHTML = svg;
-
-        // Make SVG responsive
-        const svgElement = containerRef.current.querySelector("svg");
-        if (svgElement) {
-          svgElement.style.maxWidth = "100%";
-          svgElement.style.height = "auto";
-          svgElement.style.minHeight = "400px";
-        }
-      } catch (error) {
-        console.error("Mermaid render error:", error);
-        containerRef.current.innerHTML = `
-          <div class="text-red-400 p-4">
-            <p>Failed to render diagram</p>
-            <pre class="text-xs mt-2 text-gray-500">${error}</pre>
-          </div>
-        `;
-      }
+  // Update when outline changes
+  React.useEffect(() => {
+    if (outline) {
+      const { nodes: newNodes, edges: newEdges } = buildGraph(outline);
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } else {
+      setNodes([]);
+      setEdges([]);
     }
+  }, [outline, setNodes, setEdges]);
 
-    renderDiagram();
-  }, [mermaidCode]);
+  const onNodeMouseEnter: NodeMouseHandler = useCallback((event, node) => {
+    setHoveredNode(node);
+  }, []);
+
+  const onNodeMouseLeave: NodeMouseHandler = useCallback(() => {
+    setHoveredNode(null);
+  }, []);
 
   if (!outline) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400">
-        Validate a scenario to see the DAG visualization
+      <div className="h-full w-full flex items-center justify-center bg-surface/30" style={{ minHeight: '400px' }}>
+        <div className="text-center">
+          <svg className="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          </svg>
+          <p className="text-slate-500 dark:text-slate-400">Validate a scenario to see the DAG visualization</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Warning for complex expressions */}
-      {showComplexWarning && (
-        <div className="bg-amber-900/50 border-b border-amber-700 px-4 py-2 text-amber-200 text-sm flex items-center gap-2">
-          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <span>
-            Complex expressions detected. Gate structure may be approximate.
-            <a href="https://github.com/Chesterguan/PSDL/issues/6" target="_blank" rel="noopener noreferrer" className="underline ml-1 hover:text-amber-100">
-              See psdl-lang RFC #6
-            </a>
-          </span>
+    <div className="h-full w-full flex flex-col">
+      <div className="flex-1 flex" style={{ minHeight: "400px" }}>
+        {/* DAG Graph */}
+        <div className="flex-1" style={{ width: "100%", height: "100%" }}>
+          <ReactFlow
+            key={flowKey}
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            onNodeMouseEnter={onNodeMouseEnter}
+            onNodeMouseLeave={onNodeMouseLeave}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            minZoom={0.3}
+            maxZoom={2}
+            defaultEdgeOptions={{
+              type: "smoothstep",
+            }}
+            style={{ width: "100%", height: "100%" }}
+          >
+            <Background color={isDark ? "#374151" : "#d1d5db"} gap={20} size={1} />
+            <Controls
+              className="!bg-surface !border-border !shadow-lg"
+              showInteractive={false}
+            />
+            <MiniMap
+              className="!bg-surface !border-border"
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case "signal": return "#3b82f6";
+                  case "trend": return "#f59e0b";
+                  case "gate": return "#a855f7";
+                  case "logic": return "#22c55e";
+                  default: return "#6b7280";
+                }
+              }}
+              maskColor={isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.6)"}
+            />
+          </ReactFlow>
         </div>
-      )}
 
-      {/* Diagram */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-900"
-      />
-
-      {/* Legend */}
-      <div className="border-t border-gray-700 p-3 bg-gray-800 flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ background: "#dbeafe", border: "2px solid #3b82f6" }} />
-            <span className="text-gray-300">Signal</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ background: "#fef3c7", border: "2px solid #f59e0b" }} />
-            <span className="text-gray-300">Trend</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ background: "#e879f9", border: "2px solid #a855f7" }} />
-            <span className="text-gray-300">Gate (AND/OR)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ background: "#dcfce7", border: "2px solid #22c55e" }} />
-            <span className="text-gray-300">Logic</span>
-          </div>
-        </div>
-        <div className="text-gray-500 text-xs">
-          Signal → Trend → Gate → Logic
+        {/* Details Panel - Fixed position on the right */}
+        <div className="w-72 border-l border-border bg-surface p-3 overflow-auto flex-shrink-0">
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Node Details</h4>
+          <DetailsPanel node={hoveredNode} />
         </div>
       </div>
 
-      {/* Mermaid Code (collapsible for debugging) */}
-      <details className="border-t border-gray-700">
-        <summary className="p-2 text-xs text-gray-500 cursor-pointer hover:text-gray-300">
-          View Mermaid Code
-        </summary>
-        <pre className="p-3 bg-gray-950 text-xs text-gray-400 overflow-x-auto">
-          {mermaidCode}
-        </pre>
-      </details>
+      {/* Legend */}
+      <div className="border-t border-border p-3 bg-surface flex items-center justify-between text-sm flex-shrink-0">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-4 rounded bg-gradient-to-br from-blue-500/40 to-blue-600/50 border border-blue-400"
+                 style={{ transform: "skewX(-6deg)" }} />
+            <span className="text-foreground">Signal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-4 rounded-lg bg-gradient-to-br from-amber-500/40 to-orange-600/50 border border-amber-400" />
+            <span className="text-foreground">Trend</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gradient-to-br from-purple-500/40 to-pink-600/50 border border-purple-400"
+                 style={{ transform: "rotate(45deg)", borderRadius: "2px" }} />
+            <span className="text-foreground">Gate</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-4 bg-gradient-to-br from-green-500/40 to-emerald-600/50 border border-green-400"
+                 style={{ clipPath: "polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%)" }} />
+            <span className="text-foreground">Logic</span>
+          </div>
+        </div>
+        <div className="text-muted text-xs">
+          Hover nodes for details
+        </div>
+      </div>
     </div>
   );
 }
