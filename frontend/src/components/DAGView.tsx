@@ -523,11 +523,11 @@ export function DAGView({ outline }: DAGViewProps) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-surface/30" style={{ minHeight: '400px' }}>
         <div className="text-center">
-          <svg className="w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 mx-auto mb-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
           </svg>
-          <p className="text-slate-500 dark:text-slate-400">Validate a scenario to see the DAG visualization</p>
+          <p className="text-muted">Validate a scenario to see the DAG visualization</p>
         </div>
       </div>
     );

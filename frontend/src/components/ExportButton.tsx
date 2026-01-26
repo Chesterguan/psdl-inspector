@@ -31,12 +31,12 @@ export default function ExportButton({ exportData, scenarioName, isLoading }: Ex
       onClick={handleExport}
       disabled={!exportData || isLoading}
       className={`
-        flex items-center gap-2 px-4 py-2 rounded-lg font-medium
-        transition-colors duration-200
+        flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl font-medium text-sm
+        transition-all duration-200
         ${
           exportData && !isLoading
-            ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-            : 'bg-surface-hover text-muted cursor-not-allowed'
+            ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer shadow-sm hover:shadow-md'
+            : 'bg-surface-hover text-muted cursor-not-allowed border border-border'
         }
       `}
     >

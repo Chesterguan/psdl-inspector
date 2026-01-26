@@ -2,33 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light theme (default) */
+/* Import fonts - Source Code Pro for code, Inter for UI (clinical/technical) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap');
+
+/* Light theme - Clinical, high-contrast */
 :root {
   --background: #f8fafc;
+  --background-secondary: #ffffff;
+  --background-tertiary: #f1f5f9;
+  --background-elevated: #ffffff;
   --foreground: #0f172a;
+  --foreground-secondary: #475569;
   --surface: #ffffff;
   --surface-hover: #f1f5f9;
   --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
   --muted: #64748b;
-  --accent: #3b82f6;
+  --accent: #0369a1;
+  --accent-hover: #0284c7;
+  --accent-success: #047857;
+  --accent-warning: #b45309;
+  --accent-danger: #b91c1c;
+  --accent-cyan: #0e7490;
+  --accent-purple: #7c3aed;
+  --grid-opacity: 0;
+  --font-mono: 'Source Code Pro', 'SF Mono', 'Monaco', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Dark theme */
+/* Dark theme - Technical, high-fidelity, improved contrast */
 .dark {
-  --background: #030712;
-  --foreground: #f1f5f9;
-  --surface: #111827;
-  --surface-hover: #1f2937;
-  --border: #374151;
-  --muted: #9ca3af;
-  --accent: #60a5fa;
+  --background: #0d1117;
+  --background-secondary: #161b22;
+  --background-tertiary: #21262d;
+  --background-elevated: #21262d;
+  --foreground: #e6edf3;
+  --foreground-secondary: #b1bac4;
+  --surface: #161b22;
+  --surface-hover: #21262d;
+  --border: #30363d;
+  --border-subtle: #21262d;
+  --muted: #7d8590;
+  --accent: #58a6ff;
+  --accent-hover: #79c0ff;
+  --accent-success: #3fb950;
+  --accent-warning: #d29922;
+  --accent-danger: #f85149;
+  --accent-cyan: #39c5cf;
+  --accent-purple: #a371f7;
+  --grid-opacity: 0.02;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Workbench container - centered 80% width */
+.workbench {
+  width: 100%;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+@media (max-width: 1280px) {
+  .workbench {
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  .workbench {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 @layer utilities {
@@ -37,21 +91,261 @@ body {
   }
 }
 
-/* Custom scrollbar for dark mode */
-.dark ::-webkit-scrollbar {
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #1f2937;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+::-webkit-scrollbar-thumb {
+  background: var(--border);
   border-radius: 4px;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Focus ring styles */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--accent);
+}
+
+/* Button base styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.1s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground-secondary);
+}
+
+.btn-ghost:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+/* Card styles */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Input styles */
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--foreground);
+  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(3, 105, 161, 0.1);
+}
+
+.input::placeholder {
+  color: var(--muted);
+}
+
+/* Status colors */
+.status-success { color: var(--accent-success); }
+.status-warning { color: var(--accent-warning); }
+.status-danger { color: var(--accent-danger); }
+.status-info { color: var(--accent-cyan); }
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-success {
+  background: rgba(4, 120, 87, 0.1);
+  color: var(--accent-success);
+}
+
+.badge-warning {
+  background: rgba(180, 83, 9, 0.1);
+  color: var(--accent-warning);
+}
+
+.badge-danger {
+  background: rgba(185, 28, 28, 0.1);
+  color: var(--accent-danger);
+}
+
+.badge-info {
+  background: rgba(14, 116, 144, 0.1);
+  color: var(--accent-cyan);
+}
+
+/* Code/mono text */
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Typography hierarchy for dark mode readability */
+.dark .section-title {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.dark .section-number {
+  font-weight: 700;
+}
+
+.dark .form-label {
+  font-weight: 600;
+  color: var(--foreground-secondary);
+}
+
+.dark .form-input,
+.dark .form-textarea,
+.dark .form-select {
+  color: var(--foreground);
+  font-weight: 400;
+}
+
+.dark .form-input::placeholder,
+.dark .form-textarea::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Tab underline style */
+.tab-underline {
+  position: relative;
+}
+
+.dark .tab-underline {
+  font-weight: 600;
+}
+
+/* Improve muted text visibility in dark mode */
+.dark .text-muted {
+  color: var(--muted);
+}
+
+/* Rule cards in dark mode */
+.dark .rule-card {
+  background: var(--background-secondary);
+}
+
+/* Preview panel text */
+.dark .preview-panel {
+  color: var(--foreground);
+}
+
+/* Better contrast for secondary text */
+.dark .text-foreground-secondary {
+  color: var(--foreground-secondary);
+  font-weight: 500;
+}
+
+/* Section styles */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--foreground-secondary);
+}
+
+/* Builder section panels - external border only */
+.section-panel {
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .section-panel {
+  border-color: var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Preview panel - external border */
+.preview-panel {
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .preview-panel {
+  border-color: var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(3, 105, 161, 0.2);
+}
+
+.dark ::selection {
+  background: rgba(14, 165, 233, 0.3);
 }

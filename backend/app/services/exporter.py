@@ -2,6 +2,9 @@
 
 This is an Inspector-specific feature for governance/compliance.
 psdl-lang provides the IR, Inspector provides the audit packaging.
+
+Key addition: terminologyAnchors - OMOP vocabulary binding that enables
+portable execution across different sites with their own datasetSpec.
 """
 
 from __future__ import annotations
@@ -18,8 +21,10 @@ from app.models.schemas import (
     ValidationResult,
     ValidationError,
     AuditInfo,
+    TerminologyAnchors,
 )
 from app.services.parser import scenario_to_dict
+from app.services.terminology_anchoring import get_terminology_anchoring_service
 
 # Get versions
 try:
@@ -27,8 +32,8 @@ try:
 except Exception:
     PSDL_LANG_VERSION = "unknown"
 
-INSPECTOR_VERSION = "0.1.0"
-BUNDLE_VERSION = "1.0"
+INSPECTOR_VERSION = "0.2.0"
+BUNDLE_VERSION = "1.1"  # Added terminologyAnchors
 
 
 def generate_certified_bundle(
@@ -40,6 +45,7 @@ def generate_certified_bundle(
     provenance: Optional[str] = None,
     errors: Optional[list] = None,
     warnings: Optional[list] = None,
+    include_terminology_anchors: bool = True,
 ) -> CertifiedBundle:
     """Generate a Certified Audit Bundle from psdl-lang's PSDLScenario.
 
@@ -55,9 +61,10 @@ def generate_certified_bundle(
         provenance: Optional source reference (DOI, guideline)
         errors: Validation errors (empty if valid)
         warnings: Validation warnings
+        include_terminology_anchors: Whether to anchor refs to OMOP vocabulary
 
     Returns:
-        CertifiedBundle with full audit trail
+        CertifiedBundle with full audit trail and terminology anchors
     """
     # Generate checksum from raw YAML (not parsed, for integrity)
     checksum = hashlib.sha256(raw_yaml.encode('utf-8')).hexdigest()
@@ -73,6 +80,32 @@ def generate_certified_bundle(
         parsed=parsed_dict,
     )
 
+    # Generate terminology anchors (OMOP vocabulary binding)
+    terminology_anchors: Optional[TerminologyAnchors] = None
+    if include_terminology_anchors:
+        try:
+            anchoring_service = get_terminology_anchoring_service()
+            terminology_anchors = anchoring_service.anchor_scenario(scenario)
+
+            # Add warnings for unanchored refs
+            if terminology_anchors.unanchored_refs:
+                if warnings is None:
+                    warnings = []
+                for ref in terminology_anchors.unanchored_refs:
+                    warnings.append({
+                        "message": f"Unanchored terminology ref: '{ref}' - no OMOP concept match found. Sites must provide custom mapping in datasetSpec.",
+                        "severity": "warning",
+                        "path": f"signals.{ref}",
+                    })
+        except Exception as e:
+            # Don't fail bundle export if anchoring fails
+            if warnings is None:
+                warnings = []
+            warnings.append({
+                "message": f"Terminology anchoring failed: {str(e)}. Bundle exported without vocabulary binding.",
+                "severity": "warning",
+            })
+
     # Build validation result
     validation = ValidationResult(
         psdl_lang_version=PSDL_LANG_VERSION,
@@ -82,11 +115,11 @@ def generate_certified_bundle(
         warnings=[ValidationError(**w) if isinstance(w, dict) else w for w in (warnings or [])],
     )
 
-    # Build audit info (from request or extracted from scenario)
+    # Build audit info (from request, scenario, or raw YAML)
     audit = AuditInfo(
-        intent=intent or _extract_audit_field(scenario, 'intent'),
-        rationale=rationale or _extract_audit_field(scenario, 'rationale'),
-        provenance=provenance or _extract_audit_field(scenario, 'provenance'),
+        intent=intent or _extract_audit_field(scenario, 'intent', raw_yaml),
+        rationale=rationale or _extract_audit_field(scenario, 'rationale', raw_yaml),
+        provenance=provenance or _extract_audit_field(scenario, 'provenance', raw_yaml),
     )
 
     # Generate human-readable summary
@@ -97,20 +130,52 @@ def generate_certified_bundle(
         certified_at=datetime.now(timezone.utc).isoformat(),
         checksum=f"sha256:{checksum}",
         scenario=scenario_content,
+        terminology_anchors=terminology_anchors,
         validation=validation,
         audit=audit,
         summary=summary,
     )
 
 
-def _extract_audit_field(scenario: PSDLScenario, field: str) -> Optional[str]:
-    """Extract audit field from scenario if psdl-lang supports it.
+def _extract_audit_field(scenario: PSDLScenario, field: str, raw_yaml: Optional[str] = None) -> Optional[str]:
+    """Extract audit field from scenario or raw YAML.
 
-    Future: psdl-lang may add audit block support.
+    Tries multiple sources:
+    1. psdl-lang's parsed audit block (if supported)
+    2. Raw YAML parsing as fallback
     """
-    # Check if scenario has audit block (future psdl-lang feature)
+    # First try psdl-lang's parsed audit block
     if hasattr(scenario, 'audit') and scenario.audit:
-        return getattr(scenario.audit, field, None)
+        value = getattr(scenario.audit, field, None)
+        if value:
+            return value
+
+    # Fallback: parse from raw YAML
+    if raw_yaml:
+        return _extract_audit_from_yaml(raw_yaml, field)
+
+    return None
+
+
+def _extract_audit_from_yaml(raw_yaml: str, field: str) -> Optional[str]:
+    """Extract audit field directly from raw YAML.
+
+    This handles cases where psdl-lang doesn't parse the audit block.
+    """
+    import yaml
+    try:
+        parsed = yaml.safe_load(raw_yaml)
+        if parsed and isinstance(parsed, dict):
+            audit = parsed.get('audit', {})
+            if audit and isinstance(audit, dict):
+                value = audit.get(field)
+                if value:
+                    # Remove surrounding quotes if present
+                    if isinstance(value, str):
+                        return value.strip('"\'')
+                    return str(value)
+    except Exception:
+        pass
     return None
 
 
@@ -221,6 +286,46 @@ def _generate_summary(scenario: PSDLScenario, format: str) -> str:
                 lines.append("  Exclude:")
                 for criterion in scenario.population.exclude:
                     lines.append(f"    - {criterion}")
+
+    return "\n".join(lines)
+
+
+def _generate_anchors_summary(terminology_anchors: Optional[TerminologyAnchors], format: str) -> str:
+    """Generate a summary of terminology anchors for the bundle summary."""
+    if not terminology_anchors:
+        return ""
+
+    lines = []
+
+    if format == "markdown":
+        lines.append("## Terminology Anchors")
+        lines.append("")
+        lines.append(f"**Anchored**: {terminology_anchors.anchored_count}/{terminology_anchors.total_refs} refs")
+        lines.append("")
+
+        if terminology_anchors.anchors:
+            lines.append("| Ref | OMOP Concept | Code | Confidence |")
+            lines.append("|-----|--------------|------|------------|")
+            for ref, anchor in terminology_anchors.anchors.items():
+                concept = anchor.concept_name or "-"
+                code = f"{anchor.vocabulary_id}:{anchor.concept_code}" if anchor.concept_code else "-"
+                lines.append(f"| {ref} | {concept} | {code} | {anchor.match_confidence} |")
+
+        if terminology_anchors.unanchored_refs:
+            lines.append("")
+            lines.append("**Unanchored refs** (require custom mapping in datasetSpec):")
+            for ref in terminology_anchors.unanchored_refs:
+                lines.append(f"- {ref}")
+    else:
+        lines.append("")
+        lines.append("TERMINOLOGY ANCHORS:")
+        lines.append(f"  Anchored: {terminology_anchors.anchored_count}/{terminology_anchors.total_refs}")
+
+        for ref, anchor in terminology_anchors.anchors.items():
+            if anchor.concept_id:
+                lines.append(f"  - {ref}: {anchor.concept_name} (ID: {anchor.concept_id}, {anchor.match_confidence})")
+            else:
+                lines.append(f"  - {ref}: UNANCHORED")
 
     return "\n".join(lines)
 

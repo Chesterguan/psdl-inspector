@@ -12,6 +12,7 @@ interface GeneratedResult {
 
 interface GenerationPanelProps {
   onUseGenerated: (result: GeneratedResult) => void;
+  onContinue?: (yaml: string) => void;
 }
 
 interface ProviderStatus {
@@ -39,7 +40,7 @@ const PHASE_MESSAGES: Record<GenerationPhase, string> = {
   error: 'Generation failed',
 };
 
-export default function GenerationPanel({ onUseGenerated }: GenerationPanelProps) {
+export default function GenerationPanel({ onUseGenerated, onContinue }: GenerationPanelProps) {
   const [prompt, setPrompt] = useState('');
   const [clinicalContext, setClinicalContext] = useState('');
   const [showContext, setShowContext] = useState(false);
@@ -66,12 +67,10 @@ export default function GenerationPanel({ onUseGenerated }: GenerationPanelProps
       const data = await resp.json();
       setStatus(data);
 
-      // Set default provider based on availability
       if (data.default_provider) {
         setProvider(data.default_provider as Provider);
       }
 
-      // Set default Ollama model if available
       if (!selectedOllamaModel && data.ollama?.model) {
         setSelectedOllamaModel(data.ollama.model);
       }
@@ -88,9 +87,8 @@ export default function GenerationPanel({ onUseGenerated }: GenerationPanelProps
   useEffect(() => {
     checkStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only check status on mount
+  }, []);
 
-  // Timer for elapsed time during generation
   useEffect(() => {
     if (isGenerating) {
       setElapsedTime(0);
@@ -203,110 +201,101 @@ export default function GenerationPanel({ onUseGenerated }: GenerationPanelProps
   const contextWarning = contextCharCount > 10000;
 
   return (
-    <div className="h-full overflow-auto p-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Sparkles className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
-          AI-Assisted Generation
-        </div>
-        <button
-          onClick={checkStatus}
-          className="p-1 hover:bg-surface-hover rounded"
-          title="Refresh status"
-          disabled={isGenerating}
-        >
-          <RefreshCw className="w-4 h-4 text-muted" />
-        </button>
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px] gap-6">
+      {/* Left: Generation Form */}
+      <div className="space-y-4">
+        {/* Section 1: Provider */}
+        <div className="section-panel bg-background-secondary rounded-lg overflow-hidden">
+          <div className="section-header flex items-center justify-between px-4 py-3 bg-background-tertiary">
+            <div className="flex items-center gap-3">
+              <span className="section-number w-7 h-7 flex items-center justify-center bg-accent-cyan/20 rounded font-mono text-sm font-bold text-accent-cyan">01</span>
+              <span className="section-title text-sm font-semibold text-foreground">Provider Selection</span>
+            </div>
+            <button
+              onClick={checkStatus}
+              className="p-1.5 hover:bg-background rounded transition-colors"
+              title="Refresh status"
+              disabled={isGenerating}
+            >
+              <RefreshCw className="w-4 h-4 text-foreground-secondary" />
+            </button>
+          </div>
+          <div className="section-body px-4 py-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* OpenAI Button */}
+              <button
+                onClick={() => setProvider('openai')}
+                disabled={isGenerating || !status?.openai.available}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  provider === 'openai'
+                    ? 'bg-accent text-white'
+                    : 'bg-background hover:bg-background-tertiary text-foreground'
+                } ${!status?.openai.available ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <Cloud className="w-4 h-4" />
+                OpenAI
+                {status?.openai.available && status.openai.model && (
+                  <span className="text-xs opacity-70">{status.openai.model}</span>
+                )}
+              </button>
 
-      {/* Provider Selector */}
-      <div className="flex items-center gap-2 p-3 bg-surface-hover rounded-lg">
-        <span className="text-sm text-muted">Provider:</span>
-        <div className="flex gap-2">
-          {/* OpenAI Button */}
-          <button
-            onClick={() => setProvider('openai')}
-            disabled={isGenerating || !status?.openai.available}
-            className={`
-              flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-              ${provider === 'openai'
-                ? 'bg-blue-600 text-white'
-                : 'bg-surface hover:bg-border text-foreground'}
-              ${!status?.openai.available ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-          >
-            <Cloud className="w-4 h-4" />
-            OpenAI
-            {status?.openai.available && (
-              <span className="text-xs opacity-70">{status.openai.model}</span>
-            )}
-          </button>
+              {/* Ollama Button */}
+              <button
+                onClick={() => setProvider('ollama')}
+                disabled={isGenerating || !status?.ollama.available}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  provider === 'ollama'
+                    ? 'bg-accent-success text-white'
+                    : 'bg-background hover:bg-background-tertiary text-foreground'
+                } ${!status?.ollama.available ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <Server className="w-4 h-4" />
+                Ollama
+              </button>
 
-          {/* Ollama Button */}
-          <button
-            onClick={() => setProvider('ollama')}
-            disabled={isGenerating || !status?.ollama.available}
-            className={`
-              flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-              ${provider === 'ollama'
-                ? 'bg-green-600 text-white'
-                : 'bg-surface hover:bg-border text-foreground'}
-              ${!status?.ollama.available ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-          >
-            <Server className="w-4 h-4" />
-            Ollama
-          </button>
-        </div>
+              {/* Ollama Model Selector */}
+              {provider === 'ollama' && status?.ollama.available && status.ollama.models && status.ollama.models.length > 0 && (
+                <select
+                  value={selectedOllamaModel || ''}
+                  onChange={(e) => setSelectedOllamaModel(e.target.value)}
+                  className="px-3 py-2.5 bg-background rounded-md text-foreground text-sm cursor-pointer outline-none focus:ring-2 focus:ring-accent/30"
+                  disabled={isGenerating}
+                >
+                  {status.ollama.models.map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+              )}
 
-        {/* Ollama Model Selector (shown when Ollama is selected) */}
-        {provider === 'ollama' && status?.ollama.available && status.ollama.models && status.ollama.models.length > 0 && (
-          <select
-            value={selectedOllamaModel || ''}
-            onChange={(e) => setSelectedOllamaModel(e.target.value)}
-            className="text-sm bg-surface border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-green-500"
-            disabled={isGenerating}
-          >
-            {status.ollama.models.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
-        )}
+              {/* Status Indicators */}
+              <div className="ml-auto flex items-center gap-3 text-xs">
+                {status?.openai.available ? (
+                  <span className="text-accent-success flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> OpenAI
+                  </span>
+                ) : (
+                  <span className="text-foreground-secondary flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> OpenAI
+                  </span>
+                )}
+                {status?.ollama.available ? (
+                  <span className="text-accent-success flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> Ollama
+                  </span>
+                ) : (
+                  <span className="text-foreground-secondary flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> Ollama
+                  </span>
+                )}
+              </div>
+            </div>
 
-        {/* Status Indicators */}
-        <div className="ml-auto flex items-center gap-2 text-xs">
-          {status?.openai.available ? (
-            <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" /> OpenAI
-            </span>
-          ) : (
-            <span className="text-muted flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> OpenAI
-            </span>
-          )}
-          {status?.ollama.available ? (
-            <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" /> Ollama
-            </span>
-          ) : (
-            <span className="text-muted flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> Ollama
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* No Provider Available Warning */}
-      {status && !status.available && (
-        <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 text-sm">
-          <h4 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">No LLM Provider Available</h4>
-          <p className="text-yellow-700 dark:text-yellow-200/80 mb-2">
-            Configure at least one provider:
-          </p>
-          <pre className="bg-surface p-2 rounded text-xs text-foreground overflow-x-auto">
+            {/* No Provider Warning */}
+            {status && !status.available && (
+              <div className="mt-4 p-4 bg-accent-warning/10 rounded-lg border border-accent-warning/20">
+                <h4 className="font-semibold text-accent-warning text-sm mb-2">No LLM Provider Available</h4>
+                <p className="text-foreground-secondary text-sm mb-3">Configure at least one provider:</p>
+                <pre className="bg-background p-3 rounded text-xs text-foreground font-mono overflow-x-auto">
 {`# Option 1: OpenAI (recommended)
 export OPENAI_API_KEY="sk-..."
 
@@ -314,230 +303,262 @@ export OPENAI_API_KEY="sk-..."
 brew install ollama
 ollama serve
 ollama pull mistral-small`}
-          </pre>
+                </pre>
+              </div>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Prompt Input */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          Describe your clinical scenario
-        </label>
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Example: Detect early sepsis in ICU patients using temperature, heart rate, respiratory rate, and white blood cell count. Alert when multiple SIRS criteria are met."
-          className="w-full h-28 px-3 py-2 bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          disabled={!status?.available || isGenerating}
-        />
-      </div>
-
-      {/* Clinical Context (Collapsible) */}
-      <div className="border border-border rounded-lg overflow-hidden">
-        <button
-          onClick={() => setShowContext(!showContext)}
-          className="w-full flex items-center justify-between px-3 py-2 bg-surface-hover hover:bg-border transition-colors text-sm"
-          disabled={isGenerating}
-        >
-          <div className="flex items-center gap-2 text-foreground">
-            <BookOpen className="w-4 h-4" />
-            <span>Clinical Context (Optional)</span>
-            {clinicalContext.trim() && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">
-                {contextCharCount.toLocaleString()} chars
-              </span>
-            )}
+        {/* Section 2: Prompt */}
+        <div className="section-panel bg-background-secondary rounded-lg overflow-hidden">
+          <div className="section-header flex items-center gap-3 px-4 py-3 bg-background-tertiary">
+            <span className="section-number w-7 h-7 flex items-center justify-center bg-accent-cyan/20 rounded font-mono text-sm font-bold text-accent-cyan">02</span>
+            <span className="section-title text-sm font-semibold text-foreground">Scenario Description</span>
           </div>
-          {showContext ? (
-            <ChevronDown className="w-4 h-4 text-muted" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-muted" />
-          )}
-        </button>
-        {showContext && (
-          <div className="p-3 space-y-2">
-            <p className="text-xs text-muted">
-              Paste clinical guidelines, diagnostic criteria, or reference text to improve accuracy.
-              The LLM will use these definitions for correct thresholds.
-            </p>
+          <div className="section-body px-4 py-4">
+            <label className="form-label block text-sm font-semibold text-foreground-secondary mb-2">
+              Describe your clinical scenario
+            </label>
             <textarea
-              value={clinicalContext}
-              onChange={(e) => setClinicalContext(e.target.value)}
-              placeholder={`Example:
-KDIGO AKI Criteria:
-- Stage 1: Serum creatinine increase ≥0.3 mg/dL within 48h OR ≥1.5x baseline within 7 days
-- Stage 2: Serum creatinine ≥2.0x baseline
-- Stage 3: Serum creatinine ≥3.0x baseline OR ≥4.0 mg/dL OR initiation of RRT
-
-Leukopenia Definition:
-- WBC < 4.0 x10^9/L (or < 4000/µL)`}
-              className="w-full h-32 px-3 py-2 bg-surface border border-border rounded text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm font-mono"
-              disabled={isGenerating}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Example: Detect early sepsis in ICU patients using temperature, heart rate, respiratory rate, and white blood cell count. Alert when multiple SIRS criteria are met."
+              className="w-full h-32 px-3 py-3 bg-background rounded-md text-foreground text-sm placeholder:text-muted/50 focus:ring-2 focus:ring-accent/30 outline-none resize-none transition-all"
+              disabled={!status?.available || isGenerating}
             />
-            {contextWarning && (
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                Large context may slow generation. Consider summarizing key criteria only.
-              </p>
-            )}
+
+            {/* Example Prompts */}
+            <div className="mt-3">
+              <span className="text-xs font-semibold text-foreground-secondary">Quick examples:</span>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  'Detect AKI using creatinine rise over 48 hours',
+                  'Monitor for sepsis using SIRS criteria',
+                  'Alert on critical potassium levels',
+                ].map((example) => (
+                  <button
+                    key={example}
+                    onClick={() => setPrompt(example)}
+                    disabled={!status?.available || isGenerating}
+                    className="px-2.5 py-1.5 text-xs bg-background hover:bg-background-tertiary text-foreground-secondary hover:text-foreground rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Generate Button & Status */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleGenerate}
-          disabled={!canGenerate}
-          className={`
-            flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors
-            ${canGenerate
-              ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-              : 'bg-surface-hover text-muted cursor-not-allowed'
-            }
-          `}
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {PHASE_MESSAGES[phase]}
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Generate Scenario
-            </>
-          )}
-        </button>
-
-        {/* Status Indicator */}
-        {isGenerating && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted">{formatTime(elapsedTime)}</span>
-            <span className="text-muted">|</span>
-            <span className="text-blue-600 dark:text-blue-400">{phaseDetail}</span>
-          </div>
-        )}
-        {!isGenerating && phase === 'done' && (
-          <span className="text-sm text-green-600 dark:text-green-400">{phaseDetail}</span>
-        )}
-        {!isGenerating && phase === 'error' && (
-          <span className="text-sm text-red-600 dark:text-red-400">{phaseDetail}</span>
-        )}
-      </div>
-
-      {/* Generated Output */}
-      {generatedYaml && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Generated PSDL</span>
-              {attempts > 1 && (
-                <span className="text-xs text-muted bg-surface-hover px-2 py-0.5 rounded">
-                  {attempts} attempts
-                </span>
-              )}
-              {elapsedTime > 0 && (
-                <span className="text-xs text-muted">
-                  in {formatTime(elapsedTime)}
+        {/* Section 3: Clinical Context (Collapsible) */}
+        <div className="section-panel bg-background-secondary rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowContext(!showContext)}
+            className="w-full section-header flex items-center justify-between px-4 py-3 bg-background-tertiary hover:bg-background-tertiary/80 transition-colors"
+            disabled={isGenerating}
+          >
+            <div className="flex items-center gap-3">
+              <span className="section-number w-7 h-7 flex items-center justify-center bg-accent-cyan/20 rounded font-mono text-sm font-bold text-accent-cyan">03</span>
+              <BookOpen className="w-4 h-4 text-foreground-secondary" />
+              <span className="section-title text-sm font-semibold text-foreground">Clinical Context</span>
+              <span className="text-xs text-foreground-secondary">(Optional)</span>
+              {clinicalContext.trim() && (
+                <span className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded">
+                  {contextCharCount.toLocaleString()} chars
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            {showContext ? (
+              <ChevronDown className="w-4 h-4 text-foreground-secondary" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-foreground-secondary" />
+            )}
+          </button>
+          {showContext && (
+            <div className="section-body px-4 pb-4">
+              <p className="text-xs text-foreground-secondary mb-3">
+                Paste clinical guidelines, diagnostic criteria, or reference text to improve accuracy.
+              </p>
+              <textarea
+                value={clinicalContext}
+                onChange={(e) => setClinicalContext(e.target.value)}
+                placeholder={`Example:
+KDIGO AKI Criteria:
+- Stage 1: Serum creatinine increase >= 0.3 mg/dL within 48h
+- Stage 2: Serum creatinine >= 2.0x baseline
+- Stage 3: Serum creatinine >= 3.0x baseline`}
+                className="w-full h-36 px-3 py-3 bg-background rounded-md text-foreground text-sm font-mono placeholder:text-muted/50 focus:ring-2 focus:ring-accent/30 outline-none resize-none transition-all"
+                disabled={isGenerating}
+              />
+              {contextWarning && (
+                <p className="mt-2 text-xs text-accent-warning flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Large context may slow generation. Consider summarizing key criteria only.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Generate Button */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleGenerate}
+            disabled={!canGenerate}
+            className={`flex items-center gap-2 px-5 py-3 rounded-lg font-medium text-sm transition-colors ${
+              canGenerate
+                ? 'bg-accent-purple hover:bg-accent-purple/90 text-white cursor-pointer'
+                : 'bg-background-tertiary text-muted cursor-not-allowed'
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {PHASE_MESSAGES[phase]}
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate Scenario
+              </>
+            )}
+          </button>
+
+          {/* Status */}
+          {isGenerating && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-foreground-secondary font-mono">{formatTime(elapsedTime)}</span>
+              <span className="text-foreground-secondary">|</span>
+              <span className="text-accent">{phaseDetail}</span>
+            </div>
+          )}
+          {!isGenerating && phase === 'done' && (
+            <span className="text-sm text-accent-success">{phaseDetail}</span>
+          )}
+          {!isGenerating && phase === 'error' && (
+            <span className="text-sm text-accent-danger">{phaseDetail}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Right: Preview Panel */}
+      <div className="preview-panel bg-background-secondary rounded-lg sticky top-20 max-h-[calc(100vh-120px)] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-3 flex items-center justify-between border-b border-border/30">
+          <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Generated Output</span>
+          {generatedYaml && (
+            <div className="flex items-center gap-2">
               {isValid ? (
-                <span className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Valid
+                <span className="flex items-center gap-1 text-accent-success text-xs font-medium">
+                  <CheckCircle className="w-3.5 h-3.5" /> Valid
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.length} issue{errors.length !== 1 ? 's' : ''}
+                <span className="flex items-center gap-1 text-accent-warning text-xs font-medium">
+                  <AlertCircle className="w-3.5 h-3.5" /> {errors.length} issue{errors.length !== 1 ? 's' : ''}
                 </span>
               )}
-              <button
-                onClick={handleUseThis}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors"
-              >
-                Use This
-              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {!generatedYaml && !isGenerating && (
+            <div className="h-full flex flex-col items-center justify-center text-center py-12">
+              <Sparkles className="w-10 h-10 text-accent-purple/30 mb-4" />
+              <p className="text-sm text-foreground-secondary">Describe a scenario and click Generate</p>
+              <p className="text-xs text-muted mt-1">The AI will create PSDL for you</p>
+            </div>
+          )}
+
+          {isGenerating && (
+            <div className="h-full flex flex-col items-center justify-center text-center py-12">
+              <Loader2 className="w-10 h-10 text-accent-purple animate-spin mb-4" />
+              <p className="text-sm text-foreground">{PHASE_MESSAGES[phase]}</p>
+              <p className="text-xs text-foreground-secondary mt-1">{phaseDetail}</p>
+            </div>
+          )}
+
+          {generatedYaml && (
+            <div className="space-y-4">
+              {/* Meta info */}
+              <div className="flex items-center gap-3 text-xs text-foreground-secondary">
+                {attempts > 1 && (
+                  <span className="bg-background px-2 py-1 rounded">{attempts} attempts</span>
+                )}
+                {elapsedTime > 0 && (
+                  <span>Generated in {formatTime(elapsedTime)}</span>
+                )}
+              </div>
+
+              {/* YAML Preview */}
+              <pre className="bg-background rounded-lg p-3 font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap text-foreground-secondary max-h-[300px] overflow-y-auto">
+                {generatedYaml}
+              </pre>
+
+              {/* Errors */}
+              {errors.length > 0 && (
+                <div className="p-3 bg-accent-danger/10 rounded-lg border border-accent-danger/20">
+                  <h4 className="text-xs font-semibold text-accent-danger mb-2">Errors</h4>
+                  <ul className="text-xs text-accent-danger space-y-1">
+                    {errors.map((e, i) => (
+                      <li key={i}>- {e}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Warnings */}
+              {warnings.length > 0 && (
+                <div className="p-3 bg-accent-warning/10 rounded-lg border border-accent-warning/20">
+                  <h4 className="text-xs font-semibold text-accent-warning mb-2">Warnings</h4>
+                  <ul className="text-xs text-accent-warning space-y-1">
+                    {warnings.map((w, i) => (
+                      <li key={i}>- {w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        {generatedYaml && (
+          <div className="flex flex-col gap-2 p-3 border-t border-border/30">
+            <div className="flex gap-2">
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="px-3 py-1.5 bg-surface-hover hover:bg-border text-foreground rounded text-sm font-medium transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 px-3 bg-background hover:bg-background-tertiary text-foreground text-sm font-medium rounded-md transition-colors disabled:opacity-50"
               >
-                Retry
+                Regenerate
+              </button>
+              <button
+                onClick={handleUseThis}
+                className="flex-1 py-2.5 px-3 bg-background hover:bg-background-tertiary text-foreground text-sm font-medium rounded-md transition-colors"
+              >
+                Edit in YAML
               </button>
             </div>
+            {isValid && onContinue && (
+              <button
+                onClick={() => onContinue(generatedYaml)}
+                className="w-full py-2.5 px-3 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-md transition-colors"
+              >
+                Continue to Preview
+              </button>
+            )}
           </div>
+        )}
 
-          <pre className="p-4 bg-surface border border-border rounded-lg text-sm text-foreground overflow-auto max-h-72 font-mono">
-            {generatedYaml}
-          </pre>
-
-          {/* Validation Issues */}
-          {errors.length > 0 && (
-            <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800/50 rounded-lg p-3">
-              <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Errors</h4>
-              <ul className="text-sm text-red-600 dark:text-red-300/80 space-y-1">
-                {errors.map((e, i) => (
-                  <li key={i}>• {e}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {warnings.length > 0 && (
-            <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800/50 rounded-lg p-3">
-              <h4 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-1">Warnings</h4>
-              <ul className="text-sm text-yellow-600 dark:text-yellow-300/80 space-y-1">
-                {warnings.map((w, i) => (
-                  <li key={i}>• {w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Error Display (generation errors) */}
-      {!generatedYaml && !isGenerating && errors.length > 0 && (
-        <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">
-          {errors.map((e, i) => (
-            <div key={i}>• {e}</div>
-          ))}
-        </div>
-      )}
-
-      {/* Info Box */}
-      <div className="bg-blue-100 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-300 dark:border-blue-800/50 text-sm">
-        <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-1">How it works</h4>
-        <p className="text-blue-600 dark:text-blue-200/80">
-          Describe what clinical condition you want to detect. Choose OpenAI (fast, accurate) or
-          Ollama (local, private). Optionally paste clinical guidelines for accurate thresholds.
-          The AI generates PSDL and auto-corrects validation errors.
-        </p>
-      </div>
-
-      {/* Example Prompts */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-medium text-muted">Example prompts:</h4>
-        <div className="flex flex-wrap gap-2">
-          {[
-            'Detect AKI using creatinine rise over 48 hours',
-            'Monitor for sepsis using SIRS criteria',
-            'Alert on critical potassium levels',
-            'Track blood pressure trends for hypertension',
-          ].map((example) => (
-            <button
-              key={example}
-              onClick={() => setPrompt(example)}
-              disabled={!status?.available || isGenerating}
-              className="px-2 py-1 text-xs bg-surface-hover hover:bg-border text-foreground rounded border border-border transition-colors disabled:opacity-50"
-            >
-              {example}
-            </button>
-          ))}
+        {/* Info */}
+        <div className="px-4 pb-4">
+          <div className="p-3 bg-accent/5 rounded-lg border border-accent/10">
+            <p className="text-xs text-foreground-secondary">
+              <span className="font-semibold text-accent">Tip:</span> Add clinical context for more accurate thresholds
+            </p>
+          </div>
         </div>
       </div>
     </div>

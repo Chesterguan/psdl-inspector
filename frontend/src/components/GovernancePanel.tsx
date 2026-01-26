@@ -103,7 +103,7 @@ export default function GovernancePanel({
             transition-colors duration-200
             ${
               outline && !isExporting
-                ? 'bg-purple-600 hover:bg-purple-700 text-white cursor-pointer'
+                ? 'bg-accent-purple hover:bg-accent-purple/90 text-white cursor-pointer'
                 : 'bg-surface-hover text-muted cursor-not-allowed'
             }
           `}
@@ -242,7 +242,7 @@ export default function GovernancePanel({
             transition-colors duration-200
             ${
               outline && !isExporting
-                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                ? 'bg-accent hover:bg-accent-hover text-white cursor-pointer'
                 : 'bg-surface-hover text-muted cursor-not-allowed'
             }
           `}

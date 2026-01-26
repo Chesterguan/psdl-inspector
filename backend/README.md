@@ -38,14 +38,23 @@ app/
 │   ├── validate.py            # Validation endpoints
 │   ├── outline.py             # Semantic outline endpoints
 │   ├── export.py              # Export endpoints
-│   └── generate.py            # AI generation endpoints
+│   ├── generate.py            # AI generation endpoints
+│   └── vocabulary.py          # Vocabulary search endpoints
 └── services/
     ├── parser.py              # psdl-lang wrapper
     ├── validator.py           # Validation logic
     ├── exporter.py            # Certified bundle generation
     ├── docx_exporter.py       # Word document generation
     ├── openai_service.py      # OpenAI GPT integration
-    └── ollama_service.py      # Local Ollama integration
+    ├── ollama_service.py      # Local Ollama integration
+    ├── terminology_anchoring.py  # OMOP vocabulary binding
+    ├── vocabulary.py          # Vocabulary lookup service
+    └── vocabulary_search/     # Modular semantic search
+        ├── base.py            # Abstract interfaces
+        ├── embedders.py       # MiniLM, SapBERT, BioLORD, OpenAI
+        ├── retrievers.py      # FAISS, NumPy, HNSW
+        ├── rerankers.py       # Rules, String similarity, Hybrid
+        └── factory.py         # Configuration & factory
 ```
 
 ## Environment Variables
@@ -53,6 +62,11 @@ app/
 ```bash
 # OpenAI API (optional - for AI generation)
 OPENAI_API_KEY=sk-your-key-here
+
+# Vocabulary Search Configuration (optional)
+VOCAB_SEARCH_EMBEDDER=minilm    # minilm, sapbert, biolord, openai
+VOCAB_SEARCH_RETRIEVER=faiss    # faiss, numpy, hnsw
+VOCAB_SEARCH_RERANKER=rules     # none, rules, string, hybrid
 ```
 
 Create a `.env` file from the template:
@@ -106,4 +120,4 @@ ollama pull mistral-small
 
 The backend allows requests from the frontend dev server at `http://localhost:9806`.
 
-*Updated: 2025-12-17*
+*Updated: 2026-01-26*

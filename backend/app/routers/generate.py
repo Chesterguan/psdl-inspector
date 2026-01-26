@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from app.models.schemas import GenerateRequest, GenerateResponse
+from app.models.schemas import GenerateRequest, GenerateResponse, EnrichmentSummary, EnrichmentDetail
 from app.services.ollama_service import ollama_service
 from app.services.openai_service import openai_service
 from app.services.validator import validate_scenario
+from app.services.vocab_enrichment import vocab_enrichment_service
 
 router = APIRouter()
 
@@ -119,12 +120,55 @@ async def generate_scenario(request: GenerateRequest):
             # Re-validate
             scenario, errors, warnings = validate_scenario(generated_yaml)
 
+        # Enrich with vocabulary data if validation passed
+        enrichment_summary = None
+        if len(errors) == 0:
+            try:
+                enriched_yaml, enrichments = vocab_enrichment_service.enrich_yaml(generated_yaml)
+                generated_yaml = enriched_yaml
+
+                # Build enrichment summary
+                summary = vocab_enrichment_service.get_enrichment_summary(enrichments)
+                enrichment_summary = EnrichmentSummary(
+                    total_signals=summary["total_signals"],
+                    matched=summary["matched"],
+                    unmatched=summary["unmatched"],
+                    success_rate=summary["success_rate"],
+                    details=[
+                        EnrichmentDetail(
+                            signal=d.get("signal", ""),
+                            ref=d.get("ref", ""),
+                            matched_concept=d.get("matched_concept"),
+                            concept_id=d.get("concept_id"),
+                            concept_code=d.get("concept_code"),
+                            vocabulary_id=d.get("vocabulary_id"),
+                            unit=d.get("unit"),
+                            error=d.get("error"),
+                        )
+                        for d in summary["details"]
+                    ]
+                )
+            except Exception as enrich_error:
+                # Don't fail generation if enrichment fails - just skip it
+                enrichment_summary = EnrichmentSummary(
+                    total_signals=0,
+                    matched=0,
+                    unmatched=0,
+                    success_rate=0.0,
+                    details=[EnrichmentDetail(
+                        signal="",
+                        ref="",
+                        error=f"Enrichment failed: {str(enrich_error)}"
+                    )]
+                )
+
         return GenerateResponse(
             yaml=generated_yaml,
             valid=len(errors) == 0,
             errors=[e.message for e in errors],
             warnings=[w.message for w in warnings],
             attempts=attempts,
+            enrichment=enrichment_summary,
         )
     except HTTPException:
         raise

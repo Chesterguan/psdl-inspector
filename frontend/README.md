@@ -40,7 +40,7 @@ src/
 │   ├── layout.tsx        # Root layout with theme provider
 │   └── globals.css       # Global styles + CSS variables
 ├── components/
-│   ├── Editor.tsx        # CodeMirror YAML editor
+│   ├── Editor.tsx        # CodeMirror YAML editor with template & line numbers
 │   ├── GenerationPanel.tsx # AI scenario generation
 │   ├── ValidationPanel.tsx # Validation display
 │   ├── OutlineTree.tsx   # Semantic tree view
@@ -50,7 +50,15 @@ src/
 │   ├── ExportButton.tsx  # Bundle download
 │   ├── CanonicalView.tsx # Canonical summary
 │   ├── ThemeToggle.tsx   # Dark/light mode
-│   └── Logo.tsx          # SVG logo
+│   ├── WelcomeGuide.tsx  # First-time user onboarding
+│   ├── Logo.tsx          # SVG logo
+│   └── builder/          # Visual Builder components (v0.2.0)
+│       ├── BuilderPanel.tsx
+│       ├── SignalStep.tsx
+│       ├── TrendStep.tsx
+│       ├── LogicStep.tsx
+│       ├── OutputStep.tsx
+│       └── AuditStep.tsx
 ├── context/
 │   └── ThemeContext.tsx  # Theme state management
 └── lib/
@@ -69,6 +77,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8200
 ### Wizard Workflow
 3-step process: Input → Preview → Export
 
+### Input Modes (v0.2.0)
+- **Builder**: Visual scenario builder with guided workflow
+- **Generate**: AI-assisted generation (OpenAI/Ollama)
+- **Editor**: Manual YAML editing with template and line numbers
+
 ### AI Generation
 - OpenAI GPT-4o-mini integration
 - Local Ollama support
@@ -81,10 +94,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8200
 - Severity-based coloring
 - Hover details panel
 
-### Theme Support
-- Light and dark modes
+### User Experience
+- Welcome guide for first-time users
+- Light and dark theme modes
 - CSS custom properties for colors
-- Persistent preference
+- Persistent theme preference
 
 ## API Integration
 
@@ -98,4 +112,4 @@ The frontend connects to the FastAPI backend at `/api/*`:
 - `POST /api/export/bundle` - Certified bundle
 - `POST /api/export/irb-document` - Word export
 
-*Updated: 2025-12-17*
+*Updated: 2026-01-26*

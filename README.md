@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Chesterguan/psdl-inspector"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
+  <a href="https://github.com/Chesterguan/psdl-inspector"><img src="https://img.shields.io/badge/version-0.2.0-blue.svg" alt="Version"></a>
   <a href="https://pypi.org/project/psdl-lang/"><img src="https://img.shields.io/badge/psdl--lang-0.3.1-green.svg" alt="psdl-lang"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey.svg" alt="License"></a>
   <a href="https://zread.ai/Chesterguan/psdl-inspector" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
@@ -30,11 +30,12 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 ## Compatibility
 
-| Inspector Version | psdl-lang Version | PSDL Spec | Status |
-|-------------------|-------------------|-----------|--------|
-| 0.1.x | 0.3.1 | 0.3 | **Current** |
-| - | 0.2.x | 0.2 | Not supported |
-| - | < 0.2 | - | Not supported |
+| Inspector Version | psdl-lang Version | PSDL Spec | Bundle Version | Status |
+|-------------------|-------------------|-----------|----------------|--------|
+| 0.2.x | 0.3.1 | 0.3 | 1.1 | **Current** |
+| 0.1.x | 0.3.1 | 0.3 | 1.0 | Maintained |
+| - | 0.2.x | 0.2 | - | Not supported |
+| - | < 0.2 | - | - | Not supported |
 
 > **Note**: PSDL Inspector requires psdl-lang 0.3.x. The psdl-lang library provides parsing, validation, and IR generation that Inspector builds upon.
 
@@ -42,11 +43,13 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 | Feature | Description |
 |---------|-------------|
+| **Build** | Visual scenario builder with guided workflow and OMOP vocabulary search |
 | **Generate** | AI-assisted scenario creation with OpenAI or local Ollama |
 | **Validate** | Real-time syntax and semantic validation via psdl-lang |
 | **Visualize** | Interactive DAG view with ReactFlow (signal → trend → logic) |
 | **Outline** | Semantic tree navigation of scenario structure |
-| **Bundle** | Generate checksummed certified bundles |
+| **Anchor** | Automatic terminology binding to OMOP vocabulary at export |
+| **Bundle** | Generate checksummed certified bundles with terminology anchors |
 | **Export** | IRB preparation with AI-enriched Word document export |
 
 ## What Inspector Does NOT Do
@@ -115,7 +118,7 @@ ollama pull mistral-small
 
 Navigate to http://localhost:9806. The header should display:
 ```
-Inspector v0.1.0
+Inspector v0.2.0
 psdl-lang v0.3.1
 ```
 
@@ -124,13 +127,26 @@ psdl-lang v0.3.1
 PSDL Inspector uses a 3-step wizard workflow:
 
 ### Step 1: Input
-- **Generate Tab**: AI-assisted scenario creation from natural language
+
+Three input modes are available:
+
+- **Builder Mode** (New in v0.2.0): Constrained visual builder with guided workflow
+  - Signal selection with OMOP vocabulary search
+  - Trend configuration with metric selection
+  - Logic rule builder with severity levels
+  - Outputs configuration (decisions, features, evidence)
+  - Audit section (intent, rationale, provenance)
+
+- **Generate Mode**: AI-assisted scenario creation from natural language
   - OpenAI GPT-4o-mini (cloud, recommended)
   - Ollama (local, privacy-preserving)
   - Auto-validation and error correction
   - Optional clinical context for accurate thresholds
-- **Editor**: Manual YAML editing with CodeMirror
-- **Validation Panel**: Real-time syntax and semantic validation
+
+- **Editor Mode**: Manual YAML editing with CodeMirror
+  - Syntax highlighting and auto-completion
+  - Line numbers and template insertion
+  - Real-time validation feedback
 
 ### Step 2: Preview
 - **Outline**: Tree view of signals, trends, and logic with dependency tracking
@@ -142,7 +158,7 @@ PSDL Inspector uses a 3-step wizard workflow:
 
 ### Step 3: Export
 - **Governance Documentation**: Clinical summary, justification, risk assessment
-- **JSON Bundle**: Checksummed certified audit bundle for downstream systems
+- **JSON Bundle**: Checksummed certified audit bundle with terminology anchors
 - **Word Document**: AI-enriched IRB documentation with:
   - Executive summary and clinical background
   - Algorithm overview and data elements
@@ -180,7 +196,7 @@ PSDL Inspector uses a 3-step wizard workflow:
 Returns version information.
 ```json
 {
-  "inspector": "0.1.0",
+  "inspector": "0.2.0",
   "psdl_lang": "0.3.1"
 }
 ```
@@ -224,31 +240,60 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
 
 ```json
 {
-  "bundle_version": "1.0",
-  "certified_at": "2025-12-15T10:30:00Z",
+  "bundle_version": "1.1",
+  "certified_at": "2026-01-26T10:30:00Z",
   "checksum": "sha256:abc123...",
 
   "scenario": {
     "name": "AKI_Detection",
-    "version": "0.3.1"
+    "version": "0.3.1",
+    "raw_yaml": "...",
+    "parsed": { /* Full IR */ }
+  },
+
+  "terminology_anchors": {
+    "anchors": {
+      "creatinine": {
+        "concept_id": 3016723,
+        "vocabulary_id": "LOINC",
+        "concept_code": "2160-0",
+        "concept_name": "Creatinine [Mass/volume] in Serum or Plasma",
+        "standard_unit": "mg/dL",
+        "match_confidence": "high"
+      }
+    },
+    "unanchored_refs": [],
+    "anchored_count": 1,
+    "total_refs": 1
   },
 
   "validation": {
     "psdl_lang_version": "0.3.1",
+    "inspector_version": "0.2.0",
     "valid": true,
     "errors": [],
     "warnings": []
   },
 
   "audit": {
-    "intent": "Detect early AKI...",
-    "rationale": "KDIGO guidelines...",
+    "intent": "Detect early AKI for timely intervention",
+    "rationale": "Based on KDIGO guidelines",
     "provenance": "doi:10.1038/..."
   },
 
   "summary": "Human-readable summary for IRB..."
 }
 ```
+
+### Terminology Anchors (v1.1)
+
+The `terminology_anchors` section maps semantic refs (e.g., "creatinine") to OMOP concept IDs. This enables:
+
+- **Portable execution**: Same scenario runs on any OMOP-compliant site
+- **Interoperability**: Standard vocabulary binding (LOINC, SNOMED, RxNorm)
+- **Audit trail**: Clear mapping from algorithm refs to standard concepts
+
+See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platforms use these anchors.
 
 ## Tech Stack
 
@@ -271,9 +316,12 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
 
 ## Roadmap
 
-- [x] AI-assisted scenario generation (OpenAI + Ollama) ✅
-- [x] Interactive DAG visualization with ReactFlow ✅
-- [x] AI-enriched IRB Word document export ✅
+- [x] AI-assisted scenario generation (OpenAI + Ollama)
+- [x] Interactive DAG visualization with ReactFlow
+- [x] AI-enriched IRB Word document export
+- [x] Visual scenario builder with guided workflow
+- [x] Terminology anchoring (OMOP vocabulary binding)
+- [x] Modular vocabulary search (embedders, retrievers, rerankers)
 - [ ] Editable DAG (visual scenario editing)
 - [ ] Lint rules (best practices, style checks)
 - [ ] Scenario registry with versioning
@@ -281,19 +329,14 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
 
 ## Contributing
 
-Contributions welcome! Please:
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
+Quick start:
 
 ```bash
 # Backend (with hot reload)
 cd backend && source .venv/bin/activate
+pip install psdl-lang --upgrade  # Always get latest
 uvicorn app.main:app --reload --port 8200
 
 # Frontend (with hot reload)
@@ -302,9 +345,9 @@ cd frontend && npm run dev
 
 ### Code Style
 
-- Python: Follow PEP 8
-- TypeScript: ESLint + Prettier
-- Commits: Conventional commits preferred
+- Python: Follow PEP 8, use type hints
+- TypeScript: ESLint + Prettier, strict mode
+- Commits: [Conventional commits](https://www.conventionalcommits.org/) (feat:, fix:, docs:, etc.)
 
 ## License
 

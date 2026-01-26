@@ -4,9 +4,12 @@ import { useState, useCallback, useEffect } from 'react';
 import {
   FileUp, Play, RefreshCw, ChevronRight, ChevronLeft,
   Check, AlertCircle, Loader2, Edit3, Sparkles,
-  Download, Eye, FileText, Shield, Maximize2, X
+  Download, Eye, FileText, Shield, Maximize2, X,
+  Github, Package, Heart, ExternalLink, HelpCircle
 } from 'lucide-react';
 import { Editor, DAGView, GovernancePanel, ExportButton, GenerationPanel, ThemeToggle, Logo } from '@/components';
+import { PSDLBuilder } from '@/components/builder';
+import WelcomeGuide, { useWelcomeGuide } from '@/components/WelcomeGuide';
 import { api, ValidationResponse, OutlineResponse, CertifiedBundle, VersionInfo } from '@/lib/api';
 
 // Sample scenario for demo
@@ -57,7 +60,7 @@ logic:
 `;
 
 type WizardStep = 'input' | 'preview' | 'export';
-type InputMode = 'manual' | 'llm';
+type InputMode = 'builder' | 'llm' | 'manual';
 
 interface StepInfo {
   id: WizardStep;
@@ -74,7 +77,7 @@ const STEPS: StepInfo[] = [
 export default function Home() {
   // Wizard state
   const [currentStep, setCurrentStep] = useState<WizardStep>('input');
-  const [inputMode, setInputMode] = useState<InputMode>('manual');
+  const [inputMode, setInputMode] = useState<InputMode>('builder');
 
   // Scenario state
   const [content, setContent] = useState(SAMPLE_SCENARIO);
@@ -89,12 +92,18 @@ export default function Home() {
   const [isValidating, setIsValidating] = useState(false);
   const [isLoadingOutline, setIsLoadingOutline] = useState(false);
   const [isLoadingExport, setIsLoadingExport] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionMessage, setTransitionMessage] = useState('');
 
   // Error state
   const [apiError, setApiError] = useState<string | null>(null);
 
   // UI state
   const [showFullEditor, setShowFullEditor] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
+
+  // Welcome guide
+  const { isOpen: showWelcomeGuide, closeGuide, openGuide } = useWelcomeGuide();
 
   // Governance data
   const [governanceData, setGovernanceData] = useState({
@@ -103,38 +112,53 @@ export default function Home() {
     riskAssessment: '',
   });
 
-  const handleValidate = useCallback(async () => {
-    if (!content.trim()) return;
+  const handleValidate = useCallback(async (showTransition = false): Promise<{ valid: boolean; errors: string[] }> => {
+    if (!content.trim()) return { valid: false, errors: ['No scenario content to validate'] };
 
     setIsValidating(true);
     setIsLoadingOutline(true);
     setIsLoadingExport(true);
     setApiError(null);
 
+    if (showTransition) {
+      setIsTransitioning(true);
+      setTransitionMessage('Validating scenario...');
+    }
+
     try {
       const validation = await api.validate(content);
       setValidationResult(validation);
 
       if (validation.valid) {
+        if (showTransition) {
+          setTransitionMessage('Generating preview data...');
+        }
         const [outline, exportData] = await Promise.all([
           api.getOutline(content),
           api.exportBundle({ content }),
         ]);
         setOutlineResult(outline);
         setExportResult(exportData);
+        return { valid: true, errors: [] };
       } else {
         setOutlineResult(null);
         setExportResult(null);
+        const errorMessages = validation.errors?.map(e => e.message) || ['Validation failed'];
+        return { valid: false, errors: errorMessages };
       }
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'API request failed');
+      const errorMsg = error instanceof Error ? error.message : 'API request failed';
+      setApiError(errorMsg);
       setValidationResult(null);
       setOutlineResult(null);
       setExportResult(null);
+      return { valid: false, errors: [errorMsg] };
     } finally {
       setIsValidating(false);
       setIsLoadingOutline(false);
       setIsLoadingExport(false);
+      setIsTransitioning(false);
+      setTransitionMessage('');
     }
   }, [content]);
 
@@ -261,249 +285,404 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors">
-      {/* Header */}
-      <header className="border-b border-border bg-surface px-6 py-3">
+      {/* Announcement Bar */}
+      {showAnnouncement && (
+        <div className="bg-gradient-to-r from-accent-purple to-accent-cyan text-white px-4 py-2 text-center text-sm relative">
+          <span className="font-medium">Open Source Clinical Algorithm Tool</span>
+          <span className="mx-2 opacity-60">|</span>
+          <span className="opacity-90">Try PSDL for standardized patient scenario definitions</span>
+          <a
+            href="https://github.com/Chesterguan/PSDL"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-80 font-medium"
+          >
+            Learn more <ExternalLink className="w-3 h-3" />
+          </a>
+          <button
+            onClick={() => setShowAnnouncement(false)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/20 rounded transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Unified Header */}
+      <header className="sticky top-0 z-10 px-6 py-3 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size={32} />
-            <div>
-              <h1 className="text-lg font-bold">PSDL Inspector</h1>
-              <p className="text-xs text-muted">
-                Validate, analyze, and export PSDL scenarios
-              </p>
+          {/* Left: Logo + Nav */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2.5">
+              <Logo size={32} />
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-foreground tracking-tight leading-tight">PSDL Inspector</span>
+                <span className="text-[10px] text-muted leading-tight hidden sm:block">Validate & visualize clinical algorithms</span>
+              </div>
+            </div>
+
+            {/* Step Navigation - Workflow Pills */}
+            <div className="flex items-center">
+              <div className="flex items-center bg-background-tertiary/50 rounded-full px-1 py-1 border border-border/50">
+                {currentStep !== 'input' && (
+                  <button
+                    onClick={goBack}
+                    className="p-1 rounded-full hover:bg-background text-muted hover:text-foreground transition-colors mr-1"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {STEPS.map((step, index) => {
+                  const status = getStepStatus(step.id);
+                  const isClickable = status === 'complete' || status === 'current' || (step.id === 'input');
+                  return (
+                    <div key={step.id} className="flex items-center">
+                      {index > 0 && (
+                        <div className={`w-6 h-px mx-0.5 ${
+                          status === 'complete' ? 'bg-accent-success/50' :
+                          status === 'current' ? 'bg-accent-purple/30' :
+                          'bg-border'
+                        }`} />
+                      )}
+                      <button
+                        onClick={() => isClickable && goToStep(step.id)}
+                        disabled={!isClickable}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          status === 'current'
+                            ? 'bg-gradient-to-r from-accent-purple to-accent-cyan text-white shadow-sm'
+                            : status === 'complete'
+                            ? 'bg-accent-success/10 text-accent-success hover:bg-accent-success/20'
+                            : status === 'error'
+                            ? 'bg-accent-danger/10 text-accent-danger'
+                            : 'text-muted hover:text-foreground-secondary hover:bg-background/50'
+                        }`}
+                      >
+                        {status === 'complete' ? (
+                          <Check className="w-3 h-3" />
+                        ) : status === 'error' ? (
+                          <AlertCircle className="w-3 h-3" />
+                        ) : (
+                          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            status === 'current' ? 'bg-white/20' : 'bg-current/10'
+                          }`}>
+                            {index + 1}
+                          </span>
+                        )}
+                        {step.label}
+                      </button>
+                    </div>
+                  );
+                })}
+                {currentStep !== 'export' && canProceed && (
+                  <button
+                    onClick={goNext}
+                    className="p-1 rounded-full hover:bg-background text-muted hover:text-foreground transition-colors ml-1"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Right: Links + Theme + Version */}
+          <div className="flex items-center gap-2">
+            {/* External Links */}
+            <div className="flex items-center gap-1 mr-2">
+              <a
+                href="https://github.com/Chesterguan/psdl-inspector"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg hover:bg-background-tertiary text-muted hover:text-foreground transition-colors"
+                title="GitHub Repository"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+              <a
+                href="https://github.com/Chesterguan/PSDL/blob/main/docs/WHITEPAPER.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg hover:bg-background-tertiary text-muted hover:text-foreground transition-colors"
+                title="PSDL Whitepaper"
+              >
+                <FileText className="w-5 h-5" />
+              </a>
+              <a
+                href="https://pypi.org/project/psdl-lang/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg hover:bg-background-tertiary text-muted hover:text-foreground transition-colors"
+                title="psdl-lang on PyPI"
+              >
+                <Package className="w-5 h-5" />
+              </a>
+            </div>
             {versionInfo && (
-              <div className="text-xs text-muted text-right hidden sm:block">
-                <div>psdl-lang v{versionInfo.psdl_lang}</div>
-              </div>
+              <span className="text-[10px] text-muted font-mono hidden sm:block">v{versionInfo.psdl_lang}</span>
             )}
+            <button
+              onClick={openGuide}
+              className="p-2 hover:bg-background-secondary rounded-lg transition-colors text-muted hover:text-foreground"
+              title="Help & Guide"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Step Indicator with Navigation */}
-      <div className="sticky top-0 z-10 border-b border-border bg-surface/95 backdrop-blur px-6 py-3">
-        <div className="flex items-center justify-between max-w-5xl mx-auto">
-          {/* Back Button */}
-          <button
-            onClick={goBack}
-            disabled={currentStep === 'input'}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              currentStep === 'input'
-                ? 'text-muted cursor-not-allowed opacity-50'
-                : 'bg-surface-hover hover:bg-border'
-            }`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </button>
-
-          {/* Steps */}
-          <div className="flex items-center gap-1">
-            {STEPS.map((step, index) => {
-              const status = getStepStatus(step.id);
-              const isClickable = status === 'complete' || status === 'current' || (step.id === 'input');
-
-              return (
-                <div key={step.id} className="flex items-center">
-                  {index > 0 && (
-                    <div className={`w-8 h-0.5 transition-colors ${
-                      status === 'complete' || (index <= STEPS.findIndex(s => s.id === currentStep))
-                        ? 'bg-accent'
-                        : 'bg-border'
-                    }`} />
-                  )}
-                  <button
-                    onClick={() => isClickable && goToStep(step.id)}
-                    disabled={!isClickable}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                      status === 'current'
-                        ? 'bg-accent text-white'
-                        : status === 'complete'
-                        ? 'bg-green-600/20 text-green-600 dark:text-green-400 hover:bg-green-600/30'
-                        : status === 'error'
-                        ? 'bg-red-600/20 text-red-600 dark:text-red-400'
-                        : 'text-muted cursor-not-allowed'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                      status === 'current' ? 'bg-blue-500 text-white' :
-                      status === 'complete' ? 'bg-green-600 text-white' :
-                      status === 'error' ? 'bg-red-600 text-white' :
-                      'bg-border'
-                    }`}>
-                      {status === 'complete' ? <Check className="w-3 h-3" /> :
-                       status === 'error' ? <AlertCircle className="w-3 h-3" /> :
-                       index + 1}
-                    </div>
-                    <span className="hidden sm:inline">{step.label}</span>
-                  </button>
-                </div>
-              );
-            })}
+      {/* Transition Overlay */}
+      {isTransitioning && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-background-secondary rounded-2xl p-8 shadow-xl border border-border/50 text-center max-w-sm mx-4">
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 rounded-full border-4 border-accent/20"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent animate-spin"></div>
+              <Loader2 className="absolute inset-3 w-10 h-10 text-accent animate-pulse" />
+            </div>
+            <p className="text-lg font-semibold text-foreground mb-2">Processing</p>
+            <p className="text-sm text-foreground-secondary">{transitionMessage}</p>
+            <div className="mt-4 h-1 bg-background-tertiary rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-accent-purple to-accent-cyan animate-pulse" style={{ width: '60%' }}></div>
+            </div>
           </div>
-
-          {/* Next Button */}
-          {currentStep === 'export' ? (
-            <div className="w-20" />
-          ) : (
-            <button
-              onClick={goNext}
-              disabled={!canProceed || isValidating}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                canProceed && !isValidating
-                  ? 'bg-accent hover:bg-blue-700 text-white'
-                  : 'bg-surface-hover text-muted cursor-not-allowed opacity-50'
-              }`}
-            >
-              {isValidating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="hidden sm:inline">Validating</span>
-                </>
-              ) : (
-                <>
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto p-6">
+        <div className="workbench">
         {apiError && (
-          <div className="m-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
-            <strong>API Error:</strong> {apiError}
-            <p className="mt-1 text-red-600 dark:text-red-500">
-              Make sure the backend is running on http://localhost:8200
-            </p>
+          <div className="mb-4 p-3 bg-accent-danger/10 rounded-lg text-accent-danger text-sm">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-semibold block mb-1">Validation Error:</strong>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {apiError.split('\n').map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Step 1: Input */}
         {currentStep === 'input' && (
-          <div className="h-full flex flex-col">
-            {/* Mode Toggle */}
-            <div className="flex items-center justify-center gap-4 p-3 border-b border-border bg-surface/30">
-              <button
-                onClick={() => setInputMode('manual')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  inputMode === 'manual'
-                    ? 'bg-accent text-white shadow-lg'
-                    : 'bg-surface-hover text-muted hover:bg-border'
-                }`}
-              >
-                <Edit3 className="w-4 h-4" />
-                Manual Editor
-              </button>
-              <span className="text-muted text-sm">or</span>
-              <button
-                onClick={() => setInputMode('llm')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  inputMode === 'llm'
-                    ? 'bg-purple-600 text-white shadow-lg'
-                    : 'bg-surface-hover text-muted hover:bg-border'
-                }`}
-              >
-                <Sparkles className="w-4 h-4" />
-                AI Generate
-              </button>
+          <div>
+            {/* Mode Tabs + Validate in one row */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex p-0.5 bg-background-secondary rounded-lg">
+                <button
+                  onClick={() => setInputMode('builder')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    inputMode === 'builder' ? 'bg-accent text-white' : 'text-foreground-secondary hover:text-foreground'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Builder
+                </button>
+                <button
+                  onClick={() => setInputMode('llm')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    inputMode === 'llm' ? 'bg-accent-purple text-white' : 'text-foreground-secondary hover:text-foreground'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AI Generate
+                </button>
+                <button
+                  onClick={() => setInputMode('manual')}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    inputMode === 'manual' ? 'bg-accent-cyan text-white' : 'text-foreground-secondary hover:text-foreground'
+                  }`}
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Raw YAML
+                </button>
+              </div>
+
+{/* Validate button only shown in manual mode - Builder uses Continue button */}
             </div>
 
-            {/* Manual Mode: Editor */}
-            {inputMode === 'manual' && (
-              <div className="flex-1 flex flex-col min-h-0">
-                {/* Editor Toolbar */}
-                <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted">PSDL Scenario</span>
-                    {content.split('\n').length > 50 && (
-                      <span className="text-xs text-muted bg-surface-hover px-2 py-0.5 rounded">
-                        {content.split('\n').length} lines
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowFullEditor(true)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm bg-surface-hover hover:bg-border rounded transition-colors"
-                      title="Expand editor"
-                    >
-                      <Maximize2 className="w-4 h-4" />
-                    </button>
-                    <label className="flex items-center gap-1 px-2 py-1 text-sm bg-surface-hover hover:bg-border rounded cursor-pointer transition-colors">
-                      <FileUp className="w-4 h-4" />
-                      <span className="hidden sm:inline">Upload</span>
-                      <input
-                        type="file"
-                        accept=".yaml,.yml"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                    <button
-                      onClick={handleReset}
-                      className="flex items-center gap-1 px-2 py-1 text-sm bg-surface-hover hover:bg-border rounded transition-colors"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      <span className="hidden sm:inline">Reset</span>
-                    </button>
-                    <button
-                      onClick={handleValidate}
-                      disabled={isValidating}
-                      className="flex items-center gap-1 px-3 py-1 text-sm bg-accent hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
-                    >
-                      <Play className="w-4 h-4" />
-                      {isValidating ? 'Validating...' : 'Validate'}
-                    </button>
-                  </div>
-                </div>
+            {/* Builder Mode: Constrained PSDL Builder */}
+            {inputMode === 'builder' && (
+              <PSDLBuilder
+                onYamlChange={(yaml) => {
+                  setContent(yaml);
+                  // Clear validation when YAML changes
+                  setValidationResult(null);
+                  setOutlineResult(null);
+                  setExportResult(null);
+                }}
+onContinue={async () => {
+                  // Validate with transition animation and navigate to preview if valid
+                  setApiError(null);
+                  const result = await handleValidate(true);
+                  if (result.valid) {
+                    setCurrentStep('preview');
+                  } else {
+                    // Show specific validation errors
+                    setApiError(result.errors.join('\n'));
+                  }
+                }}
+                isValidating={isValidating}
+              />
+            )}
 
-                {/* Editor + Validation Status */}
-                <div className="flex-1 flex min-h-0">
-                  <div className="flex-1 p-4 min-h-0">
-                    <div className="h-full max-h-[calc(100vh-280px)]">
-                      <Editor
-                        value={content}
-                        onChange={setContent}
-                        className="h-full"
-                      />
+            {/* Manual Mode: Raw YAML Editor */}
+            {inputMode === 'manual' && (
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px] gap-6">
+                {/* Left: YAML Editor */}
+                <div className="space-y-4">
+                  {/* Section 1: Editor */}
+                  <div className="section-panel bg-background-secondary rounded-lg overflow-hidden">
+                    <div className="section-header flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="section-number font-mono text-sm font-semibold text-accent-cyan">01</span>
+                        <span className="section-title text-sm font-medium text-foreground">YAML Editor</span>
+                        {content.split('\n').length > 50 && (
+                          <span className="text-xs text-muted bg-background px-2 py-0.5 rounded font-mono">
+                            {content.split('\n').length} lines
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowFullEditor(true)}
+                          className="p-2 hover:bg-background rounded-md transition-colors"
+                          title="Expand editor"
+                        >
+                          <Maximize2 className="w-4 h-4 text-foreground-secondary" />
+                        </button>
+                        <label className="flex items-center gap-1.5 px-3 py-2 bg-background hover:bg-background-tertiary text-foreground text-sm font-medium rounded-md cursor-pointer transition-colors">
+                          <FileUp className="w-4 h-4" />
+                          <span className="hidden sm:inline">Upload</span>
+                          <input
+                            type="file"
+                            accept=".yaml,.yml"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          onClick={handleReset}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-background hover:bg-background-tertiary text-foreground text-sm font-medium rounded-md transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          <span className="hidden sm:inline">Reset</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="section-body px-4 pb-4">
+                      <div className="h-[calc(100vh-360px)] min-h-[400px]">
+                        <Editor
+                          value={content}
+                          onChange={setContent}
+                          className="h-full"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Validation Status Panel */}
-                  <div className="w-72 border-l border-border p-4 overflow-auto bg-surface/30">
-                    <h3 className="text-sm font-semibold mb-3">Validation Status</h3>
+                  {/* Validate Button */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleValidate()}
+                      disabled={isValidating || !content.trim()}
+                      className={`flex items-center gap-2 px-5 py-3 rounded-lg font-medium text-sm transition-colors ${
+                        !isValidating && content.trim()
+                          ? 'bg-accent-cyan hover:bg-accent-cyan/90 text-white cursor-pointer'
+                          : 'bg-background-tertiary text-muted cursor-not-allowed'
+                      }`}
+                    >
+                      {isValidating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Validating...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4" />
+                          Validate Scenario
+                        </>
+                      )}
+                    </button>
 
+                    {/* Status Indicator */}
+                    {validationResult && !isValidating && (
+                      <span className={`text-sm font-medium ${isValid ? 'text-accent-success' : 'text-accent-danger'}`}>
+                        {isValid ? 'Valid PSDL' : `${errorCount} error${errorCount !== 1 ? 's' : ''} found`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Validation Panel */}
+                <div className="preview-panel bg-background-secondary rounded-lg sticky top-20 max-h-[calc(100vh-120px)] flex flex-col overflow-hidden">
+                  {/* Header */}
+                  <div className="px-4 py-3 flex items-center justify-between border-b border-border/30">
+                    <span className="text-sm font-semibold text-foreground uppercase tracking-wide">Validation</span>
+                    {validationResult && (
+                      <div className="flex items-center gap-2">
+                        {isValid ? (
+                          <span className="flex items-center gap-1 text-accent-success text-sm font-medium">
+                            <Check className="w-4 h-4" /> Valid
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-accent-danger text-sm font-medium">
+                            <AlertCircle className="w-4 h-4" /> {errorCount} issue{errorCount !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto px-4 py-4">
                     {isValidating && (
-                      <div className="flex items-center gap-2 text-accent">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Validating...
+                      <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                        <Loader2 className="w-10 h-10 text-accent-cyan animate-spin mb-4" />
+                        <p className="text-sm text-foreground">Validating PSDL...</p>
+                        <p className="text-sm text-foreground-secondary mt-1">Checking syntax and semantics</p>
+                      </div>
+                    )}
+
+                    {!isValidating && !validationResult && (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                        <Play className="w-10 h-10 text-accent-cyan/30 mb-4" />
+                        <p className="text-sm text-foreground-secondary">Click Validate to check your scenario</p>
+                        <p className="text-sm text-muted mt-1">Syntax and semantic validation</p>
                       </div>
                     )}
 
                     {!isValidating && validationResult && (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
+                        {/* Status Badge */}
                         {isValid ? (
-                          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                          <div className="flex items-center gap-3 text-accent-success p-4 bg-accent-success/10 rounded-lg border border-accent-success/20">
                             <Check className="w-5 h-5" />
-                            <span className="font-medium">Valid PSDL</span>
+                            <div>
+                              <span className="font-semibold text-sm">Valid PSDL</span>
+                              <p className="text-sm opacity-80">Ready for preview</p>
+                            </div>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                          <div className="flex items-center gap-3 text-accent-danger p-4 bg-accent-danger/10 rounded-lg border border-accent-danger/20">
                             <AlertCircle className="w-5 h-5" />
-                            <span className="font-medium">{errorCount} Error{errorCount !== 1 ? 's' : ''}</span>
+                            <div>
+                              <span className="font-semibold text-sm">{errorCount} Error{errorCount !== 1 ? 's' : ''}</span>
+                              <p className="text-sm opacity-80">Fix issues to continue</p>
+                            </div>
                           </div>
                         )}
 
+                        {/* Warnings */}
                         {warningCount > 0 && (
-                          <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-sm">
+                          <div className="flex items-center gap-2 text-accent-warning text-sm p-3 bg-accent-warning/10 rounded-lg border border-accent-warning/20">
                             <AlertCircle className="w-4 h-4" />
                             {warningCount} Warning{warningCount !== 1 ? 's' : ''}
                           </div>
@@ -511,41 +690,62 @@ export default function Home() {
 
                         {/* Errors */}
                         {validationResult.errors.length > 0 && (
-                          <div className="mt-3">
-                            <h4 className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase mb-2">Errors</h4>
-                            <div className="space-y-1 max-h-40 overflow-auto">
+                          <div className="p-3 bg-accent-danger/10 rounded-lg border border-accent-danger/20">
+                            <h4 className="text-sm font-semibold text-accent-danger mb-2">Errors</h4>
+                            <ul className="text-sm text-accent-danger space-y-1.5 max-h-48 overflow-y-auto">
                               {validationResult.errors.map((err, i) => (
-                                <div key={i} className="text-xs text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/20 p-2 rounded">
-                                  {err.line && <span className="text-red-600 dark:text-red-400">Line {err.line}: </span>}
-                                  {err.message}
-                                </div>
+                                <li key={i} className="flex gap-2">
+                                  <span className="flex-shrink-0">-</span>
+                                  <span>
+                                    {err.line && <span className="font-mono text-sm opacity-75">L{err.line}: </span>}
+                                    {err.message}
+                                  </span>
+                                </li>
                               ))}
-                            </div>
+                            </ul>
                           </div>
                         )}
 
                         {/* Warnings */}
                         {validationResult.warnings.length > 0 && (
-                          <div className="mt-3">
-                            <h4 className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase mb-2">Warnings</h4>
-                            <div className="space-y-1 max-h-40 overflow-auto">
+                          <div className="p-3 bg-accent-warning/10 rounded-lg border border-accent-warning/20">
+                            <h4 className="text-sm font-semibold text-accent-warning mb-2">Warnings</h4>
+                            <ul className="text-sm text-accent-warning space-y-1.5 max-h-48 overflow-y-auto">
                               {validationResult.warnings.map((warn, i) => (
-                                <div key={i} className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/20 p-2 rounded">
-                                  {warn.line && <span className="text-yellow-600 dark:text-yellow-400">Line {warn.line}: </span>}
-                                  {warn.message}
-                                </div>
+                                <li key={i} className="flex gap-2">
+                                  <span className="flex-shrink-0">-</span>
+                                  <span>
+                                    {warn.line && <span className="font-mono text-sm opacity-75">L{warn.line}: </span>}
+                                    {warn.message}
+                                  </span>
+                                </li>
                               ))}
-                            </div>
+                            </ul>
                           </div>
                         )}
                       </div>
                     )}
+                  </div>
 
-                    {!isValidating && !validationResult && (
-                      <p className="text-sm text-muted">
-                        Click &quot;Validate&quot; to check your scenario
+                  {/* Actions */}
+                  {isValid && outlineResult && (
+                    <div className="flex gap-2 p-3 border-t border-border/30">
+                      <button
+                        onClick={() => setCurrentStep('preview')}
+                        className="flex-1 py-2.5 px-3 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-md transition-colors"
+                      >
+                        Continue to Preview
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Tip */}
+                  <div className="px-4 pb-4">
+                    <div className="p-3 bg-accent-cyan/5 rounded-lg border border-accent-cyan/10">
+                      <p className="text-sm text-foreground-secondary">
+                        <span className="font-semibold text-accent-cyan">Tip:</span> Upload a .yaml file or paste PSDL directly
                       </p>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -554,7 +754,33 @@ export default function Home() {
             {/* LLM Mode: Generation Panel */}
             {inputMode === 'llm' && (
               <div className="flex-1 overflow-auto">
-                <GenerationPanel onUseGenerated={handleUseGenerated} />
+                <GenerationPanel
+                  onUseGenerated={handleUseGenerated}
+                  onContinue={async (yaml) => {
+                    setContent(yaml);
+                    setIsLoadingOutline(true);
+                    setIsLoadingExport(true);
+                    setIsTransitioning(true);
+                    setTransitionMessage('Generating preview data...');
+                    try {
+                      const [outline, exportData] = await Promise.all([
+                        api.getOutline(yaml),
+                        api.exportBundle({ content: yaml }),
+                      ]);
+                      setOutlineResult(outline);
+                      setExportResult(exportData);
+                      setValidationResult({ valid: true, errors: [], warnings: [], parsed: null });
+                      setCurrentStep('preview');
+                    } catch (error) {
+                      setApiError(error instanceof Error ? error.message : 'Failed to load preview data');
+                    } finally {
+                      setIsLoadingOutline(false);
+                      setIsLoadingExport(false);
+                      setIsTransitioning(false);
+                      setTransitionMessage('');
+                    }
+                  }}
+                />
               </div>
             )}
           </div>
@@ -562,131 +788,163 @@ export default function Home() {
 
         {/* Step 2: DAG Preview */}
         {currentStep === 'preview' && (
-          <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="p-4 border-b border-border bg-surface/30 flex-shrink-0">
+          <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 160px)' }}>
+            <div className="p-6 border-b border-border bg-background-secondary/50 flex-shrink-0">
               <h2 className="text-lg font-semibold">Scenario DAG</h2>
-              <p className="text-sm text-muted">
+              <p className="text-sm text-muted mt-1">
                 Visual representation of signals, trends, and logic rules
               </p>
             </div>
-            <div className="flex-1" style={{ minHeight: '500px' }}>
+            <div className="flex-1" style={{ minHeight: '400px' }}>
               <DAGView outline={outlineResult} />
+            </div>
+            {/* Navigation Bar */}
+            <div className="p-4 border-t border-border bg-background-secondary/50 flex-shrink-0">
+              <div className="flex items-center justify-between max-w-4xl mx-auto">
+                <button
+                  onClick={() => setCurrentStep('input')}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground-secondary hover:text-foreground transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to Input
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="text-sm text-muted">
+                    {outlineResult && (
+                      <span>
+                        {outlineResult.signals?.length || 0} signals, {outlineResult.trends?.length || 0} trends, {outlineResult.logic?.length || 0} rules
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep('export')}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg font-medium text-sm transition-colors"
+                  >
+                    Continue to Export
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Step 3: Export (Governance + Export combined) */}
         {currentStep === 'export' && (
-          <div className="h-full overflow-auto p-6">
-            <div className="max-w-3xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-full overflow-auto p-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column: Governance / IRB Documentation */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                      <Shield className="w-5 h-5" />
+                    <h2 className="text-xl font-semibold flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-accent-cyan/15 flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-accent-cyan" />
+                      </div>
                       IRB Documentation
                     </h2>
-                    <p className="text-sm text-muted mt-1">
+                    <p className="text-sm text-muted mt-2 ml-13">
                       Optional governance notes for clinical review
                     </p>
                   </div>
 
                   {/* Scenario Info (compact) */}
-                  <div className="bg-surface rounded-lg p-3 border border-border text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-muted">Scenario:</span>
-                      <span className="font-semibold">{outlineResult?.scenario || 'N/A'}</span>
+                  <div className="bg-surface rounded-xl p-4 border border-border space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted">Scenario</span>
+                      <span className="font-semibold font-mono text-sm">{outlineResult?.scenario || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted">Signals:</span>
-                      <span className="text-blue-600 dark:text-blue-400">{outlineResult?.signals?.length || 0}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted">Signals</span>
+                      <span className="badge badge-info">{outlineResult?.signals?.length || 0}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted">Rules:</span>
-                      <span className="text-green-600 dark:text-green-400">{outlineResult?.logic?.length || 0}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted">Rules</span>
+                      <span className="badge badge-success">{outlineResult?.logic?.length || 0}</span>
                     </div>
                   </div>
 
                   {/* Documentation Fields */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1.5">Clinical Summary</label>
+                      <label className="block text-sm font-medium mb-2">Clinical Summary</label>
                       <textarea
                         value={governanceData.clinicalSummary}
                         onChange={(e) => setGovernanceData({ ...governanceData, clinicalSummary: e.target.value })}
                         placeholder="What does this algorithm detect and why?"
-                        className="w-full h-20 px-3 py-2 text-sm bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="input h-24 resize-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1.5">Justification</label>
+                      <label className="block text-sm font-medium mb-2">Justification</label>
                       <textarea
                         value={governanceData.justification}
                         onChange={(e) => setGovernanceData({ ...governanceData, justification: e.target.value })}
                         placeholder="Why is this algorithm needed?"
-                        className="w-full h-20 px-3 py-2 text-sm bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="input h-24 resize-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1.5">Risk Assessment</label>
+                      <label className="block text-sm font-medium mb-2">Risk Assessment</label>
                       <textarea
                         value={governanceData.riskAssessment}
                         onChange={(e) => setGovernanceData({ ...governanceData, riskAssessment: e.target.value })}
                         placeholder="What are the risks of false positives/negatives?"
-                        className="w-full h-20 px-3 py-2 text-sm bg-surface border border-border rounded-lg text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="input h-24 resize-none"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Right Column: Export Bundle */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                      <Download className="w-5 h-5" />
+                    <h2 className="text-xl font-semibold flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-accent-success/15 flex items-center justify-center">
+                        <Download className="w-5 h-5 text-accent-success" />
+                      </div>
                       Export Bundle
                     </h2>
-                    <p className="text-sm text-muted mt-1">
+                    <p className="text-sm text-muted mt-2 ml-13">
                       Download certified scenario bundle
                     </p>
                   </div>
 
                   {exportResult ? (
-                    <div className="bg-surface border border-border rounded-lg p-4 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div className="bg-surface border border-border rounded-xl p-5 space-y-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-accent-success/15 rounded-xl flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-accent-success" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{outlineResult?.scenario || 'scenario'}.json</h3>
-                          <p className="text-xs text-muted">Certified Bundle</p>
+                          <h3 className="font-semibold truncate">{outlineResult?.scenario || 'scenario'}.json</h3>
+                          <p className="text-sm text-muted">Certified Bundle</p>
                         </div>
                       </div>
 
-                      <div className="border-t border-border pt-3">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                      <div className="border-t border-border pt-4">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-accent-success" />
                             <span>Scenario Definition</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                          <div className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-accent-success" />
                             <span>Canonical Form</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                          <div className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-accent-success" />
                             <span>Content Hash</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                          <div className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-accent-success" />
                             <span>Validation Proof</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="border-t border-border pt-3">
-                        <div className="bg-background rounded p-2 text-xs font-mono space-y-0.5">
+                      <div className="border-t border-border pt-4">
+                        <div className="bg-background-secondary rounded-lg p-3 text-sm font-mono space-y-1">
                           <div className="text-muted">Version: {exportResult.bundle_version}</div>
                           <div className="text-muted">Certified: {new Date(exportResult.certified_at).toLocaleDateString()}</div>
                           <div className="text-muted truncate">Hash: {exportResult.checksum?.substring(0, 24)}...</div>
@@ -700,10 +958,10 @@ export default function Home() {
                       />
                     </div>
                   ) : (
-                    <div className="bg-surface border border-border rounded-lg p-6 text-center">
-                      <AlertCircle className="w-10 h-10 text-muted mx-auto mb-2" />
-                      <p className="text-muted text-sm">No export data available</p>
-                      <p className="text-xs text-muted mt-1">Validate your scenario first</p>
+                    <div className="bg-surface border border-border rounded-xl p-8 text-center">
+                      <AlertCircle className="w-12 h-12 text-muted mx-auto mb-3" />
+                      <p className="text-muted font-medium">No export data available</p>
+                      <p className="text-sm text-muted mt-1">Validate your scenario first</p>
                     </div>
                   )}
 
@@ -721,31 +979,74 @@ export default function Home() {
             </div>
           </div>
         )}
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-background-secondary/30 px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted">
+          <div className="flex items-center gap-1">
+            <span>Built with</span>
+            <Heart className="w-3.5 h-3.5 text-accent-danger fill-accent-danger" />
+            <span>for the clinical informatics community</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/Chesterguan/PSDL"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              PSDL Language
+            </a>
+            <span className="text-border">|</span>
+            <a
+              href="https://github.com/Chesterguan/psdl-inspector"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Contribute
+            </a>
+            <span className="text-border">|</span>
+            <a
+              href="https://github.com/Chesterguan/PSDL/blob/main/docs/WHITEPAPER.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Whitepaper
+            </a>
+          </div>
+          <div className="text-xs opacity-70">
+            MIT License {new Date().getFullYear()}
+          </div>
+        </div>
+      </footer>
 
       {/* Full Screen Editor Modal */}
       {showFullEditor && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface">
-            <span className="text-sm font-medium">Full Editor</span>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
+            <span className="text-sm font-semibold">Full Editor</span>
+            <div className="flex items-center gap-3">
               <button
-                onClick={handleValidate}
+                onClick={() => handleValidate()}
                 disabled={isValidating}
-                className="flex items-center gap-1 px-3 py-1 text-sm bg-accent hover:bg-blue-700 text-white rounded transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm bg-accent hover:bg-accent-hover text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 <Play className="w-4 h-4" />
                 {isValidating ? 'Validating...' : 'Validate'}
               </button>
               <button
                 onClick={() => setShowFullEditor(false)}
-                className="p-1.5 hover:bg-surface-hover rounded transition-colors"
+                className="p-2 hover:bg-surface-hover rounded-lg transition-colors border border-border"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-6">
             <Editor
               value={content}
               onChange={setContent}
@@ -754,6 +1055,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Welcome Guide Modal */}
+      <WelcomeGuide isOpen={showWelcomeGuide} onClose={closeGuide} />
     </div>
   );
 }

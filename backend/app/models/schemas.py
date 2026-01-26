@@ -1,7 +1,7 @@
 """Pydantic models for API schemas."""
 
 from __future__ import annotations
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Literal
 from pydantic import BaseModel, Field
 
 
@@ -91,6 +91,38 @@ class OutlineResponse(BaseModel):
     logic: List[LogicOutline] = Field(default_factory=list)
 
 
+# --- Terminology Anchors Models ---
+
+
+class TerminologyAnchor(BaseModel):
+    """Single terminology anchor for a semantic reference."""
+
+    concept_id: Optional[int] = Field(None, description="OMOP concept ID")
+    concept_code: Optional[str] = Field(None, description="Vocabulary-specific code (e.g., LOINC code)")
+    vocabulary_id: Optional[str] = Field(None, description="Source vocabulary (e.g., LOINC, SNOMED)")
+    concept_name: Optional[str] = Field(None, description="Standard concept name")
+    domain_id: Optional[str] = Field(None, description="OMOP domain (Measurement, Condition, Drug, etc.)")
+    standard_unit: Optional[str] = Field(None, description="Standard unit for measurements")
+    match_confidence: Literal["high", "medium", "low", "unanchored"] = Field(
+        "unanchored", description="Confidence level of the vocabulary match"
+    )
+
+
+class TerminologyAnchors(BaseModel):
+    """All terminology anchors for a scenario - OMOP vocabulary binding."""
+
+    anchors: Dict[str, TerminologyAnchor] = Field(
+        default_factory=dict, description="Map of semantic refs to their OMOP anchors"
+    )
+    unanchored_refs: List[str] = Field(
+        default_factory=list, description="Refs that couldn't be matched to vocabulary"
+    )
+    anchor_timestamp: str = Field(..., description="When anchoring was performed (ISO 8601)")
+    vocabulary_version: Optional[str] = Field(None, description="OMOP vocabulary version used")
+    total_refs: int = Field(0, description="Total number of refs processed")
+    anchored_count: int = Field(0, description="Number of successfully anchored refs")
+
+
 # --- Export Models ---
 
 
@@ -135,11 +167,14 @@ class ExportRequest(BaseModel):
 class CertifiedBundle(BaseModel):
     """Certified Audit Bundle - the contract between Inspector and execution platforms."""
 
-    bundle_version: str = Field("1.0", description="Bundle schema version")
+    bundle_version: str = Field("1.1", description="Bundle schema version")
     certified_at: str = Field(..., description="ISO 8601 timestamp")
     checksum: str = Field(..., description="SHA-256 checksum of scenario content")
 
     scenario: ScenarioContent = Field(..., description="Scenario content and parsed IR")
+    terminology_anchors: Optional[TerminologyAnchors] = Field(
+        None, description="OMOP vocabulary binding for semantic refs"
+    )
     validation: ValidationResult = Field(..., description="Validation results")
     audit: AuditInfo = Field(..., description="Audit trail information")
     summary: str = Field(..., description="Human-readable summary for IRB")
@@ -180,11 +215,35 @@ class GenerateRequest(BaseModel):
     clinical_context: Optional[str] = Field(None, description="Optional clinical guidelines or reference text to include")
 
 
+class EnrichmentDetail(BaseModel):
+    """Details about a single signal enrichment."""
+
+    signal: str = Field(..., description="Signal name in the YAML")
+    ref: str = Field(..., description="Signal reference used for lookup")
+    matched_concept: Optional[str] = Field(None, description="Matched OMOP concept name")
+    concept_id: Optional[int] = Field(None, description="OMOP concept ID")
+    concept_code: Optional[str] = Field(None, description="Concept code (e.g., LOINC code)")
+    vocabulary_id: Optional[str] = Field(None, description="Source vocabulary (e.g., LOINC)")
+    unit: Optional[str] = Field(None, description="Enriched unit")
+    error: Optional[str] = Field(None, description="Error message if enrichment failed")
+
+
+class EnrichmentSummary(BaseModel):
+    """Summary of vocabulary enrichment results."""
+
+    total_signals: int = Field(0, description="Total number of signals processed")
+    matched: int = Field(0, description="Number of signals matched to vocabulary")
+    unmatched: int = Field(0, description="Number of signals without matches")
+    success_rate: float = Field(0.0, description="Percentage of signals matched")
+    details: List[EnrichmentDetail] = Field(default_factory=list, description="Per-signal enrichment details")
+
+
 class GenerateResponse(BaseModel):
     """Response from scenario generation."""
 
-    yaml: str = Field(..., description="Generated PSDL YAML")
+    yaml: str = Field(..., description="Generated PSDL YAML (enriched with vocabulary if available)")
     valid: bool = Field(..., description="Whether generated YAML is valid")
     errors: List[str] = Field(default_factory=list, description="Validation errors")
     warnings: List[str] = Field(default_factory=list, description="Validation warnings")
     attempts: int = Field(1, description="Number of generation/correction attempts made")
+    enrichment: Optional[EnrichmentSummary] = Field(None, description="Vocabulary enrichment results")

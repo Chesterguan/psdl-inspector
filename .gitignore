@@ -43,4 +43,24 @@ venv/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+
+# Claude Code
 .claude/CLAUDE.md
+
+# Vocabulary data (large files)
+backend/data/vocabulary/
+backend/data/*.db
+backend/data/*.sqlite
+
+# Test outputs
+backend/test_output_bundle.json
+backend/test_*.py
+
+# Vocabulary enrichment scripts (internal tooling)
+backend/scripts/
+
+# Prototypes
+prototype/
+
+# Playwright MCP artifacts
+.playwright-mcp/
