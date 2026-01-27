@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Vocabulary processing artifacts (exclude large intermediate files)
+# Keep: loinc_enriched.db, population_enriched.db, enriched/, embeddings core files
+data/vocabulary/batch/
+data/vocabulary/extracted/
+data/vocabulary/reports/
+data/vocabulary/results/
+data/vocabulary/population/
+data/vocabulary/embeddings/batch/
+data/vocabulary/embeddings/results/
+data/vocabulary/*.log
+data/vocabulary/*_test.json
+data/vocabulary/common_*.json
+data/vocabulary/vocabulary.db
+
+# Scripts (internal tooling)
+scripts/
+
+# Misc
+*.log
+.DS_Store

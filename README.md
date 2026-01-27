@@ -63,7 +63,34 @@ Inspector is **governance middleware** — it certifies that algorithms are corr
 | Send clinical alerts | Execution platform responsibility |
 | Handle PHI/HIPAA data | No patient data in certification |
 
-## Quick Start
+## Try It Out
+
+### Option 1: Docker (Recommended)
+
+```bash
+git clone https://github.com/Chesterguan/psdl-inspector.git
+cd psdl-inspector
+docker-compose up
+```
+
+Open http://localhost:9806
+
+> **Note**: The Docker image includes the full OMOP vocabulary (~1GB) for immediate terminology search. First build may take a few minutes.
+
+**Optional**: Add your API keys for AI generation:
+```bash
+cp .env.example .env
+# Edit .env with OPENAI_API_KEY=sk-...
+docker-compose up
+```
+
+### Option 2: Deploy Your Own
+
+See [Deployment Guide](docs/DEPLOYMENT.md) for Vercel + Render setup.
+
+---
+
+## Development Setup
 
 ### Requirements
 

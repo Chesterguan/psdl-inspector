@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Navigation bar in Preview step with "Continue to Export" button
 - Audit fields (intent, rationale, provenance) now extracted from YAML in export bundle
 - EXECUTION_CONTRACT.md documentation
+- **Docker Deployment**: Full Docker Compose setup with vocabulary included
+  - Backend image includes OMOP vocabulary (~1GB) for immediate terminology search
+  - Frontend image with Next.js standalone build
+  - Works identically to local development
+  - `.env.example` for API key configuration
+  - Deployment guide for Vercel + Render
 
 ### Changed
 - Enhanced YAML editor with line numbers, template button, and copy button
@@ -21,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed navigation flow from Preview to Export in all input modes
 - Fixed audit section parsing in export bundle generation
+- Fixed vocabulary endpoint 503 error handling in Builder mode
 
 ## [0.2.0] - 2026-01-26
 

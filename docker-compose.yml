@@ -1,0 +1,44 @@
+# PSDL Inspector - Docker Compose
+# Run: docker-compose up
+# Access: http://localhost:9806
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "9806:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8200
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# Optional: Add if you want Ollama in the stack
+#  ollama:
+#    image: ollama/ollama:latest
+#    ports:
+#      - "11434:11434"
+#    volumes:
+#      - ollama_data:/root/.ollama
+#    restart: unless-stopped
+
+# volumes:
+#  ollama_data:

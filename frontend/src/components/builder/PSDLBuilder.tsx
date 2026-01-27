@@ -142,15 +142,19 @@ export default function PSDLBuilder({ onYamlChange, onValidationChange, onContin
   const [ruleIdCounter, setRuleIdCounter] = useState(0);
   const [vocabVersion, setVocabVersion] = useState('Loading...');
 
-  // Fetch vocabulary version on mount
+  // Fetch vocabulary version on mount (optional feature - fails silently if unavailable)
   useEffect(() => {
     async function fetchVocab() {
       try {
         const resp = await fetch('http://localhost:8200/api/vocabulary/version');
+        if (!resp.ok) {
+          setVocabVersion('Not configured');
+          return;
+        }
         const data = await resp.json();
         setVocabVersion(`OMOP ${data.omop_cdm_version} // LOINC ${data.loinc_version}`);
       } catch {
-        setVocabVersion('Offline');
+        setVocabVersion('Not configured');
       }
     }
     fetchVocab();

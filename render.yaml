@@ -1,0 +1,37 @@
+# Render Blueprint - Deploy from production branch only
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API
+  - type: web
+    name: psdl-inspector-api
+    runtime: python
+    repo: https://github.com/Chesterguan/psdl-inspector
+    branch: production
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: OPENAI_API_KEY
+        sync: false  # User sets manually in dashboard
+    healthCheckPath: /health
+    plan: free  # or starter for better performance
+
+  # Frontend (Alternative: use Vercel for frontend)
+  - type: web
+    name: psdl-inspector-web
+    runtime: node
+    repo: https://github.com/Chesterguan/psdl-inspector
+    branch: production
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: psdl-inspector-api
+          property: host
+    plan: free

@@ -13,6 +13,7 @@ Please be respectful and constructive in all interactions. We welcome contributo
 - Python 3.9+
 - Node.js 18+
 - Git
+- Docker (optional, for containerized development)
 
 ### Development Setup
 
@@ -52,6 +53,16 @@ Please be respectful and constructive in all interactions. We welcome contributo
    - Frontend: http://localhost:9806
    - Backend API: http://localhost:8200
    - API docs: http://localhost:8200/docs
+
+### Alternative: Docker Development
+
+For a quick start with the full environment (including OMOP vocabulary):
+
+```bash
+docker-compose up
+```
+
+This builds both frontend and backend with all dependencies. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for details.
 
 ## How to Contribute
 
@@ -165,6 +176,8 @@ psdl-inspector/
 │   │   ├── models/         # Pydantic schemas
 │   │   ├── routers/        # API endpoints
 │   │   └── services/       # Business logic
+│   ├── data/vocabulary/    # OMOP vocabulary (included in Docker)
+│   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/               # Next.js frontend
 │   ├── src/
@@ -172,8 +185,10 @@ psdl-inspector/
 │   │   ├── components/    # React components
 │   │   ├── context/       # React context
 │   │   └── lib/           # Utilities
+│   ├── Dockerfile
 │   └── package.json
 ├── docs/                   # Documentation
+├── docker-compose.yml      # Full stack deployment
 └── README.md
 ```
 
