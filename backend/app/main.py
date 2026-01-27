@@ -15,7 +15,7 @@ try:
 except Exception:
     PSDL_LANG_VERSION = "unknown"
 
-INSPECTOR_VERSION = "0.1.0"
+INSPECTOR_VERSION = "0.2.0"
 
 app = FastAPI(
     title="PSDL Inspector API",
