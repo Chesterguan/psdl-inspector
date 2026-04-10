@@ -188,10 +188,8 @@ signal_groups:
     description: "Bad panel"
 """
     parser = PSDLParser()
-    with pytest.raises(Exception):
-        scenario = parser.parse_string(yaml)
-        errors = scenario.validate()
-        assert any("nonexistent_signal" in e for e in errors)
+    with pytest.raises(Exception, match="nonexistent_signal"):
+        parser.parse_string(yaml)
 
 
 def test_parse_group_missing_description_fails():
@@ -261,3 +259,16 @@ signal_groups:
     assert len(scenario.signal_groups) == 2
     assert "all_labs" in scenario.signal_groups
     assert "renal_panel" in scenario.signal_groups
+
+
+def test_parse_group_members_not_list_fails():
+    """Group with non-list members raises parse error."""
+    yaml = MINIMAL_YAML + """
+signal_groups:
+  bad_type:
+    members: creatinine
+    description: "Members should be a list"
+"""
+    parser = PSDLParser()
+    with pytest.raises(Exception, match="must be a list"):
+        parser.parse_string(yaml)
