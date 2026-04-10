@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight, ChevronDown, Zap, TrendingUp, GitBranch } from 'lucide-react';
-import type { OutlineResponse, SignalOutline, TrendOutline, LogicOutline } from '@/lib/api';
+import { ChevronRight, ChevronDown, Zap, TrendingUp, GitBranch, Layers } from 'lucide-react';
+import type { OutlineResponse, SignalOutline, TrendOutline, LogicOutline, SignalGroupOutline } from '@/lib/api';
 
 interface OutlineTreeProps {
   outline: OutlineResponse | null;
@@ -121,6 +121,27 @@ function LogicItem({ logic }: { logic: LogicOutline }) {
   );
 }
 
+function SignalGroupItem({ group }: { group: SignalGroupOutline }) {
+  return (
+    <div className="p-2 rounded bg-surface-hover hover:bg-border">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-indigo-600 dark:text-indigo-400">{group.name}</span>
+      </div>
+      {group.domain && (
+        <div className="text-xs text-muted mt-1">
+          Domain: <span className="font-mono">{group.domain}</span>
+        </div>
+      )}
+      {group.members.length > 0 && (
+        <div className="text-xs text-muted mt-1">
+          Members: <span className="font-mono">{group.members.join(', ')}</span>
+        </div>
+      )}
+      <div className="text-xs text-muted mt-1">{group.description}</div>
+    </div>
+  );
+}
+
 export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
   if (isLoading) {
     return (
@@ -161,6 +182,20 @@ export default function OutlineTree({ outline, isLoading }: OutlineTreeProps) {
           <SignalItem key={signal.name} signal={signal} />
         ))}
       </TreeSection>
+
+      {/* Signal Groups (RFC 2026-04-09) */}
+      {outline.signal_groups && outline.signal_groups.length > 0 && (
+        <TreeSection
+          title="Signal Groups"
+          icon={<Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+          count={outline.signal_groups.length}
+          defaultOpen={false}
+        >
+          {outline.signal_groups.map((group) => (
+            <SignalGroupItem key={group.name} group={group} />
+          ))}
+        </TreeSection>
+      )}
 
       {/* Trends */}
       <TreeSection

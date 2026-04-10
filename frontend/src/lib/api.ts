@@ -47,6 +47,13 @@ export interface LogicOutline {
   operators: string[];
 }
 
+export interface SignalGroupOutline {
+  name: string;
+  description: string;
+  domain: string | null;
+  members: string[];
+}
+
 export interface OutlineResponse {
   scenario: string;
   version: string | null;
@@ -54,6 +61,7 @@ export interface OutlineResponse {
   signals: SignalOutline[];
   trends: TrendOutline[];
   logic: LogicOutline[];
+  signal_groups: SignalGroupOutline[];
 }
 
 export interface AuditInfo {
