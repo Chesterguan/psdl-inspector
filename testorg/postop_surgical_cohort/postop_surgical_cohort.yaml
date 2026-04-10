@@ -1,0 +1,371 @@
+# PSDL: Perioperative Surgical Cohort Definition
+# ================================================
+#
+# Defines a daily pipeline cohort of adult surgical patients
+# from surgery scheduling (T-2 days) through hospital discharge.
+#
+# Data domains: encounters, OR cases, labs, diagnoses, dialysis/CRRT,
+# procedures (ICD+CPT), mortality, billing, vitals, meds, providers.
+#
+# NOTE: Categorical cohort criteria (surgery_status, goals_of_care,
+# transfer_source) are expressed in the population block. PSDL logic
+# rules only support numeric trend comparisons and boolean composition.
+# This is a known expressiveness boundary for cohort-style definitions.
+
+scenario: Perioperative_Surgical_Cohort
+version: "0.1.0"
+description: >
+  Identify adult perioperative patients from pre-surgical scheduling
+  through postoperative hospitalization until discharge. Captures all
+  patients who will undergo, are undergoing, or have undergone surgery
+  and remain hospitalized.
+
+# -- Audit Block ------------------------------------------------
+audit:
+  intent: >
+    Build a daily cohort of perioperative surgical patients for
+    post-op monitoring, quality metrics, and downstream ETL pipelines.
+  rationale: >
+    Perioperative surveillance requires tracking patients across the
+    full surgical episode: from scheduled surgery through discharge.
+    A stable primary_encounter_id enables cross-day linkage in daily
+    batch pipelines.
+  provenance:
+    type: institutional
+    reference: "Internal surgical quality program"
+
+# -- Population --------------------------------------------------
+# Categorical inclusion/exclusion criteria live here because PSDL
+# logic rules only support numeric comparisons against trends.
+population:
+  include:
+    - age >= 18
+    - has_scheduled_surgery_within_2d == true OR surgery_in_progress == true OR has_completed_surgery == true
+    - hospitalization_status == "inpatient"
+  exclude:
+    - goals_of_care == "comfort_only" AND goals_of_care_documented_before_surgery == true
+    - transfer_source == "outside_institution" AND admit_location == "ICU"
+
+# -- Signal Groups (RFC 2026-04-09) ------------------------------
+# Domain-level groups request bulk data extraction for the datasetSpec.
+# Custom groups define named signal subsets for organizational clarity.
+# Groups do NOT feed into trends or logic - they are data requests only.
+signal_groups:
+  # Domain-level: bulk data extraction
+  all_labs:
+    domain: laboratory
+    description: "All lab results for cohort patients"
+
+  all_meds:
+    domain: medication
+    description: "All medication orders and administrations"
+
+  all_encounters:
+    domain: observation
+    description: "All clinical encounters, billing accounts, and mortality"
+
+  all_procedures:
+    domain: procedure
+    description: "All procedures (ICD + CPT) for cohort patients"
+
+  all_diagnoses:
+    domain: condition
+    description: "All diagnoses for cohort patients"
+
+  all_vitals:
+    domain: vital_sign
+    description: "All vitals including height and weight"
+
+  # Custom: named signal subsets for monitoring panels
+  renal_panel:
+    members: [creatinine, hemoglobin, dialysis_active]
+    description: "Renal function monitoring panel"
+
+  coag_panel:
+    members: [inr, platelet_count]
+    description: "Coagulation monitoring panel"
+
+  perfusion_panel:
+    members: [lactate, hemoglobin]
+    description: "Tissue perfusion indicators"
+
+# -- Signals (abstract semantic refs) ----------------------------
+# Physical bindings (table, column, concept_id) go in the datasetSpec.
+# Only signals used in trends/logic need individual definitions.
+signals:
+  # --- Labs ---
+  creatinine:
+    ref: creatinine
+    expected_unit: mg/dL
+    description: "Serum creatinine"
+
+  hemoglobin:
+    ref: hemoglobin
+    expected_unit: g/dL
+    description: "Hemoglobin level"
+
+  lactate:
+    ref: lactate
+    expected_unit: mmol/L
+    description: "Serum lactate"
+
+  potassium:
+    ref: potassium
+    expected_unit: mEq/L
+    description: "Serum potassium"
+
+  platelet_count:
+    ref: platelet_count
+    expected_unit: x10^3/uL
+    description: "Platelet count"
+
+  wbc:
+    ref: white_blood_cell_count
+    expected_unit: x10^3/uL
+    description: "White blood cell count"
+
+  inr:
+    ref: international_normalized_ratio
+    expected_unit: ratio
+    description: "INR for coagulation status"
+
+  # --- Vitals (contained by encounters) ---
+  height:
+    ref: body_height
+    expected_unit: cm
+    description: "Patient height"
+
+  weight:
+    ref: body_weight
+    expected_unit: kg
+    description: "Patient weight"
+
+  # --- Dialysis (numeric flag: 0=none, 1=intermittent, 2=crrt) ---
+  dialysis_active:
+    ref: dialysis_active_flag
+    expected_unit: flag
+    description: "Dialysis/CRRT active flag (0=none, 1=intermittent, 2=CRRT)"
+
+  # --- Mortality (numeric flag) ---
+  death_flag:
+    ref: death_indicator
+    expected_unit: flag
+    description: "Mortality flag (0=alive, 1=deceased)"
+
+  # --- Surgical timing ---
+  hours_since_surgery:
+    ref: hours_since_surgery_end
+    expected_unit: h
+    description: "Hours elapsed since surgery completion"
+
+# -- Trends (numeric computations) -------------------------------
+trends:
+  # Post-op timing
+  postop_hours:
+    type: float
+    unit: h
+    expr: last(hours_since_surgery)
+    description: "Hours since surgery end"
+
+  # Creatinine monitoring
+  cr_current:
+    type: float
+    unit: mg/dL
+    expr: last(creatinine)
+    description: "Most recent creatinine"
+
+  cr_delta_48h:
+    type: float
+    unit: mg/dL
+    expr: delta(creatinine, 48h)
+    description: "Creatinine change over 48 hours"
+
+  # Hemoglobin monitoring
+  hgb_current:
+    type: float
+    unit: g/dL
+    expr: last(hemoglobin)
+    description: "Most recent hemoglobin"
+
+  hgb_delta_24h:
+    type: float
+    unit: g/dL
+    expr: delta(hemoglobin, 24h)
+    description: "Hemoglobin change over 24 hours (bleeding indicator)"
+
+  # Lactate monitoring
+  lactate_current:
+    type: float
+    unit: mmol/L
+    expr: last(lactate)
+    description: "Most recent lactate"
+
+  # Potassium monitoring
+  potassium_current:
+    type: float
+    unit: mEq/L
+    expr: last(potassium)
+    description: "Most recent potassium"
+
+  # INR monitoring
+  inr_current:
+    type: float
+    unit: ratio
+    expr: last(inr)
+    description: "Most recent INR"
+
+  # Platelet monitoring
+  plt_current:
+    type: float
+    unit: x10^3/uL
+    expr: last(platelet_count)
+    description: "Most recent platelet count"
+
+  # Dialysis flag
+  dialysis_flag:
+    type: float
+    unit: flag
+    expr: last(dialysis_active)
+    description: "Current dialysis status flag"
+
+  # Mortality flag
+  mortality_flag:
+    type: float
+    unit: flag
+    expr: last(death_flag)
+    description: "Mortality indicator"
+
+# -- Logic (post-op surveillance rules) --------------------------
+# Cohort membership is determined by the population block above.
+# Logic rules here focus on post-op clinical surveillance.
+logic:
+  # === Post-Op Kidney Function ===
+  postop_cr_rising:
+    when: cr_delta_48h >= 0.3
+    severity: medium
+    description: "Post-op creatinine rise >= 0.3 mg/dL in 48h (KDIGO AKI Stage 1 screen)"
+
+  postop_cr_critical:
+    when: cr_current >= 4.0
+    severity: critical
+    description: "Creatinine >= 4.0 mg/dL (KDIGO AKI Stage 3 threshold)"
+
+  # === Post-Op Bleeding ===
+  postop_hgb_drop:
+    when: hgb_delta_24h <= -2.0
+    severity: high
+    description: "Hemoglobin drop > 2 g/dL in 24h (possible surgical bleeding)"
+
+  postop_hgb_critical:
+    when: hgb_current <= 7.0
+    severity: critical
+    description: "Hemoglobin <= 7 g/dL (transfusion threshold)"
+
+  # === Post-Op Perfusion ===
+  postop_lactate_elevated:
+    when: lactate_current >= 2.0
+    severity: medium
+    description: "Lactate >= 2 mmol/L (possible tissue hypoperfusion)"
+
+  postop_lactate_critical:
+    when: lactate_current >= 4.0
+    severity: critical
+    description: "Lactate >= 4 mmol/L (severe perfusion compromise)"
+
+  # === Electrolyte / Coag ===
+  postop_hyperkalemia:
+    when: potassium_current >= 5.5
+    severity: high
+    description: "Potassium >= 5.5 mEq/L (hyperkalemia risk)"
+
+  postop_coagulopathy:
+    when: inr_current >= 2.0
+    severity: high
+    description: "INR >= 2.0 (coagulopathy, bleeding risk)"
+
+  postop_thrombocytopenia:
+    when: plt_current <= 50
+    severity: high
+    description: "Platelets <= 50k (thrombocytopenia)"
+
+  # === Renal Replacement ===
+  on_dialysis_or_crrt:
+    when: dialysis_flag >= 1
+    severity: medium
+    description: "Patient on renal replacement therapy (intermittent or CRRT)"
+
+  on_crrt:
+    when: dialysis_flag >= 2
+    severity: high
+    description: "Patient on continuous renal replacement therapy (CRRT)"
+
+  # === Mortality ===
+  patient_deceased:
+    when: mortality_flag >= 1
+    severity: critical
+    description: "Patient deceased (encounter or SSDI)"
+
+  # === Composite Alerts ===
+  any_critical_alert:
+    when: postop_cr_critical OR postop_hgb_critical OR postop_lactate_critical OR patient_deceased
+    severity: critical
+    description: "Any critical post-op alert triggered"
+
+  any_high_alert:
+    when: postop_hgb_drop OR postop_hyperkalemia OR postop_coagulopathy OR postop_thrombocytopenia OR on_crrt
+    severity: high
+    description: "Any high-severity post-op alert triggered"
+
+  kidney_compromise:
+    when: postop_cr_rising AND on_dialysis_or_crrt
+    severity: high
+    description: "Rising creatinine with active RRT (worsening renal function)"
+
+# -- Outputs ------------------------------------------------------
+outputs:
+  decision:
+    has_critical_alert:
+      type: boolean
+      from: logic.any_critical_alert
+      description: "Critical post-op alert active"
+    has_high_alert:
+      type: boolean
+      from: logic.any_high_alert
+      description: "High-severity post-op alert active"
+
+  features:
+    postop_hours:
+      type: float
+      from: trends.postop_hours
+      unit: h
+      description: "Hours since surgery"
+    cr_current:
+      type: float
+      from: trends.cr_current
+      unit: mg/dL
+      description: "Current creatinine"
+    cr_delta_48h:
+      type: float
+      from: trends.cr_delta_48h
+      unit: mg/dL
+      description: "48h creatinine change"
+    hgb_current:
+      type: float
+      from: trends.hgb_current
+      unit: g/dL
+      description: "Current hemoglobin"
+    lactate_current:
+      type: float
+      from: trends.lactate_current
+      unit: mmol/L
+      description: "Current lactate"
+
+  evidence:
+    primary_encounter_id:
+      type: string
+      description: >
+        Stable encounter identifier that persists across daily pipeline runs.
+        All post-op records (day 1 through discharge) link to this ID.
+    timestamp:
+      type: datetime
+      description: "Pipeline evaluation timestamp"
