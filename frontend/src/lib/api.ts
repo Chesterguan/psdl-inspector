@@ -92,6 +92,7 @@ export interface CertifiedBundle {
   scenario: ScenarioContent;
   validation: ValidationResult;
   audit: AuditInfo;
+  signal_groups?: SignalGroupOutline[];
   summary: string;
 }
 

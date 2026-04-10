@@ -22,6 +22,7 @@ from app.models.schemas import (
     ValidationError,
     AuditInfo,
     TerminologyAnchors,
+    SignalGroupOutline,
 )
 from app.services.parser import scenario_to_dict
 from app.services.terminology_anchoring import get_terminology_anchoring_service
@@ -125,12 +126,16 @@ def generate_certified_bundle(
     # Generate human-readable summary
     summary = _generate_summary(scenario, format)
 
+    # Build structured signal groups for the bundle (RFC 2026-04-09)
+    signal_groups = _build_signal_group_list(scenario)
+
     return CertifiedBundle(
         bundle_version=BUNDLE_VERSION,
         certified_at=datetime.now(timezone.utc).isoformat(),
         checksum=f"sha256:{checksum}",
         scenario=scenario_content,
         terminology_anchors=terminology_anchors,
+        signal_groups=signal_groups,
         validation=validation,
         audit=audit,
         summary=summary,
@@ -181,6 +186,19 @@ def _extract_audit_from_yaml(raw_yaml: str, field: str) -> Optional[str]:
     except Exception:
         pass
     return None
+
+
+def _build_signal_group_list(scenario: PSDLScenario) -> list:
+    """Build structured SignalGroupOutline list from parsed scenario (RFC 2026-04-09)."""
+    groups = []
+    for name, group in getattr(scenario, 'signal_groups', {}).items():
+        groups.append(SignalGroupOutline(
+            name=name,
+            description=group.description,
+            domain=group.domain.value if group.domain else None,
+            members=group.members if group.members else [],
+        ))
+    return groups
 
 
 def _generate_summary(scenario: PSDLScenario, format: str) -> str:

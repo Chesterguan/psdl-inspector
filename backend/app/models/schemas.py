@@ -177,13 +177,16 @@ class ExportRequest(BaseModel):
 class CertifiedBundle(BaseModel):
     """Certified Audit Bundle - the contract between Inspector and execution platforms."""
 
-    bundle_version: str = Field("1.1", description="Bundle schema version")
+    bundle_version: str = Field("1.2", description="Bundle schema version")
     certified_at: str = Field(..., description="ISO 8601 timestamp")
     checksum: str = Field(..., description="SHA-256 checksum of scenario content")
 
     scenario: ScenarioContent = Field(..., description="Scenario content and parsed IR")
     terminology_anchors: Optional[TerminologyAnchors] = Field(
         None, description="OMOP vocabulary binding for semantic refs"
+    )
+    signal_groups: List[SignalGroupOutline] = Field(
+        default_factory=list, description="Signal groups (RFC 2026-04-09)"
     )
     validation: ValidationResult = Field(..., description="Validation results")
     audit: AuditInfo = Field(..., description="Audit trail information")

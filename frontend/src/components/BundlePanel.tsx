@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CertifiedBundle } from "@/lib/api";
+import { CertifiedBundle, SignalGroupOutline } from "@/lib/api";
 
 interface BundlePanelProps {
   bundle: CertifiedBundle | null;
@@ -131,6 +131,37 @@ export function BundlePanel({ bundle, loading }: BundlePanelProps) {
           </div>
         </div>
       </section>
+
+      {/* Signal Groups (RFC 2026-04-09) */}
+      {bundle.signal_groups && bundle.signal_groups.length > 0 && (
+        <section>
+          <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Signal Groups
+          </h3>
+          <div className="bg-surface rounded-lg p-4 space-y-3 border border-border">
+            {bundle.signal_groups.map((group: SignalGroupOutline) => (
+              <div key={group.name} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                <div className="font-semibold text-foreground">{group.name}</div>
+                <div className="text-sm text-muted mt-1">{group.description}</div>
+                {group.domain && (
+                  <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                    domain: {group.domain}
+                  </span>
+                )}
+                {group.members && group.members.length > 0 && (
+                  <div className="text-xs text-muted mt-1 font-mono">
+                    [{group.members.join(', ')}]
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Audit Block Section */}
       <section>
