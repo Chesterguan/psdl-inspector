@@ -53,7 +53,7 @@ def test_scenario_validate_signal_group_valid_members():
         },
     )
     errors = scenario.validate()
-    assert not any("signal_group" in e.lower() or "Signal group" in e for e in errors)
+    assert errors == []
 
 
 def test_scenario_validate_signal_group_invalid_member():
@@ -90,4 +90,15 @@ def test_scenario_validate_domain_group_no_member_check():
         },
     )
     errors = scenario.validate()
-    assert not any("signal_group" in e.lower() or "Signal group" in e for e in errors)
+    assert errors == []
+
+
+def test_signal_group_rejects_both_domain_and_members():
+    """SignalGroup raises ValueError if both domain and members are set."""
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        SignalGroup(
+            name="bad",
+            description="Both set",
+            domain=ClinicalDomain.LABORATORY,
+            members=["creatinine"],
+        )
