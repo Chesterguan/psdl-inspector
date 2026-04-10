@@ -272,3 +272,43 @@ signal_groups:
     parser = PSDLParser()
     with pytest.raises(Exception, match="must be a list"):
         parser.parse_string(yaml)
+
+
+from app.models.schemas import SignalGroupOutline, OutlineResponse
+
+
+def test_signal_group_outline_schema():
+    """SignalGroupOutline model works for domain-level group."""
+    outline = SignalGroupOutline(
+        name="all_labs",
+        description="All lab results",
+        domain="laboratory",
+        members=[],
+    )
+    assert outline.name == "all_labs"
+    assert outline.domain == "laboratory"
+
+
+def test_signal_group_outline_custom():
+    """SignalGroupOutline model works for custom group."""
+    outline = SignalGroupOutline(
+        name="renal_panel",
+        description="Renal monitoring",
+        members=["creatinine", "hemoglobin"],
+    )
+    assert outline.members == ["creatinine", "hemoglobin"]
+    assert outline.domain is None
+
+
+def test_outline_response_has_signal_groups_field():
+    """OutlineResponse includes signal_groups field defaulting to empty list."""
+    # Minimal OutlineResponse with required fields only
+    response = OutlineResponse(
+        scenario="test",
+        version="1.0.0",
+        description=None,
+        signals=[],
+        trends=[],
+        logic=[],
+    )
+    assert response.signal_groups == []

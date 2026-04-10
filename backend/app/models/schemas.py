@@ -74,6 +74,15 @@ class LogicOutline(BaseModel):
     )
 
 
+class SignalGroupOutline(BaseModel):
+    """Signal group in the outline (RFC 2026-04-09)."""
+
+    name: str
+    description: str
+    domain: Optional[str] = Field(None, description="ClinicalDomain value for domain-level group")
+    members: List[str] = Field(default_factory=list, description="Signal names for custom group")
+
+
 class OutlineRequest(BaseModel):
     """Request to generate semantic outline."""
 
@@ -89,6 +98,7 @@ class OutlineResponse(BaseModel):
     signals: List[SignalOutline] = Field(default_factory=list)
     trends: List[TrendOutline] = Field(default_factory=list)
     logic: List[LogicOutline] = Field(default_factory=list)
+    signal_groups: List[SignalGroupOutline] = Field(default_factory=list)
 
 
 # --- Terminology Anchors Models ---
