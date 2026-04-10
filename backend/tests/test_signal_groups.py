@@ -312,3 +312,56 @@ def test_outline_response_has_signal_groups_field():
         logic=[],
     )
     assert response.signal_groups == []
+
+
+# --- Outliner service tests (RFC 2026-04-09) ---
+
+from app.services.outliner import generate_outline
+from app.services.validator import validate_scenario
+
+
+GROUPS_YAML = MINIMAL_YAML + """
+signal_groups:
+  all_labs:
+    domain: laboratory
+    description: "All lab results"
+  renal_panel:
+    members: [creatinine, hemoglobin]
+    description: "Renal monitoring"
+"""
+
+
+def test_outline_includes_signal_groups():
+    """Outline response includes signal groups."""
+    scenario, errors, warnings = validate_scenario(GROUPS_YAML)
+    assert scenario is not None
+    outline = generate_outline(scenario)
+    assert len(outline.signal_groups) == 2
+    names = [g.name for g in outline.signal_groups]
+    assert "all_labs" in names
+    assert "renal_panel" in names
+
+
+def test_outline_domain_group_has_domain():
+    """Domain-level group outline has domain field set."""
+    scenario, errors, warnings = validate_scenario(GROUPS_YAML)
+    outline = generate_outline(scenario)
+    all_labs = next(g for g in outline.signal_groups if g.name == "all_labs")
+    assert all_labs.domain == "laboratory"
+    assert all_labs.members == []
+
+
+def test_outline_custom_group_has_members():
+    """Custom group outline has members list."""
+    scenario, errors, warnings = validate_scenario(GROUPS_YAML)
+    outline = generate_outline(scenario)
+    renal = next(g for g in outline.signal_groups if g.name == "renal_panel")
+    assert renal.domain is None
+    assert renal.members == ["creatinine", "hemoglobin"]
+
+
+def test_outline_no_groups_when_absent():
+    """Outline has empty signal_groups when section not present."""
+    scenario, errors, warnings = validate_scenario(MINIMAL_YAML)
+    outline = generate_outline(scenario)
+    assert outline.signal_groups == []

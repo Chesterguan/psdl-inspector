@@ -14,6 +14,7 @@ from app.models.schemas import (
     SignalOutline,
     TrendOutline,
     LogicOutline,
+    SignalGroupOutline,
 )
 
 
@@ -80,6 +81,8 @@ def generate_outline(scenario: PSDLScenario) -> OutlineResponse:
     # Compute reverse dependencies (used_by)
     _compute_used_by(signals, trends, logic_list)
 
+    signal_group_outlines = _build_signal_group_outlines(scenario)
+
     return OutlineResponse(
         scenario=scenario.name,
         version=scenario.version,
@@ -87,7 +90,21 @@ def generate_outline(scenario: PSDLScenario) -> OutlineResponse:
         signals=signals,
         trends=trends,
         logic=logic_list,
+        signal_groups=signal_group_outlines,
     )
+
+
+def _build_signal_group_outlines(scenario) -> list:
+    """Build signal group outlines from parsed scenario (RFC 2026-04-09)."""
+    groups = []
+    for name, group in getattr(scenario, 'signal_groups', {}).items():
+        groups.append(SignalGroupOutline(
+            name=name,
+            description=group.description,
+            domain=group.domain.value if group.domain else None,
+            members=group.members if group.members else [],
+        ))
+    return groups
 
 
 def _compute_used_by(

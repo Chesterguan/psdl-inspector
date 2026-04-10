@@ -33,7 +33,7 @@ except Exception:
     PSDL_LANG_VERSION = "unknown"
 
 INSPECTOR_VERSION = "0.2.0"
-BUNDLE_VERSION = "1.1"  # Added terminologyAnchors
+BUNDLE_VERSION = "1.2"  # Added signal_groups (RFC 2026-04-09)
 
 
 def generate_certified_bundle(
@@ -148,6 +148,10 @@ def _extract_audit_field(scenario: PSDLScenario, field: str, raw_yaml: Optional[
     if hasattr(scenario, 'audit') and scenario.audit:
         value = getattr(scenario.audit, field, None)
         if value:
+            # psdl-lang may return dicts for structured fields like provenance
+            if isinstance(value, dict):
+                import json
+                return json.dumps(value)
             return value
 
     # Fallback: parse from raw YAML
@@ -260,6 +264,25 @@ def _generate_summary(scenario: PSDLScenario, format: str) -> str:
                 severity_str = f" [{logic.severity.value.upper()}]" if logic.severity else ""
                 desc_str = f" -- {logic.description}" if logic.description else ""
                 lines.append(f"  - {name}{severity_str}: {logic.expr}{desc_str}")
+
+    # Signal Groups (RFC 2026-04-09)
+    if hasattr(scenario, 'signal_groups') and scenario.signal_groups:
+        lines.append("")
+        if format == "markdown":
+            lines.append("## Signal Groups")
+            lines.append("")
+            for name, group in scenario.signal_groups.items():
+                if group.domain:
+                    lines.append(f"- **{name}**: domain={group.domain.value} -- {group.description}")
+                elif group.members:
+                    lines.append(f"- **{name}**: [{', '.join(group.members)}] -- {group.description}")
+        else:
+            lines.append("SIGNAL GROUPS:")
+            for name, group in scenario.signal_groups.items():
+                if group.domain:
+                    lines.append(f"  - {name}: domain={group.domain.value} -- {group.description}")
+                elif group.members:
+                    lines.append(f"  - {name}: [{', '.join(group.members)}] -- {group.description}")
 
     # Population (if defined)
     if scenario.population:
