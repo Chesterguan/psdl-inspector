@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psdl-meds"
+version = "0.1.0"
+description = "MEDS (Medical Event Data Standard) writer + validator for the PSDL ecosystem."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = [
+    "pyarrow>=15,<17",
+    "meds>=0.3,<0.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[project.scripts]
+psdl-meds = "psdl_meds.cli:main"
+
+[tool.setuptools]
+# This pyproject.toml lives INSIDE the package directory (flat layout).
+# Tell setuptools to treat the current directory as the source of the
+# `psdl_meds` package — its __init__.py is right next to this file.
+packages = ["psdl_meds"]
+package-dir = {"psdl_meds" = "."}
