@@ -9,11 +9,13 @@ __version__ = "0.1.0"
 
 from psdl_meds.codes import format_code
 from psdl_meds.schema import MEDS_COLUMNS, meds_arrow_schema
+from psdl_meds.validator import validate_shard
 from psdl_meds.writer import write_meds_shard
 
 __all__ = [
     "MEDS_COLUMNS",
     "format_code",
     "meds_arrow_schema",
+    "validate_shard",
     "write_meds_shard",
 ]
