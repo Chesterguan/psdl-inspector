@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from importlib.metadata import version as pkg_version
 
-from app.routers import validate, outline, export, generate, vocabulary
+from app.routers import validate, outline, export, generate, vocabulary, meds
 
 # Get psdl-lang version
 try:
@@ -38,6 +38,7 @@ app.include_router(outline.router, prefix="/api", tags=["outline"])
 app.include_router(export.router, prefix="/api", tags=["export"])
 app.include_router(generate.router, prefix="/api", tags=["generate"])
 app.include_router(vocabulary.router, prefix="/api", tags=["vocabulary"])
+app.include_router(meds.router, prefix="/api", tags=["meds"])
 
 
 @app.get("/")

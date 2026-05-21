@@ -174,8 +174,9 @@ psdl-inspector/
 │   ├── app/
 │   │   ├── main.py         # Application entry
 │   │   ├── models/         # Pydantic schemas
-│   │   ├── routers/        # API endpoints
+│   │   ├── routers/        # API endpoints (validate, outline, export, generate, vocabulary, meds)
 │   │   └── services/       # Business logic
+│   ├── psdl_meds/          # Shared MEDS writer/validator/CLI (installable as `psdl-meds`, also embedded by PSDL Workbench)
 │   ├── data/vocabulary/    # OMOP vocabulary (included in Docker)
 │   ├── Dockerfile
 │   └── requirements.txt
@@ -206,6 +207,7 @@ psdl-inspector/
 - Scenario registry/versioning
 - Semantic diff between scenario versions
 - Additional LLM provider integrations
+- `psdl_meds` improvements — additional MEDS-DEV task labels, unit harmonization, alternative input formats for `psdl-meds convert`
 
 ### Good First Issues
 Look for issues labeled `good first issue` in the GitHub Issues.

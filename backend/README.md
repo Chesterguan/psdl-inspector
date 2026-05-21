@@ -9,6 +9,7 @@ FastAPI backend for PSDL Inspector - provides validation, generation, and export
 - **httpx** - Async HTTP client for LLM APIs
 - **python-docx** - Word document generation
 - **Pydantic** - Data validation and serialization
+- **pyarrow** + **meds** - MEDS Parquet writer/validator (via `psdl_meds`, shipped in-repo)
 
 ## Development
 
@@ -39,7 +40,8 @@ app/
 │   ├── outline.py             # Semantic outline endpoints
 │   ├── export.py              # Export endpoints
 │   ├── generate.py            # AI generation endpoints
-│   └── vocabulary.py          # Vocabulary search endpoints
+│   ├── vocabulary.py          # Vocabulary search endpoints
+│   └── meds.py                # MEDS preview endpoint (uses psdl_meds)
 └── services/
     ├── parser.py              # psdl-lang wrapper
     ├── validator.py           # Validation logic
@@ -55,7 +57,30 @@ app/
         ├── retrievers.py      # FAISS, NumPy, HNSW
         ├── rerankers.py       # Rules, String similarity, Hybrid
         └── factory.py         # Configuration & factory
+
+psdl_meds/                     # Shared MEDS library (installable, editable)
+├── __init__.py                # Public API re-exports
+├── codes.py                   # `<VOCAB>/<concept_code>` formatter
+├── schema.py                  # MEDS column constants + pyarrow schema
+├── writer.py                  # Iterable[dict] → MEDS Parquet shard
+├── validator.py               # Cross-checks shard against meds.schema
+├── preview.py                 # Synthetic shard from anchored signals
+├── cli.py                     # `psdl-meds convert | preview`
+├── pyproject.toml             # setuptools build; installable as `psdl-meds`
+└── tests/                     # 32 library tests
 ```
+
+### Installing `psdl_meds`
+
+```bash
+# From this repo, editable into the active venv:
+pip install -e ./psdl_meds
+
+# Verify
+psdl-meds --help
+```
+
+PSDL Workbench consumes the same package via `pip install -e ../psdl-inspector/backend/psdl_meds` (PyPI release deferred to Workbench M4).
 
 ## Environment Variables
 
@@ -97,6 +122,9 @@ cp .env.example .env
 - `POST /api/export/draft` - Export draft (even if invalid)
 - `POST /api/export/irb-document` - Export Word document for IRB
 
+### MEDS Preview
+- `POST /api/meds/preview` - Synthesize a 10-row MEDS Parquet preview from anchored signals (no DB required); response: `{ n_events, n_subjects, path, codes_used }`
+
 ## LLM Providers
 
 ### OpenAI (Recommended)
@@ -120,4 +148,4 @@ ollama pull mistral-small
 
 The backend allows requests from the frontend dev server at `http://localhost:9806`.
 
-*Updated: 2026-01-26*
+*Updated: 2026-05-20*
