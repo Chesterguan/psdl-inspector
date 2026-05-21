@@ -6,11 +6,11 @@ guessing at scenario design or recording cadence.
 
 ## Reference recording
 
-▶ **[Watch on YouTube](https://youtu.be/j-3UHeCyHDk)** — the published walkthrough that follows the two cue sheets below. Embed:
+▶ **[Watch the Sepsis-3 walkthrough on YouTube](https://youtu.be/j-3UHeCyHDk)** — published recording that follows the sepsis cue sheet below.
 
-[![PSDL Inspector — sepsis + T2D cohort walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk)
+[![PSDL Inspector — Sepsis-3 walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk)
 
-> This kit is the recipe; the YouTube video is the canonical bake of it. Anyone re-recording (e.g., for a translated narration or a new spec version) should follow the same beats so the result stays comparable.
+> This kit is the recipe; the YouTube video is the canonical bake of the **sepsis** scenario. The T2D cohort walkthrough has the same shape of cue sheet ready but no recording yet — anyone re-recording (translated narration, new spec version, or producing the T2D demo) should follow the same beats so the result stays comparable.
 
 ## Scenarios
 

@@ -32,11 +32,18 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 ![PSDL Inspector wizard walkthrough](assets/psdl-inspector-workflow.gif)
 
-End-to-end walkthrough of the full pipeline — Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → **MEDS Preview** — using two real scenarios (a Sepsis-3 qSOFA screen and a T2DM + diabetic nephropathy research cohort):
+### ▶ Watch the sepsis walkthrough on YouTube → [youtu.be/j-3UHeCyHDk](https://youtu.be/j-3UHeCyHDk)
 
-[![PSDL Inspector — sepsis screening + T2D cohort walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "PSDL Inspector — end-to-end demo")
+[![PSDL Inspector — Sepsis-3 qSOFA walkthrough on YouTube](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "Click to watch on YouTube — PSDL Inspector Sepsis-3 walkthrough")
 
-Reproducible cue sheets, scenario YAMLs, and a DevTools loader for both demos live in [`docs/demos/`](docs/demos/).
+The recording follows a Sepsis-3 qSOFA + lactate screen end-to-end through the full pipeline (Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → **MEDS Preview**).
+
+Two reproducible scenarios are shipped under [`docs/demos/`](docs/demos/) — scenario YAMLs, narrator cue sheets, and a DevTools loader:
+
+| # | Scenario | Audience | Recording |
+|---|----------|----------|-----------|
+| 1 | Sepsis-3 qSOFA + lactate screen | Clinical informatics | ▶ YouTube above |
+| 2 | T2DM + diabetic nephropathy on metformin cohort | Research / cohort builders | Self-record kit (cue sheet ready) |
 
 ## Compatibility
 

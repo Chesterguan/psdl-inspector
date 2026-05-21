@@ -14,10 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   step. Generates a 10-row synthetic shard from anchored signals so authors
   can see what their scenario will produce in MEDS format before running
   against real data.
-- End-to-end demo walkthrough — [YouTube](https://youtu.be/j-3UHeCyHDk).
+- End-to-end demo walkthrough of the Sepsis-3 qSOFA scenario —
+  [YouTube](https://youtu.be/j-3UHeCyHDk).
   Recording kit (scenarios + cue sheets + DevTools loader) at
   [`docs/demos/`](docs/demos/), with two scenarios shipped: Sepsis-3 qSOFA
-  screen (clinical) and T2DM + diabetic nephropathy cohort (research).
+  screen (clinical, recorded) and T2DM + diabetic nephropathy cohort
+  (research, self-record kit ready).
 - Demo scenarios published as reusable PSDL examples:
   `docs/demos/sepsis-screening/scenario.yaml` and
   `docs/demos/t2d-nephropathy-cohort/scenario.yaml`.
