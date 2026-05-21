@@ -1,0 +1,298 @@
+# PSDL Research Cohort: T2D + Diabetic Nephropathy on Metformin
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# Identifies adult patients with Type 2 Diabetes Mellitus and
+# diabetic nephropathy who are on active metformin therapy,
+# with index dates between 2020-2023. Designed for research
+# studies of progression risk and treatment-effect estimation.
+#
+# Inclusion is enforced in the population block (PSDL 0.3 idiom);
+# logic rules below stratify the cohort by severity for analytics.
+#
+# References:
+#   - ADA Standards of Medical Care in Diabetes 2023
+#   - KDIGO 2022 Clinical Practice Guideline for Diabetes Management in CKD
+
+scenario: T2D_Diabetic_Nephropathy_Cohort
+version: "1.0.0"
+description: >
+  Adults with T2DM and diabetic nephropathy on active metformin therapy,
+  index 2020-2023. Stratified by glycemic control and CKD stage for
+  downstream cohort analytics.
+tags:
+  - cohort
+  - t2dm
+  - diabetic-nephropathy
+  - metformin
+  - research
+
+# ── Audit Block ──────────────────────────────────
+audit:
+  intent: >
+    Identify and stratify adults with T2DM and diabetic nephropathy on
+    metformin for observational research on progression and outcomes.
+  rationale: >
+    Diabetic nephropathy is the leading cause of ESRD in the US, yet
+    cohort identification is repeatedly hand-rolled per study. A reusable
+    PSDL definition with explicit population, signals, and stratification
+    logic makes the cohort auditable and reproducible across institutions.
+  provenance:
+    type: publication
+    reference: "American Diabetes Association. Standards of Medical Care in Diabetes 2023"
+    uri: "https://diabetesjournals.org/care/issue/46/Supplement_1"
+    version: "2023"
+
+# ── Population (cohort eligibility) ──────────────
+population:
+  include:
+    - age >= 18
+    - has_t2dm_diagnosis == true
+    - has_diabetic_nephropathy_diagnosis == true
+    - has_active_metformin == true
+    - index_year >= 2020
+    - index_year <= 2023
+  exclude:
+    - has_type1_diabetes_diagnosis == true
+    - on_chronic_dialysis == true
+    - pregnant == true
+
+# ── Signal Groups (bulk data requests for datasetSpec) ───
+signal_groups:
+  diabetes_labs:
+    domain: laboratory
+    description: "HbA1c, glucose, fasting glucose"
+
+  kidney_labs:
+    domain: laboratory
+    description: "Creatinine, eGFR, UACR, BUN"
+
+  diabetes_meds:
+    domain: medication
+    description: "All antidiabetic medications (metformin, GLP-1, SGLT2, insulin)"
+
+  comorbidity_dx:
+    domain: condition
+    description: "All chronic condition diagnoses"
+
+# ── Signal References (semantic refs only — bindings live in datasetSpec) ──
+signals:
+  # --- Diabetes labs ---
+  hba1c:
+    ref: hemoglobin_a1c
+    expected_unit: "%"
+    description: "Glycated hemoglobin (HbA1c)"
+
+  fasting_glucose:
+    ref: fasting_glucose
+    expected_unit: "mg/dL"
+    description: "Fasting plasma glucose"
+
+  # --- Kidney labs ---
+  egfr:
+    ref: estimated_glomerular_filtration_rate
+    expected_unit: "mL/min/1.73m^2"
+    description: "Estimated GFR (CKD-EPI)"
+
+  uacr:
+    ref: urine_albumin_creatinine_ratio
+    expected_unit: "mg/g"
+    description: "Urine albumin-to-creatinine ratio"
+
+  creatinine:
+    ref: creatinine
+    expected_unit: mg/dL
+    description: "Serum creatinine"
+
+  # --- Treatment flag ---
+  metformin_active:
+    ref: metformin_active_flag
+    expected_unit: flag
+    description: "Active metformin prescription flag (0=none, 1=active)"
+
+# ── Trends (numeric computations over signals) ───
+trends:
+  hba1c_latest:
+    type: float
+    unit: "%"
+    expr: last(hba1c)
+    description: "Most recent HbA1c"
+
+  hba1c_delta_12m:
+    type: float
+    unit: "%"
+    expr: delta(hba1c, 365d)
+    description: "HbA1c change over the prior 12 months"
+
+  egfr_latest:
+    type: float
+    unit: "mL/min/1.73m^2"
+    expr: last(egfr)
+    description: "Most recent eGFR"
+
+  egfr_delta_12m:
+    type: float
+    unit: "mL/min/1.73m^2"
+    expr: delta(egfr, 365d)
+    description: "eGFR change over the prior 12 months (annual decline)"
+
+  uacr_latest:
+    type: float
+    unit: "mg/g"
+    expr: last(uacr)
+    description: "Most recent urine ACR"
+
+  creatinine_latest:
+    type: float
+    unit: mg/dL
+    expr: last(creatinine)
+    description: "Most recent serum creatinine"
+
+  metformin_flag:
+    type: float
+    unit: flag
+    expr: last(metformin_active)
+    description: "Active metformin prescription (0/1)"
+
+# ── Logic (stratification rules — cohort is already filtered by population) ──
+logic:
+  # === Glycemic control ===
+  hba1c_at_goal:
+    when: hba1c_latest < 7.0
+    severity: low
+    description: "HbA1c < 7% (ADA target)"
+
+  hba1c_uncontrolled:
+    when: hba1c_latest >= 8.0
+    severity: medium
+    description: "HbA1c >= 8% (uncontrolled diabetes)"
+
+  hba1c_severe:
+    when: hba1c_latest >= 10.0
+    severity: high
+    description: "HbA1c >= 10% (severely uncontrolled)"
+
+  # === CKD staging by eGFR ===
+  ckd_stage_1_2:
+    when: egfr_latest >= 60
+    severity: low
+    description: "CKD stage 1-2 (eGFR >= 60)"
+
+  ckd_stage_3a:
+    when: egfr_latest >= 45 AND egfr_latest < 60
+    severity: medium
+    description: "CKD stage 3a (eGFR 45-59)"
+
+  ckd_stage_3b:
+    when: egfr_latest >= 30 AND egfr_latest < 45
+    severity: medium
+    description: "CKD stage 3b (eGFR 30-44)"
+
+  ckd_stage_4:
+    when: egfr_latest >= 15 AND egfr_latest < 30
+    severity: high
+    description: "CKD stage 4 (eGFR 15-29)"
+
+  ckd_stage_5:
+    when: egfr_latest < 15
+    severity: critical
+    description: "CKD stage 5 (eGFR < 15) — note metformin generally contraindicated"
+
+  # === Albuminuria categories (KDIGO A1/A2/A3) ===
+  normo_albuminuria:
+    when: uacr_latest < 30
+    severity: low
+    description: "Normo-albuminuria (UACR < 30 mg/g, A1)"
+
+  microalbuminuria:
+    when: uacr_latest >= 30 AND uacr_latest < 300
+    severity: medium
+    description: "Moderately increased albuminuria (UACR 30-300, A2)"
+
+  macroalbuminuria:
+    when: uacr_latest >= 300
+    severity: high
+    description: "Severely increased albuminuria (UACR >= 300, A3)"
+
+  # === Trajectory ===
+  egfr_rapid_decline:
+    when: egfr_delta_12m <= -5
+    severity: high
+    description: "eGFR loss >= 5 mL/min/1.73m^2 over 12 months (rapid decline)"
+
+  hba1c_improving:
+    when: hba1c_delta_12m <= -0.5
+    severity: low
+    description: "HbA1c improved by >= 0.5% over 12 months"
+
+  hba1c_worsening:
+    when: hba1c_delta_12m >= 0.5
+    severity: medium
+    description: "HbA1c worsened by >= 0.5% over 12 months"
+
+  # === Treatment continuity ===
+  on_metformin_currently:
+    when: metformin_flag >= 1
+    severity: low
+    description: "Active metformin prescription at index"
+
+  # === Composite phenotypes ===
+  advanced_nephropathy:
+    when: ckd_stage_4 OR ckd_stage_5 OR macroalbuminuria
+    severity: high
+    description: "Advanced diabetic nephropathy (KDIGO high/very-high risk)"
+
+  metformin_caution:
+    when: on_metformin_currently AND (ckd_stage_4 OR ckd_stage_5)
+    severity: critical
+    description: "Metformin active with eGFR < 30 — guideline caution / contraindication"
+
+  high_risk_progression:
+    when: egfr_rapid_decline AND macroalbuminuria
+    severity: high
+    description: "Rapid eGFR decline plus macroalbuminuria — high progression risk"
+
+# ── Outputs ──────────────────────────────────────
+outputs:
+  decision:
+    has_advanced_nephropathy:
+      type: boolean
+      from: logic.advanced_nephropathy
+      description: "Advanced diabetic nephropathy phenotype"
+    metformin_caution_flag:
+      type: boolean
+      from: logic.metformin_caution
+      description: "Metformin with low eGFR — clinical review needed"
+    high_progression_risk:
+      type: boolean
+      from: logic.high_risk_progression
+      description: "High risk of CKD progression"
+
+  features:
+    hba1c_latest:
+      type: float
+      from: trends.hba1c_latest
+      unit: "%"
+      description: "Most recent HbA1c"
+    egfr_latest:
+      type: float
+      from: trends.egfr_latest
+      unit: "mL/min/1.73m^2"
+      description: "Most recent eGFR"
+    uacr_latest:
+      type: float
+      from: trends.uacr_latest
+      unit: "mg/g"
+      description: "Most recent UACR"
+    egfr_decline_12m:
+      type: float
+      from: trends.egfr_delta_12m
+      unit: "mL/min/1.73m^2"
+      description: "12-month eGFR change"
+
+  evidence:
+    cohort_index_date:
+      type: datetime
+      description: "Date the patient first met all inclusion criteria"
+    eligibility_provenance:
+      type: string
+      description: "Stable identifier linking cohort membership to source records"
