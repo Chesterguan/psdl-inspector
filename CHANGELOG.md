@@ -14,6 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   step. Generates a 10-row synthetic shard from anchored signals so authors
   can see what their scenario will produce in MEDS format before running
   against real data.
+- End-to-end demo walkthrough — [YouTube](https://youtu.be/j-3UHeCyHDk).
+  Recording kit (scenarios + cue sheets + DevTools loader) at
+  [`docs/demos/`](docs/demos/), with two scenarios shipped: Sepsis-3 qSOFA
+  screen (clinical) and T2DM + diabetic nephropathy cohort (research).
+- Demo scenarios published as reusable PSDL examples:
+  `docs/demos/sepsis-screening/scenario.yaml` and
+  `docs/demos/t2d-nephropathy-cohort/scenario.yaml`.
+
+### Fixed
+- `MedsPreviewCard` now runs terminology anchoring itself for raw-YAML
+  scenarios; previously only Builder-created scenarios (which pre-populate
+  `concept_id` on each signal) could generate a MEDS preview.
+- `generate_irb_document()` no longer crashes when a logic rule omits
+  `severity:` — intermediate building-block rules (e.g. qSOFA components)
+  are now exported as `[INFO]` instead of producing a 500.
+- Tracking pin for `psdl-lang` bumped to `>=0.4.0`; README compatibility
+  table and embedded version examples updated to match.
 - Welcome guide modal for first-time users
 - Help button in header to reopen guide
 - Navigation bar in Preview step with "Continue to Export" button

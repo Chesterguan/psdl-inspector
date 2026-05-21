@@ -28,6 +28,14 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Demo
+
+End-to-end walkthrough of the full pipeline — Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → **MEDS Preview** — using two real scenarios (a Sepsis-3 qSOFA screen and a T2DM + diabetic nephropathy research cohort):
+
+[![PSDL Inspector — sepsis screening + T2D cohort walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "PSDL Inspector — end-to-end demo")
+
+Reproducible cue sheets, scenario YAMLs, and a DevTools loader for both demos live in [`docs/demos/`](docs/demos/).
+
 ## Compatibility
 
 Inspector **always tracks the latest `psdl-lang`** — the requirements pin is `psdl-lang>=0.4.0` so the most recent compatible release is installed. The table below records the spec/bundle versions consumed at the time of each Inspector release; older Inspector versions are not retroactively bumped.

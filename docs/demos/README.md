@@ -4,9 +4,13 @@ Two recorded walkthroughs are kept here so anyone can reproduce the canonical
 PSDL Inspector flow — including the new MEDS Preview surface — without
 guessing at scenario design or recording cadence.
 
-> These are **human-recorded** demos. The scripts below help you load
-> scenarios reproducibly and read narration on cue while you screen-record
-> at your own pace.
+## Reference recording
+
+▶ **[Watch on YouTube](https://youtu.be/j-3UHeCyHDk)** — the published walkthrough that follows the two cue sheets below. Embed:
+
+[![PSDL Inspector — sepsis + T2D cohort walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk)
+
+> This kit is the recipe; the YouTube video is the canonical bake of it. Anyone re-recording (e.g., for a translated narration or a new spec version) should follow the same beats so the result stays comparable.
 
 ## Scenarios
 
