@@ -155,7 +155,10 @@ def generate_irb_document(
         doc.add_heading('Detection Rules', level=2)
         for rule in logic_rules:
             p = doc.add_paragraph()
-            severity = rule.get('severity', 'info')
+            # PSDL leaves `severity` as None when the rule omits it (intermediate
+            # building-block rules typically don't tag a severity); `dict.get`
+            # returns the explicit None, not the default. Coerce with `or`.
+            severity = rule.get('severity') or 'info'
             severity_color = {
                 'low': '28A745',
                 'medium': 'FFC107',
