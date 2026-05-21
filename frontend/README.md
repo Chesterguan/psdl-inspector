@@ -48,6 +48,7 @@ src/
 │   ├── BundlePanel.tsx   # Certified bundle preview
 │   ├── GovernancePanel.tsx # IRB documentation
 │   ├── ExportButton.tsx  # Bundle download
+│   ├── MedsPreviewCard.tsx # MEDS Parquet preview from anchored signals
 │   ├── CanonicalView.tsx # Canonical summary
 │   ├── ThemeToggle.tsx   # Dark/light mode
 │   ├── WelcomeGuide.tsx  # First-time user onboarding
@@ -94,6 +95,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8200
 - Severity-based coloring
 - Hover details panel
 
+### MEDS Preview
+- "Preview MEDS shape" card on the Export step
+- Calls `POST /api/meds/preview` with the page's anchored signals
+- Shows synthetic event/subject counts, the Parquet path, and the code chips
+  the preview used — gives authors a sanity check on what the MEDS shard
+  will look like before any real data is exported
+
 ### User Experience
 - Welcome guide for first-time users
 - Light and dark theme modes
@@ -111,5 +119,6 @@ The frontend connects to the FastAPI backend at `/api/*`:
 - `POST /api/outline` - Semantic outline
 - `POST /api/export/bundle` - Certified bundle
 - `POST /api/export/irb-document` - Word export
+- `POST /api/meds/preview` - MEDS Parquet preview from anchored signals
 
 *Updated: 2026-01-26*
