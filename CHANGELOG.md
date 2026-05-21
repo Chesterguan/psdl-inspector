@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `psdl_meds` package: MEDS (Medical Event Data Standard) writer, validator,
+  preview synthesizer, and `psdl-meds` CLI (convert + preview).
+- `POST /api/meds/preview` endpoint and Preview MEDS card on the Export
+  step. Generates a 10-row synthetic shard from anchored signals so authors
+  can see what their scenario will produce in MEDS format before running
+  against real data.
 - Welcome guide modal for first-time users
 - Help button in header to reopen guide
 - Navigation bar in Preview step with "Continue to Export" button
