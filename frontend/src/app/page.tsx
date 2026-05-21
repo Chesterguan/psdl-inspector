@@ -967,7 +967,10 @@ onContinue={async () => {
                   )}
 
                   {/* MEDS Preview */}
-                  <MedsPreviewCard signals={outlineResult?.signals ?? []} />
+                  <MedsPreviewCard
+                    yaml={content}
+                    signalCount={outlineResult?.signals?.length ?? 0}
+                  />
 
                   {/* IRB Word Export */}
                   <GovernancePanel
