@@ -51,6 +51,7 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 | **Anchor** | Automatic terminology binding to OMOP vocabulary at export |
 | **Bundle** | Generate checksummed certified bundles with terminology anchors |
 | **Export** | IRB preparation with AI-enriched Word document export |
+| **MEDS Preview** | Synthesize a 10-row MEDS-format Parquet preview from anchored signals, no DB required; ships with `psdl-meds` CLI for offline conversion |
 
 ## What Inspector Does NOT Do
 
@@ -261,6 +262,46 @@ Export certified audit bundle with checksum.
 ### POST /api/export/irb-document
 Export AI-enriched Word document for IRB preparation.
 
+### POST /api/meds/preview
+Synthesize a 10-row MEDS preview shard from anchored signals.
+```json
+// Request
+{
+  "anchors": [
+    {
+      "psdl_signal": "serum_creatinine",
+      "omop_vocabulary": "LOINC",
+      "omop_concept_code": "2160-0",
+      "expected_unit": "mg/dL"
+    }
+  ],
+  "n": 10
+}
+
+// Response
+{
+  "n_events": 10,
+  "n_subjects": 3,
+  "path": "/tmp/psdl_inspector_meds/preview.parquet",
+  "codes_used": ["LOINC/2160-0"]
+}
+```
+Subjects are synthetic negative integers and timestamps step by one day from 2024-01-01, so the output can never collide with real PHI. The shard is validated against `meds.schema.data_schema()` before return.
+
+## MEDS Preview (`psdl_meds`)
+
+Inspector embeds the [`psdl_meds`](backend/psdl_meds/) shared library so authors can see what their scenario will produce in [MEDS](https://github.com/Medical-Event-Data-Standard/meds) format **before** running it against any real data. Use the "Preview MEDS shape" card on the Export step, or the `psdl-meds` CLI for offline work:
+
+```bash
+# Convert a CSV of (subject_id, time, code, numeric_value) rows to MEDS Parquet
+psdl-meds convert --input cohort.csv --out cohort.parquet
+
+# Synthesize a preview shard from anchored signals (no DB needed)
+psdl-meds preview --anchors anchors.json --out preview.parquet -n 10
+```
+
+The same library is used by [PSDL Workbench](https://github.com/Chesterguan/PSDL-workbench) for live OMOP-backed cohort exports.
+
 ## Certified Audit Bundle
 
 Inspector outputs **Certified Audit Bundles** — the contract between authoring and execution:
@@ -340,6 +381,8 @@ See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platfo
 |---------|-------------|------|
 | **PSDL** | Patient Scenario Definition Language spec | [GitHub](https://github.com/Chesterguan/PSDL) |
 | **psdl-lang** | Python library for PSDL parsing | [PyPI](https://pypi.org/project/psdl-lang/) |
+| **psdl_meds** | MEDS (Medical Event Data Standard) writer + validator, embedded here and reused by Workbench | [backend/psdl_meds/](backend/psdl_meds/) |
+| **PSDL Workbench** | Institutional platform for live cohort execution + governance | [GitHub](https://github.com/Chesterguan/PSDL-workbench) |
 
 ## Roadmap
 
@@ -349,6 +392,7 @@ See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platfo
 - [x] Visual scenario builder with guided workflow
 - [x] Terminology anchoring (OMOP vocabulary binding)
 - [x] Modular vocabulary search (embedders, retrievers, rerankers)
+- [x] MEDS preview + `psdl-meds` CLI (shared library with PSDL Workbench)
 - [ ] Editable DAG (visual scenario editing)
 - [ ] Lint rules (best practices, style checks)
 - [ ] Scenario registry with versioning
