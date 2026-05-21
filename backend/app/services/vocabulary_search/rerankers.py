@@ -67,13 +67,43 @@ class RuleBasedReranker(BaseReranker):
     # Common lab tests that should prefer Serum/Plasma
     SERUM_PLASMA_TESTS = ["creatinine", "glucose", "sodium", "potassium", "hemoglobin"]
 
+    # Blood-test queries that are generic enough to prefer the unspecified-blood concept
+    # over specimen-subtype variants (venous, arterial, capillary, cord, mixed venous).
+    GENERIC_BLOOD_TESTS = ["hemoglobin", "hematocrit", "wbc", "platelet", "platelets"]
+
+    BLOOD_SUBSPECIMENS = [
+        "venous blood", "arterial blood", "capillary blood",
+        "cord blood", "mixed venous", "peripheral blood",
+    ]
+
+    # Method/device qualifiers that surface for vitals when the query is generic.
+    # E.g. "heart rate" should rank simple HR above "Heart rate Intra arterial line by Invasive".
+    # Note: non-invasive variants are deliberately NOT penalized — non-invasive BP is the
+    # standard outpatient measurement and is the desired result for "blood pressure".
+    METHOD_DEVICE_PATTERNS = [
+        "invasive",
+        "intra arterial", "intra-arterial", "intraarterial",
+        "arterial line", "central line",
+        "doppler", "auscultation", "palpation", "oscillometric",
+    ]
+
+    # Generic vital-sign queries that should prefer a single measurement over panels.
+    GENERIC_VITAL_QUERIES = [
+        "heart rate", "blood pressure", "respiratory rate",
+        "pulse", "oxygen saturation", "spo2",
+    ]
+
+    # "set" deliberately excluded — too many false positives ("at onset", "dataset",
+    # "by Set" method modifiers). "battery" kept though rare in practice.
+    PANEL_TOKENS = {"panel", "battery"}
+
     def rerank(
         self,
         query: str,
         candidates: List[VocabularySearchResult],
         concepts_data: Dict[int, Dict[str, Any]],
     ) -> List[VocabularySearchResult]:
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
 
         for candidate in candidates:
             score = candidate.raw_score
@@ -158,6 +188,30 @@ class RuleBasedReranker(BaseReranker):
                     if specimen in name_lower:
                         score -= 0.15
                         break
+
+            # Specimen-subtype variants for generic blood-test queries
+            # (hemoglobin -> prefer plain "in Blood" over "in Venous blood")
+            if query_lower in self.GENERIC_BLOOD_TESTS:
+                for variant in self.BLOOD_SUBSPECIMENS:
+                    if variant in name_lower:
+                        score -= 0.25
+                        break
+
+            # Method/device qualifiers for short generic vital-sign queries
+            # (heart rate -> demote "Intra arterial line by Invasive")
+            if len(query_lower.split()) <= 2:
+                for pattern in self.METHOD_DEVICE_PATTERNS:
+                    if pattern in name_lower:
+                        score -= 0.3
+                        break
+
+            # Panel/battery composites for queries that mean a single measurement.
+            # Penalty is sized to overcome the "name starts with query" boost (+0.25)
+            # so a panel concept doesn't outrank an individual measurement.
+            if query_lower in self.GENERIC_VITAL_QUERIES:
+                name_tokens = re.findall(r"[a-z0-9]+", name_lower)
+                if self.PANEL_TOKENS.intersection(name_tokens):
+                    score -= 0.35
 
             # Method-specific variants
             if " by " in name_lower:
