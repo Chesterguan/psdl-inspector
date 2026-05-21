@@ -109,6 +109,54 @@ def test_panel_penalty_only_applies_to_generic_vital_queries(reranker):
     )
 
 
+def test_blood_pressure_panel_still_findable_when_queried_explicitly(reranker):
+    """If the user explicitly searches for 'blood pressure panel', it should rank first."""
+    candidates = [
+        _make(1, "Blood pressure panel", raw_score=0.55),
+        _make(2, "Systolic blood pressure", raw_score=0.50),
+    ]
+    assert (
+        _top_name(reranker, "blood pressure panel", candidates)
+        == "Blood pressure panel"
+    )
+
+
+def test_noninvasive_blood_pressure_not_penalized(reranker):
+    """Non-invasive BP is the standard outpatient measurement — must not be
+    demoted by the method/device penalty."""
+    candidates = [
+        _make(1, "Systolic blood pressure noninvasive", raw_score=0.55),
+        _make(2, "Systolic blood pressure by Invasive", raw_score=0.55),
+    ]
+    top = _top_name(reranker, "blood pressure", candidates)
+    assert top == "Systolic blood pressure noninvasive"
+
+
+def test_query_with_trailing_whitespace_handled(reranker):
+    """Queries from a UI text input may have trailing spaces — they must not
+    bypass list-membership checks."""
+    candidates = [
+        _make(1, "Hemoglobin [Mass/volume] in Blood", raw_score=0.50),
+        _make(2, "Hemoglobin [Mass/volume] in Venous blood", raw_score=0.55),
+    ]
+    assert (
+        _top_name(reranker, "hemoglobin  ", candidates)
+        == "Hemoglobin [Mass/volume] in Blood"
+    )
+
+
+def test_set_substring_does_not_trigger_panel_penalty(reranker):
+    """Concept names containing 'set' as a substring (onset, dataset, by Set)
+    must not trigger the panel/battery penalty."""
+    candidates = [
+        _make(1, "Heart rate at onset", raw_score=0.55),
+        _make(2, "Heart rate panel", raw_score=0.50),
+    ]
+    # "onset" tokenizes to ["onset"] — must NOT match the panel-token set.
+    # The "onset" concept's higher raw score should carry through.
+    assert _top_name(reranker, "heart rate", candidates) == "Heart rate at onset"
+
+
 def test_method_device_penalty_only_short_generic_query(reranker):
     """The new method/device penalty should only fire for short generic queries,
     not when the user explicitly asks for the invasive variant."""

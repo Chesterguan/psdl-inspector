@@ -78,8 +78,10 @@ class RuleBasedReranker(BaseReranker):
 
     # Method/device qualifiers that surface for vitals when the query is generic.
     # E.g. "heart rate" should rank simple HR above "Heart rate Intra arterial line by Invasive".
+    # Note: non-invasive variants are deliberately NOT penalized — non-invasive BP is the
+    # standard outpatient measurement and is the desired result for "blood pressure".
     METHOD_DEVICE_PATTERNS = [
-        "invasive", "non-invasive", "noninvasive",
+        "invasive",
         "intra arterial", "intra-arterial", "intraarterial",
         "arterial line", "central line",
         "doppler", "auscultation", "palpation", "oscillometric",
@@ -87,11 +89,13 @@ class RuleBasedReranker(BaseReranker):
 
     # Generic vital-sign queries that should prefer a single measurement over panels.
     GENERIC_VITAL_QUERIES = [
-        "heart rate", "blood pressure", "respiratory rate", "temperature",
+        "heart rate", "blood pressure", "respiratory rate",
         "pulse", "oxygen saturation", "spo2",
     ]
 
-    PANEL_TOKENS = {"panel", "battery", "set"}
+    # "set" deliberately excluded — too many false positives ("at onset", "dataset",
+    # "by Set" method modifiers). "battery" kept though rare in practice.
+    PANEL_TOKENS = {"panel", "battery"}
 
     def rerank(
         self,
@@ -99,7 +103,7 @@ class RuleBasedReranker(BaseReranker):
         candidates: List[VocabularySearchResult],
         concepts_data: Dict[int, Dict[str, Any]],
     ) -> List[VocabularySearchResult]:
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
 
         for candidate in candidates:
             score = candidate.raw_score
