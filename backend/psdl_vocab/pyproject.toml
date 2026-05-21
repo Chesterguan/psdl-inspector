@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psdl-vocab"
+version = "0.1.0"
+description = "Enriched OMOP vocabulary + searchable service for the PSDL ecosystem."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[tool.setuptools]
+# This pyproject.toml lives INSIDE the package directory (flat layout).
+# Tell setuptools where to find the psdl_vocab package (one level deeper).
+packages = ["psdl_vocab"]
+package-dir = {"psdl_vocab" = "psdl_vocab"}
+
+[tool.setuptools.package-data]
+psdl_vocab = ["data/*.json"]
