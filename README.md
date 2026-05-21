@@ -30,6 +30,8 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 ## Demo
 
+![PSDL Inspector wizard walkthrough](assets/psdl-inspector-workflow.gif)
+
 End-to-end walkthrough of the full pipeline — Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → **MEDS Preview** — using two real scenarios (a Sepsis-3 qSOFA screen and a T2DM + diabetic nephropathy research cohort):
 
 [![PSDL Inspector — sepsis screening + T2D cohort walkthrough](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "PSDL Inspector — end-to-end demo")
