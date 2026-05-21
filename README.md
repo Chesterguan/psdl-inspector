@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/Chesterguan/psdl-inspector"><img src="https://img.shields.io/badge/version-0.2.0-blue.svg" alt="Version"></a>
-  <a href="https://pypi.org/project/psdl-lang/"><img src="https://img.shields.io/badge/psdl--lang-0.3.1-green.svg" alt="psdl-lang"></a>
+  <a href="https://pypi.org/project/psdl-lang/"><img src="https://img.shields.io/badge/psdl--lang-latest-green.svg" alt="psdl-lang"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey.svg" alt="License"></a>
   <a href="https://zread.ai/Chesterguan/psdl-inspector" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
 </p>
@@ -30,14 +30,15 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 ## Compatibility
 
-| Inspector Version | psdl-lang Version | PSDL Spec | Bundle Version | Status |
-|-------------------|-------------------|-----------|----------------|--------|
-| 0.2.x | 0.3.1 | 0.3 | 1.1 | **Current** |
-| 0.1.x | 0.3.1 | 0.3 | 1.0 | Maintained |
-| - | 0.2.x | 0.2 | - | Not supported |
+Inspector **always tracks the latest `psdl-lang`** — the requirements pin is `psdl-lang>=0.4.0` so the most recent compatible release is installed. The table below records the spec/bundle versions consumed at the time of each Inspector release; older Inspector versions are not retroactively bumped.
+
+| Inspector Version | psdl-lang at release | PSDL Spec | Bundle Version | Status |
+|-------------------|----------------------|-----------|----------------|--------|
+| 0.2.x | 0.4.x (latest) | 0.4 | 1.1 | **Current** |
+| 0.1.x | 0.3.1 | 0.3 | 1.0 | Maintained (legacy spec) |
 | - | < 0.2 | - | - | Not supported |
 
-> **Note**: PSDL Inspector requires psdl-lang 0.3.x. The psdl-lang library provides parsing, validation, and IR generation that Inspector builds upon.
+> **Note**: Inspector follows psdl-lang's latest release. Pin `psdl-lang>=0.4.0` in your own requirements to track along — the package provides parsing, validation, and IR generation that Inspector builds upon.
 
 ## Features
 
@@ -97,7 +98,7 @@ See [Deployment Guide](docs/DEPLOYMENT.md) for Vercel + Render setup.
 
 - Python 3.9+
 - Node.js 18+
-- psdl-lang 0.3.1 (installed automatically)
+- psdl-lang (latest, installed automatically)
 
 ### 1. Clone Repository
 
@@ -147,7 +148,7 @@ ollama pull mistral-small
 Navigate to http://localhost:9806. The header should display:
 ```
 Inspector v0.2.0
-psdl-lang v0.3.1
+psdl-lang v0.4.x  # whichever latest pip resolved
 ```
 
 ## Wizard Workflow
@@ -225,7 +226,7 @@ Returns version information.
 ```json
 {
   "inspector": "0.2.0",
-  "psdl_lang": "0.3.1"
+  "psdl_lang": "0.4.0"
 }
 ```
 
@@ -336,7 +337,7 @@ Inspector outputs **Certified Audit Bundles** — the contract between authoring
   },
 
   "validation": {
-    "psdl_lang_version": "0.3.1",
+    "psdl_lang_version": "0.4.0",
     "inspector_version": "0.2.0",
     "valid": true,
     "errors": [],
@@ -371,7 +372,7 @@ See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platfo
 | Editor | CodeMirror 6 |
 | Visualization | ReactFlow, dagre (auto-layout) |
 | Backend | FastAPI, Python 3.9+ |
-| Validation | psdl-lang 0.3.1 |
+| Validation | psdl-lang (latest) |
 | AI Generation | OpenAI GPT-4o-mini, Ollama |
 | Document Export | python-docx |
 
