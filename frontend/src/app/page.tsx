@@ -8,6 +8,7 @@ import {
   Github, Package, Heart, ExternalLink, HelpCircle
 } from 'lucide-react';
 import { Editor, DAGView, GovernancePanel, ExportButton, GenerationPanel, ThemeToggle, Logo } from '@/components';
+import MedsPreviewCard from '@/components/MedsPreviewCard';
 import { PSDLBuilder } from '@/components/builder';
 import WelcomeGuide, { useWelcomeGuide } from '@/components/WelcomeGuide';
 import { api, ValidationResponse, OutlineResponse, CertifiedBundle, VersionInfo } from '@/lib/api';
@@ -964,6 +965,9 @@ onContinue={async () => {
                       <p className="text-sm text-muted mt-1">Validate your scenario first</p>
                     </div>
                   )}
+
+                  {/* MEDS Preview */}
+                  <MedsPreviewCard signals={outlineResult?.signals ?? []} />
 
                   {/* IRB Word Export */}
                   <GovernancePanel
