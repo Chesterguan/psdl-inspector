@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psdl-vocab-search"
+version = "0.1.0"
+description = "Modular vocabulary search engine (embedders + retrievers + rerankers) for the PSDL ecosystem."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = [
+    "numpy",
+    "psdl-vocab",
+]
+
+[project.optional-dependencies]
+ml = [
+    "sentence-transformers",
+    "transformers",
+    "torch",
+    "faiss-cpu",
+]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[tool.setuptools]
+# This pyproject.toml lives INSIDE the package directory (flat layout).
+# Tell setuptools to treat the current directory as the source of the
+# `psdl_vocab_search` package — its __init__.py is right next to this file.
+packages = ["psdl_vocab_search"]
+package-dir = {"psdl_vocab_search" = "."}
