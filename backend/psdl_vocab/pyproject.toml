@@ -18,9 +18,10 @@ dev = [
 
 [tool.setuptools]
 # This pyproject.toml lives INSIDE the package directory (flat layout).
-# Tell setuptools where to find the psdl_vocab package (one level deeper).
+# Tell setuptools to treat the current directory as the source of the
+# `psdl_vocab` package — its __init__.py is right next to this file.
 packages = ["psdl_vocab"]
-package-dir = {"psdl_vocab" = "psdl_vocab"}
+package-dir = {"psdl_vocab" = "."}
 
 [tool.setuptools.package-data]
 psdl_vocab = ["data/*.json"]
