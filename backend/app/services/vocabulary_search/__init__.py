@@ -1,37 +1,18 @@
-"""Modular vocabulary search system.
+"""Backward-compatibility shim.
 
-This module provides a pluggable architecture for vocabulary concept matching:
-- Embedders: Convert text to vectors (MiniLM, SapBERT, BioLORD, OpenAI, etc.)
-- Retrievers: Find similar vectors (FAISS, Annoy, ChromaDB, etc.)
-- Rerankers: Adjust scores based on domain knowledge
-
-To swap implementations, modify the factory functions or config.
+The modular vocabulary search engine was extracted into the
+psdl_vocab_search package. This re-exports its public API so existing
+``from app.services.vocabulary_search import ...`` call sites keep working.
 """
-
-from app.services.vocabulary_search.base import (
+from psdl_vocab_search import (  # noqa: F401
     VocabularySearchResult,
     BaseEmbedder,
     BaseRetriever,
     BaseReranker,
     VocabularySearchEngine,
-)
-from app.services.vocabulary_search.factory import (
     get_vocabulary_search_engine,
     create_search_engine,
     SearchEngineConfig,
     list_available_components,
     reset_engine,
 )
-
-__all__ = [
-    "VocabularySearchResult",
-    "BaseEmbedder",
-    "BaseRetriever",
-    "BaseReranker",
-    "VocabularySearchEngine",
-    "get_vocabulary_search_engine",
-    "create_search_engine",
-    "SearchEngineConfig",
-    "list_available_components",
-    "reset_engine",
-]
