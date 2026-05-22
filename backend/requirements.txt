@@ -10,3 +10,5 @@ pyarrow>=15,<17
 meds>=0.3,<0.4
 # psdl_vocab is installed editable from ./psdl_vocab during development
 # (pip install -e ./psdl_vocab). Bundled OMOP vocab ships with the package.
+# psdl_ai_gen is installed editable from ./psdl_ai_gen during development
+# (pip install -e ./psdl_ai_gen).
