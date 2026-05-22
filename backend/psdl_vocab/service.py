@@ -196,6 +196,11 @@ class VocabularyService:
             if len(name_lower) < 50:
                 scores[cid] += 15
 
+        # Extension point: subclasses may refine scores with domain-specific
+        # ranking (e.g. noise-token penalties, concept-class preferences).
+        # Base implementation is a no-op.
+        self._apply_custom_ranking(scores, query_lower, tokens)
+
         # Filter by category/domain if specified
         if category or domain:
             filtered_scores = {}
@@ -222,6 +227,21 @@ class VocabularyService:
             results = self._fuzzy_search(query_lower, limit)
 
         return results
+
+    def _apply_custom_ranking(
+        self,
+        scores: Dict[int, float],
+        query_lower: str,
+        tokens: List[str],
+    ) -> None:
+        """Hook for subclasses to refine ranking scores in place.
+
+        Called after the base smart-ranking adjustments and before the
+        category/domain filter. `scores` maps concept_id -> score; subclasses
+        mutate it directly. Each concept's full record is available via
+        `self._by_id[cid]`. Base implementation does nothing.
+        """
+        return
 
     def _fuzzy_search(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Fallback fuzzy search using simple substring matching."""
