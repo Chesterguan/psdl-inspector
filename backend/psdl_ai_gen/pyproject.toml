@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psdl-ai-gen"
+version = "0.1.0"
+description = "OpenAI + Ollama PSDL synthesis services for the PSDL ecosystem."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = [
+    "httpx>=0.25,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[tool.setuptools]
+# This pyproject.toml lives INSIDE the package directory (flat layout).
+# Tell setuptools to treat the current directory as the source of the
+# `psdl_ai_gen` package — its __init__.py is right next to this file.
+packages = ["psdl_ai_gen"]
+package-dir = {"psdl_ai_gen" = "."}

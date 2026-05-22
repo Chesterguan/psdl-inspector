@@ -8,5 +8,9 @@ psdl-lang>=0.4.0  # Always track latest psdl-lang
 python-docx>=0.8.11  # Word document generation for IRB export
 pyarrow>=15,<17
 meds>=0.3,<0.4
+# psdl_vocab is installed editable from ./psdl_vocab during development
+# (pip install -e ./psdl_vocab). Bundled OMOP vocab ships with the package.
+# psdl_ai_gen is installed editable from ./psdl_ai_gen during development
+# (pip install -e ./psdl_ai_gen).
 # psdl_vocab_search is installed editable from ./psdl_vocab_search during development
 # (pip install -e ./psdl_vocab_search). ML embedders are optional extras: .[ml]
