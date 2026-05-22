@@ -14,3 +14,5 @@ meds>=0.3,<0.4
 # (pip install -e ./psdl_ai_gen).
 # psdl_vocab_search is installed editable from ./psdl_vocab_search during development
 # (pip install -e ./psdl_vocab_search). ML embedders are optional extras: .[ml]
+# psdl_anchoring is installed editable from ./psdl_anchoring during development
+# (pip install -e ./psdl_anchoring).
