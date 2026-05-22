@@ -8,3 +8,5 @@ psdl-lang>=0.4.0  # Always track latest psdl-lang
 python-docx>=0.8.11  # Word document generation for IRB export
 pyarrow>=15,<17
 meds>=0.3,<0.4
+# psdl_ai_gen is installed editable from ./psdl_ai_gen during development
+# (pip install -e ./psdl_ai_gen).
