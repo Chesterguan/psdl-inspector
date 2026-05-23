@@ -23,5 +23,7 @@ dev = [
 packages = ["psdl_vocab"]
 package-dir = {"psdl_vocab" = "."}
 
-[tool.setuptools.package-data]
-psdl_vocab = ["data/*.json"]
+# NOTE: the vocab data is intentionally NOT bundled in the wheel. It is hosted
+# as a gzipped GitHub Release asset and downloaded + cached on first use (see
+# _data_loader.py). This keeps the wheel code-only and unblocks the much larger
+# scope-C vocab (~350MB) that cannot be bundled.
