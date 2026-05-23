@@ -90,6 +90,7 @@ Generate ONLY:
 
 1. abbreviations: List of 2-5 common clinical abbreviations.
    ONLY include widely recognized, standard abbreviations used in clinical practice.
+   For Drug concepts, abbreviations must be recognized short names for the drug itself (e.g., APAP for acetaminophen, HCTZ for hydrochlorothiazide), NOT administration routes (IV, PO) or clinical parameters (BP, HR).
    If unsure or no standard abbreviations exist, return null.
 
 2. search_terms: List of 3-7 alternate search terms.
@@ -97,7 +98,7 @@ Generate ONLY:
    If unsure, return null.
 
 3. category: One of [lab_chemistry, lab_hematology, lab_microbiology, lab_urinalysis,
-   vital_sign, imaging, procedure, observation, other]
+   vital_sign, imaging, procedure, observation, medication, other]
    If unsure, return "other".
 
 4. typical_units: List of 1-3 units using EXACT UCUM codes only.
