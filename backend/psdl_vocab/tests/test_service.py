@@ -1,5 +1,6 @@
-"""Smoke tests for the psdl_vocab package — loads the bundled OMOP vocab
-and exercises search + lookup. Hermetic: no network, no Inspector imports."""
+"""Smoke tests for the psdl_vocab package — loads the OMOP vocab and exercises
+search + lookup. Network-free: conftest.py pins PSDL_VOCAB_DATA_DIR to a local
+cache/copy so these tests never trigger the first-use release download."""
 
 import pytest
 
@@ -15,7 +16,7 @@ def vocab():
 
 def test_loads_expected_concept_count(vocab):
     stats = vocab.get_stats()
-    # bundled vocabulary_final.json has 76,596 concepts; assert a floor
+    # vocabulary_final.json has 76,596 concepts; assert a floor
     # rather than exact so a future vocab rebuild doesn't break this test
     assert stats["total_concepts"] > 70_000
 
