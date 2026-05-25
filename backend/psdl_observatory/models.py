@@ -53,7 +53,11 @@ class ScanResult:
         return len({f.schema_signature for f in self.files})
 
     def duplicate_filenames(self) -> Dict[str, List[str]]:
-        """Basenames that occur at more than one relative path -> sorted paths."""
+        """Basenames that occur at more than one relative path → sorted paths.
+
+        Assumes each ParquetFileInfo.relative_path is unique within
+        self.files (the scanner guarantees this — os.walk yields each path once).
+        """
         by_name: Dict[str, List[str]] = defaultdict(list)
         for f in self.files:
             by_name[f.filename].append(f.relative_path)

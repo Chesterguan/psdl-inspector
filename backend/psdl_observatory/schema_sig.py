@@ -22,6 +22,10 @@ def schema_signature(columns: List[str], types: List[str]) -> str:
     Order-independent: sorts (normalized_name, type) pairs before hashing, so
     column order does not affect the signature.
     """
+    if len(columns) != len(types):
+        raise ValueError(
+            f"columns and types must have equal length, got {len(columns)} vs {len(types)}"
+        )
     norm = normalize_columns(columns)
     pairs = sorted(zip(norm, [str(t) for t in types]))
     blob = "|".join(f"{name}:{typ}" for name, typ in pairs)

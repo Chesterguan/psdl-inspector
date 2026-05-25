@@ -31,3 +31,9 @@ def test_signature_is_hex_digest():
     assert isinstance(sig, str)
     assert len(sig) == 16  # truncated sha256 hex
     int(sig, 16)  # parses as hex
+
+
+def test_signature_raises_on_length_mismatch():
+    import pytest
+    with pytest.raises(ValueError):
+        schema_signature(["a", "b"], ["int64"])
