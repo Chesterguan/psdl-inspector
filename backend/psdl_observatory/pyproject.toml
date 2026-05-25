@@ -22,3 +22,9 @@ psdl-observatory = "psdl_observatory.cli:main"
 [tool.setuptools]
 packages = ["psdl_observatory"]
 package-dir = {"psdl_observatory" = "."}
+
+[tool.pytest.ini_options]
+# importlib mode lets individual submodule tests run without triggering the
+# package __init__.py (which imports all submodules). This supports incremental
+# TDD: each task's test file can run as soon as that module is created.
+addopts = "--import-mode=importlib"
