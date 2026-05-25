@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class ParquetFileInfo:
     """Footer-derived metadata for a single parquet file. No row data."""
 
