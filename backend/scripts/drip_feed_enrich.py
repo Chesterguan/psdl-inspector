@@ -32,6 +32,7 @@ Re-running `run` is idempotent: it picks up exactly where the manifest left off.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import sys
@@ -64,6 +65,26 @@ WAVES_DIR = os.path.join(BATCH_DIR, "waves")
 RESULTS_DIR = os.path.join(BATCH_DIR, "results")
 MANIFEST = os.path.join(BATCH_DIR, "drip_manifest.json")
 LOG_FILE = os.path.join(BATCH_DIR, "drip.log")
+LOCK_FILE = os.path.join(BATCH_DIR, "drip.lock")
+
+# Single-instance guard. Held open for the process lifetime; the OS releases
+# the flock automatically when the process exits (even on crash/kill), so there
+# is never a stale lock. Prevents two orchestrators racing → double-submit/spend.
+_lock_fh = None
+
+
+def _acquire_singleton_lock() -> bool:
+    """Return True if we got the exclusive lock; False if another instance holds it."""
+    global _lock_fh
+    os.makedirs(BATCH_DIR, exist_ok=True)
+    _lock_fh = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(_lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return False
+    _lock_fh.write(f"{os.getpid()}\n")
+    _lock_fh.flush()
+    return True
 CONCEPTS_PATH = "data/vocabulary/extracted/scope_c_concepts.json"
 
 # --------------------------------------------------------------------------- #
@@ -549,6 +570,12 @@ def main() -> int:
 
     if args.dry_run:
         return do_dry_run(manifest, input_tokens_per_req)
+
+    # Single-instance guard before any spend: if another orchestrator is live,
+    # stop cleanly (exit 0) so a duplicate supervisor doesn't restart-loop.
+    if not _acquire_singleton_lock():
+        log("another drip_feed instance holds the lock — exiting without doing work")
+        return 0
     return do_run(manifest, input_tokens_per_req)
 
 
