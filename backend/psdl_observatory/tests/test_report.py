@@ -21,7 +21,7 @@ def test_report_is_html():
 def test_report_includes_totals_and_files():
     html = render_html_report(_result())
     assert "Total files" in html
-    assert "2" in html  # total files
+    assert ">2</b>Total files" in html
     assert "EHR/labs/part-0.parquet" in html
     assert "sigA" in html
 

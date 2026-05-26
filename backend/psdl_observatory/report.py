@@ -12,6 +12,7 @@ from psdl_observatory.models import ScanResult
 
 
 def render_html_report(result: ScanResult) -> str:
+    dups = result.duplicate_filenames()
     rows = "\n".join(
         "<tr>"
         f"<td>{escape(f.relative_path)}</td>"
@@ -25,7 +26,7 @@ def render_html_report(result: ScanResult) -> str:
     )
     dup_rows = "\n".join(
         f"<tr><td>{escape(name)}</td><td>{len(paths)}</td><td>{escape(', '.join(paths))}</td></tr>"
-        for name, paths in sorted(result.duplicate_filenames().items())
+        for name, paths in sorted(dups.items())
     ) or '<tr><td colspan="3">none</td></tr>'
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -51,7 +52,7 @@ def render_html_report(result: ScanResult) -> str:
   <div class="stat"><b>{result.total_files}</b>Total files</div>
   <div class="stat"><b>{result.total_rows}</b>Total rows</div>
   <div class="stat"><b>{result.distinct_schema_count}</b>Distinct schemas</div>
-  <div class="stat"><b>{len(result.duplicate_filenames())}</b>Duplicate filenames</div>
+  <div class="stat"><b>{len(dups)}</b>Duplicate filenames</div>
   <div class="stat"><b>{len(result.errors)}</b>Errors</div>
 </div>
 <h2>Files</h2>
