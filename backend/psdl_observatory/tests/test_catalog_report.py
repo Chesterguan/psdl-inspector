@@ -39,3 +39,10 @@ def test_catalog_html_escapes():
     assert "&lt;script&gt;" in html
     assert "<b>.parquet" not in html
     assert "&lt;b&gt;.parquet" in html
+
+
+def test_catalog_html_empty():
+    html = render_catalog_html(CatalogResult(columns=[], schemas=[]))
+    assert html.lstrip().startswith("<!DOCTYPE html>")
+    assert "none" in html          # both tables show the sentinel row
+    assert "(0)" in html           # the <h2> counters show 0

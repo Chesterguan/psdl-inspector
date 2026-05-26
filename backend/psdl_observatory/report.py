@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from html import escape
 
+from psdl_observatory.catalog import CatalogResult
 from psdl_observatory.models import ScanResult
 
 
@@ -70,7 +71,7 @@ def render_html_report(result: ScanResult) -> str:
 """
 
 
-def render_catalog_html(catalog) -> str:
+def render_catalog_html(catalog: CatalogResult) -> str:
     """Render the semantic catalog (columns + schema profiles) as static HTML.
 
     All dynamic text is HTML-escaped. `catalog` is a CatalogResult.
