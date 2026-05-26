@@ -54,3 +54,32 @@ def test_cli_out_is_file_errors(parquet_lake, tmp_path):
     r = _run("scan", str(parquet_lake), "--out", str(bad_out), cwd=tmp_path)
     assert r.returncode == 2
     assert "not a directory" in r.stderr
+
+
+def test_cli_catalog_writes_outputs(parquet_lake, tmp_path):
+    out = tmp_path / "reports"
+    r = _run("catalog", str(parquet_lake), "--out", str(out), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (out / "column_catalog.csv").exists()
+    assert (out / "schema_semantic_catalog.csv").exists()
+    assert "columns" in r.stdout  # summary mentions column/schema counts
+
+
+def test_cli_catalog_html_flag(parquet_lake, tmp_path):
+    out = tmp_path / "reports"
+    r = _run("catalog", str(parquet_lake), "--out", str(out), "--html", cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (out / "catalog.html").exists()
+    assert "<!DOCTYPE html>" in (out / "catalog.html").read_text()
+
+
+def test_cli_catalog_bad_root_errors(tmp_path):
+    r = _run("catalog", str(tmp_path / "nope"), "--out", str(tmp_path / "r"), cwd=tmp_path)
+    assert r.returncode == 2
+    assert "not a directory" in r.stderr
+
+
+def test_cli_help_lists_catalog(tmp_path):
+    r = _run("--help", cwd=tmp_path)
+    assert r.returncode == 0
+    assert "catalog" in r.stdout
