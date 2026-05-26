@@ -30,12 +30,15 @@ def test_normalize_col_lowercases_and_unifies_separators():
     ("subject_id", ROLE_PATIENT),
     ("mrn", ROLE_PATIENT),
     ("person_key", ROLE_PATIENT),
+    ("patient", ROLE_PATIENT),
+    ("person", ROLE_PATIENT),
     # encounter
     ("encounter_id", ROLE_ENCOUNTER),
     ("visit_occurrence_id", ROLE_ENCOUNTER),
     ("hadm_id", ROLE_ENCOUNTER),
     ("stay_id", ROLE_ENCOUNTER),
     ("admission_id", ROLE_ENCOUNTER),
+    ("encounter", ROLE_ENCOUNTER),
     # code (checked before time so *_code wins over nothing)
     ("diagnosis_code", ROLE_CODE),
     ("icd10_code", ROLE_CODE),
