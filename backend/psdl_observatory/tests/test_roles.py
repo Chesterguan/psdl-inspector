@@ -69,6 +69,13 @@ def test_normalize_col_lowercases_and_unifies_separators():
     ("value", ROLE_OTHER),
     ("row_id", ROLE_OTHER),
     ("quantity", ROLE_OTHER),
+    # _flag/_status must be clinically anchored — these are NOT outcomes
+    ("marital_status", ROLE_OTHER),
+    ("active_flag", ROLE_OTHER),
+    ("employment_status", ROLE_OTHER),
+    # clinically-stemmed flag/status ARE outcomes
+    ("vital_status", ROLE_OUTCOME),
+    ("discharge_status", ROLE_OUTCOME),
 ])
 def test_infer_role(col, role):
     assert infer_role(col) == role

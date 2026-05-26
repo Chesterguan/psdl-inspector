@@ -78,7 +78,7 @@ ROLE_PATTERNS: List[Tuple[str, List[str]]] = [
     (ROLE_OUTCOME, [
         r"^(mortality|death|deceased|expired|alive|survival|disposition)$",
         r"^discharge_disposition$", r"^readmit\w*$", r"^outcome$",
-        r".*_(flag|status)$",
+        r"^(death|deceased|mortality|expired|survival|discharge|readmission|readmit|vital|alive)_(flag|status)$",
     ]),
     (ROLE_TEXT, [
         r"^(note|notes|text|narrative|comment|comments|report|description|reason)$",
