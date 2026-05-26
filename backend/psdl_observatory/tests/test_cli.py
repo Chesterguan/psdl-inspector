@@ -97,3 +97,19 @@ def test_cli_catalog_out_is_file_errors(parquet_lake, tmp_path):
     r = _run("catalog", str(parquet_lake), "--out", str(bad_out), cwd=tmp_path)
     assert r.returncode == 2
     assert "not a directory" in r.stderr
+
+
+def test_cli_catalog_reports_scan_errors(tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    root = tmp_path / "lake"
+    root.mkdir()
+    pq.write_table(pa.table({"patient_id": [1, 2]}), root / "good.parquet")
+    (root / "bad.parquet").write_text("not a parquet")
+    out = tmp_path / "reports"
+    r = _run("catalog", str(root), "--out", str(out), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert "1 scan error" in r.stdout or "errors" in r.stdout.lower()
+    # the corrupt file must not have aborted the catalog of the good file
+    assert (out / "column_catalog.csv").exists()

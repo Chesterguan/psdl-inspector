@@ -64,7 +64,7 @@ def _cmd_catalog(args: argparse.Namespace) -> int:
         html_path.write_text(render_catalog_html(catalog))
         paths["html"] = html_path
     print(f"catalog: {len(catalog.columns)} distinct columns, "
-          f"{len(catalog.schemas)} distinct schemas")
+          f"{len(catalog.schemas)} distinct schemas, {len(result.errors)} scan errors")
     for label, p in paths.items():
         print(f"  {label}: {p}")
     return 0
