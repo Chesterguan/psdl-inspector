@@ -1,6 +1,7 @@
 """`psdl-observatory` command-line entry point.
 
     psdl-observatory scan <root> --out <dir> [--html] [--workers N]
+    psdl-observatory catalog <root> --out <dir> [--html] [--workers N]
 """
 
 from __future__ import annotations

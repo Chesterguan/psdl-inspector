@@ -17,7 +17,7 @@ from psdl_observatory.writers import (
     write_inventory_csv,
     write_summary_txt,
 )
-from psdl_observatory.report import render_html_report
+from psdl_observatory.report import render_catalog_html, render_html_report
 from psdl_observatory.roles import infer_role, normalize_col
 from psdl_observatory.catalog import (
     CatalogResult,
@@ -30,7 +30,6 @@ from psdl_observatory.catalog_writers import (
     write_column_catalog_csv,
     write_schema_semantic_catalog_csv,
 )
-from psdl_observatory.report import render_catalog_html
 
 __all__ = [
     "ParquetFileInfo",
