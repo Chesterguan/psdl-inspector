@@ -51,3 +51,4 @@ def test_summary_txt_reports_totals(tmp_path):
     assert "Total rows: 180" in txt
     assert "Distinct schemas: 2" in txt
     assert "Errors: 1" in txt
+    assert "bad.parquet: ArrowInvalid: x" in txt

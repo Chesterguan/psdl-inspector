@@ -30,6 +30,7 @@ def test_scan_synthea_edw(tmp_path):
     # writers succeed end-to-end on real data
     out = write_all(result, tmp_path / "scans")
     assert out["inventory"].exists()
-    # sharded tables produce duplicate basenames (e.g. patients-0.parquet patterns)
-    # -- at minimum the scan completes and the summary is written
+    # Synthea shards are named "{table}-{i}.parquet" so basenames are unique
+    # across tables (no duplicate filenames expected); we assert the scan
+    # completes cleanly and the summary is written.
     assert out["summary"].read_text().startswith("PSDL Observatory")

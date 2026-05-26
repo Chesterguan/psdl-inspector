@@ -23,11 +23,11 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     if args.workers < 1:
         print(f"error: --workers must be >= 1, got {args.workers}", file=sys.stderr)
         return 2
-    result = scan_inventory(root, workers=args.workers)
     out_dir = Path(args.out)
     if out_dir.exists() and not out_dir.is_dir():
         print(f"error: --out exists and is not a directory: {out_dir}", file=sys.stderr)
         return 2
+    result = scan_inventory(root, workers=args.workers)
     paths = write_all(result, out_dir)
     if args.html:
         html_path = out_dir / "inventory.html"
