@@ -55,10 +55,12 @@ ROLE_PATTERNS: List[Tuple[str, List[str]]] = [
     (ROLE_PATIENT, [
         r"^(patient|person|subject|member|pat)_?(id|key|num|identifier|sk)$",
         r"^mrn$", r"^pat_?id$",
+        r"^patient$", r"^person$",    # bare FK names (e.g. Synthea EDW)
     ]),
     (ROLE_ENCOUNTER, [
         r"^(encounter|visit|admission|hospitalization|hadm|stay|episode|enc)_?"
         r"(id|key|num|occurrence_id|sk)$",
+        r"^encounter$",               # bare FK name (e.g. Synthea EDW)
         # Note: ^visit_occurrence_id$ is already matched by the pattern above
         # (stem=visit, suffix=occurrence_id) — removed as dead code.
     ]),
