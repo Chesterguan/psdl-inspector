@@ -19,6 +19,9 @@ from psdl_observatory.schema_sig import schema_signature
 
 def _find_parquet_files(root: Path) -> List[Path]:
     out: List[Path] = []
+    # os.walk does not follow directory symlinks by default; symlinked dataset mounts are
+    # intentionally not traversed in O1 (avoids cycles/double-counting).
+    # followlinks support can be added later if needed.
     for dirpath, _dirs, filenames in os.walk(root):
         for name in filenames:
             if name.endswith(".parquet"):
@@ -30,14 +33,17 @@ def read_parquet_footer(path: Union[str, Path], root: Union[str, Path]) -> Parqu
     """Read one parquet file's footer (no rows) into a ParquetFileInfo."""
     path = Path(path)
     root = Path(root)
+    size_bytes = path.stat().st_size     # stat first — fail-fast before any footer read
     md = pq.read_metadata(path)          # footer only
+    # Second footer read: PyArrow has no way to derive the Arrow schema from an
+    # already-parsed FileMetaData, so this is required (don't "optimize" it away).
     schema = pq.read_schema(path)        # footer only
     columns = tuple(schema.names)
     types = [str(schema.field(n).type) for n in schema.names]
     rel = str(path.relative_to(root))
     return ParquetFileInfo(
         relative_path=rel,
-        size_bytes=path.stat().st_size,
+        size_bytes=size_bytes,
         num_rows=md.num_rows,
         num_row_groups=md.num_row_groups,
         columns=columns,
@@ -69,7 +75,7 @@ def scan_inventory(
             try:
                 infos.append(fut.result())
             except Exception as e:  # corrupt/unreadable footer
-                rel = str(Path(p).relative_to(root))
+                rel = str(p.relative_to(root))
                 errors.append((rel, f"{type(e).__name__}: {e}"))
 
     infos.sort(key=lambda i: i.relative_path)
