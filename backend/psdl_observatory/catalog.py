@@ -60,6 +60,10 @@ class CatalogResult:
 
 def _classify_table_kind(roles_present: List[str]) -> str:
     """A light, documented heuristic label for a schema based on its roles."""
+    # Precedence: a text column dominates (notes table); otherwise the richest
+    # structural combo wins. encounter_events (patient+encounter+time) is checked
+    # before coded_clinical_events because temporal event tables are the more common
+    # shape; a table with codes AND full encounter context is still primarily an event table.
     rp = set(roles_present)
     if ROLE_TEXT in rp:
         return "clinical_notes"
@@ -110,8 +114,17 @@ def build_catalog(scan: ScanResult) -> CatalogResult:
 
     schemas = []
     for sig in sorted(sig_repr):
+        # All files sharing a schema_signature have identical (normalized-name, type)
+        # column sets by construction (see schema_sig.schema_signature), so reading the
+        # columns from one representative file is sufficient.
         f = sig_repr[sig]
-        norm_cols = [normalize_col(c) for c in f.columns]
+        seen = set()
+        norm_cols = []
+        for c in f.columns:
+            n = normalize_col(c)
+            if n not in seen:
+                seen.add(n)
+                norm_cols.append(n)
         counts = {r: 0 for r in ALL_ROLES}
         for nc in norm_cols:
             counts[infer_role(nc)] += 1

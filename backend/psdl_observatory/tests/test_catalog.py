@@ -40,6 +40,9 @@ def test_build_catalog_over_synthetic_lake(parquet_lake):
     assert len(labs) == 1
     assert ROLE_PATIENT in labs[0].roles_present
     assert labs[0].num_files == 2       # part-0 + part-1 share schema A
+    assert labs[0].role_counts["patient"] == 1
+    from psdl_observatory.roles import ROLE_OTHER
+    assert labs[0].role_counts[ROLE_OTHER] == 1
 
 
 def test_build_catalog_role_counts_and_table_kind(parquet_lake):
@@ -56,3 +59,21 @@ def test_build_catalog_empty_scan(tmp_path):
     cat = build_catalog(scan)
     assert cat.columns == []
     assert cat.schemas == []
+
+
+def test_build_catalog_dedups_normalized_columns_in_schema_profile():
+    from psdl_observatory.models import ParquetFileInfo, ScanResult
+    from psdl_observatory.roles import ROLE_TEXT
+    # two raw names that normalize to the same key within one file
+    f = ParquetFileInfo(
+        relative_path="x/f.parquet", size_bytes=1, num_rows=1, num_row_groups=1,
+        columns=("note_text", "note__text"), schema_signature="sigX",
+    )
+    cat = build_catalog(ScanResult(root="/r", files=[f], errors=[]))
+    prof = cat.schemas[0]
+    assert prof.columns == ["note_text"]          # deduped, order preserved
+    assert prof.num_columns == 1
+    assert prof.role_counts[ROLE_TEXT] == 1
+    assert sum(prof.role_counts.values()) == 1
+    # and the per-column catalog also has a single entry
+    assert [c.normalized for c in cat.columns] == ["note_text"]
