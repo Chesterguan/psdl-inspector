@@ -52,3 +52,5 @@ def test_schema_semantic_csv_rows(tmp_path):
     assert r["table_kind"] == "patient_dimension"
     assert r["roles_present"] == "patient"
     assert r["columns"] == "patient_id|value"
+    assert r["n_patient"] == "1"
+    assert r["n_other"] == "1"

@@ -35,7 +35,7 @@ def write_schema_semantic_catalog_csv(catalog: CatalogResult, path: Union[str, P
                     "roles_present", "columns"] + role_cols)
         for s in catalog.schemas:
             w.writerow([
-                s.schema_signature, s.num_files, len(s.columns), s.table_kind,
+                s.schema_signature, s.num_files, s.num_columns, s.table_kind,
                 "|".join(s.roles_present), "|".join(s.columns),
             ] + [s.role_counts.get(r, 0) for r in ALL_ROLES])
     return path
