@@ -86,3 +86,24 @@ def test_infer_role_precedence_date_beats_outcome():
 def test_infer_role_is_case_insensitive():
     assert infer_role("Patient_ID") == ROLE_PATIENT
     assert infer_role("ChartTime") == ROLE_TIME
+
+
+@pytest.mark.parametrize("col,role", [
+    # false positives that must NOT be time (the .*date$/.*time$ bug)
+    ("update", ROLE_OTHER),
+    ("candidate", ROLE_OTHER),
+    ("validate", ROLE_OTHER),
+    ("mandate", ROLE_OTHER),
+    # documented decision: *_code is code (incl. zip/error) — acceptable noise
+    ("zip_code", ROLE_CODE),
+    ("error_code", ROLE_CODE),
+    # bare birthdate/deathdate concatenated forms
+    ("birthdate", ROLE_TIME),
+])
+def test_infer_role_false_positives_and_edge_cases(col, role):
+    assert infer_role(col) == role
+
+
+def test_normalize_col_handles_allcaps_acronyms():
+    assert normalize_col("MRNNumber") == "mrn_number"
+    assert normalize_col("CDWPatientKey") == "cdw_patient_key"

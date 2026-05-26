@@ -33,10 +33,12 @@ def normalize_col(name: str) -> str:
     """Normalize a column name: lowercase, split camelCase, unify separators.
 
     'encounterID' -> 'encounter_id'; 'Visit-Occurrence-ID' -> 'visit_occurrence_id';
-    'note__text' -> 'note_text'.
+    'note__text' -> 'note_text'; 'MRNNumber' -> 'mrn_number'.
     """
-    # split camelCase / PascalCase boundaries: aB -> a_B, and ABc -> A_Bc
-    s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name.strip())
+    # split ALL-CAPS run followed by a capitalized word: ACRONYMWord -> ACRONYM_Word
+    s = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", name.strip())
+    # split camelCase / PascalCase boundaries: aB -> a_B
+    s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", s)
     s = s.lower()
     # any run of non-alphanumeric becomes a single underscore
     s = re.sub(r"[^a-z0-9]+", "_", s)
@@ -57,15 +59,19 @@ ROLE_PATTERNS: List[Tuple[str, List[str]]] = [
     (ROLE_ENCOUNTER, [
         r"^(encounter|visit|admission|hospitalization|hadm|stay|episode|enc)_?"
         r"(id|key|num|occurrence_id|sk)$",
-        r"^visit_occurrence_id$",
+        # Note: ^visit_occurrence_id$ is already matched by the pattern above
+        # (stem=visit, suffix=occurrence_id) — removed as dead code.
     ]),
     (ROLE_CODE, [
         r"^(icd9|icd10|icd|cpt4?|hcpcs|loinc|snomed|rxnorm|ndc|atc)\w*$",
         r".*_code$", r"^code$", r"^concept_id$", r"^(source|target)_concept_id$",
     ]),
     (ROLE_TIME, [
-        r".*(time|date|datetime|timestamp)$", r"^dob$", r".*_at$", r".*_ts$",
+        r"^(time|date|datetime|timestamp)$",           # bare word
+        r".*_(time|date|datetime|timestamp)$",         # underscore-delimited suffix
+        r"^dob$", r".*_at$", r".*_ts$",
         r"^(chart|admit|disch|event|start|end|birth|death)time$",
+        r"^(birth|death|chart|admit|disch)date$",      # bare compound date forms
     ]),
     (ROLE_OUTCOME, [
         r"^(mortality|death|deceased|expired|alive|survival|disposition)$",
@@ -78,12 +84,16 @@ ROLE_PATTERNS: List[Tuple[str, List[str]]] = [
     ]),
 ]
 
+# Precompiled patterns for performance (infer_role is called over thousands of
+# columns in the O2 catalog scan).
+_COMPILED_PATTERNS = [(role, [re.compile(p) for p in pats]) for role, pats in ROLE_PATTERNS]
+
 
 def infer_role(column_name: str) -> str:
     """Return the structural role for a column name (first matching pattern)."""
     norm = normalize_col(column_name)
-    for role, patterns in ROLE_PATTERNS:
-        for pat in patterns:
-            if re.match(pat, norm):
+    for role, compiled in _COMPILED_PATTERNS:
+        for rx in compiled:
+            if rx.match(norm):
                 return role
     return ROLE_OTHER
