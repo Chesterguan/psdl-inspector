@@ -33,16 +33,20 @@ def normalize_col(name: str) -> str:
     """Normalize a column name: lowercase, split camelCase, unify separators.
 
     'encounterID' -> 'encounter_id'; 'Visit-Occurrence-ID' -> 'visit_occurrence_id';
-    'note__text' -> 'note_text'; 'MRNNumber' -> 'mrn_number'.
+    'note__text' -> 'note_text'; 'MRNNumber' -> 'mrn_number';
+    '注射时间' -> '注射时间' (non-ASCII preserved); 'naïve_café' -> 'naïve_café'.
     """
     # split ALL-CAPS run followed by a capitalized word: ACRONYMWord -> ACRONYM_Word
     s = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", name.strip())
     # split camelCase / PascalCase boundaries: aB -> a_B
     s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", s)
     s = s.lower()
-    # any run of non-alphanumeric becomes a single underscore
-    s = re.sub(r"[^a-z0-9]+", "_", s)
-    return s.strip("_")
+    # non-word (Unicode-aware) runs -> underscore; underscores are \w so are preserved here
+    s = re.sub(r"[^\w]+", "_", s, flags=re.UNICODE)
+    # collapse repeated underscores, strip ends
+    s = re.sub(r"_+", "_", s).strip("_")
+    # never return empty (e.g. a pure-symbol/emoji name): fall back to the stripped raw
+    return s or name.strip().lower()
 
 
 # Ordered (role, [regex]) pairs. FIRST match wins. Ordering rationale:
@@ -55,34 +59,44 @@ ROLE_PATTERNS: List[Tuple[str, List[str]]] = [
     (ROLE_PATIENT, [
         r"^(patient|person|subject|member|pat)_?(id|key|num|identifier|sk)$",
         r"^mrn$", r"^pat_?id$",
-        r"^patient$", r"^person$",    # bare FK names (e.g. Synthea EDW)
+        r"^patient$", r"^person$",          # bare FK names (e.g. Synthea)
+        r".*_mrn_id$", r".*_mrn$",           # Epic PAT_MRN_ID etc.
     ]),
     (ROLE_ENCOUNTER, [
         r"^(encounter|visit|admission|hospitalization|hadm|stay|episode|enc)_?"
         r"(id|key|num|occurrence_id|sk)$",
-        r"^encounter$",               # bare FK name (e.g. Synthea EDW)
-        # Note: ^visit_occurrence_id$ is already matched by the pattern above
-        # (stem=visit, suffix=occurrence_id) — removed as dead code.
+        r"^encounter$",                      # bare FK name
+        r".*_csn_id$", r".*_csn$",           # Epic Contact Serial Number = encounter id
     ]),
     (ROLE_CODE, [
-        r"^(icd9|icd10|icd|cpt4?|hcpcs|loinc|snomed|rxnorm|ndc|atc)\w*$",
-        r".*_code$", r"^code$", r"^concept_id$", r"^(source|target)_concept_id$",
+        # exact vocabulary names (no trailing \w* — avoids grabbing icd_version/icd_type)
+        r"^(icd9cm|icd10cm|icd9|icd10|icd|cpt4|cpt|hcpcs|loinc|snomed|rxnorm|ndc|atc)$",
+        # embedded vocabulary token as a suffix (lab_loinc, dx_icd10, ...)
+        r".*_(loinc|icd9|icd10|icd|cpt4|cpt|hcpcs|snomed|rxnorm|ndc)$",
+        r".*_code$", r"^code$",
+        r".*_concept_id$", r"^concept_id$",  # OMOP coded backbone (condition_concept_id, ...)
+        r"^(concept|modifier)_cd$",          # i2b2 fact-table code columns (NOT a blanket *_cd)
     ]),
     (ROLE_TIME, [
-        r"^(time|date|datetime|timestamp)$",           # bare word
-        r".*_(time|date|datetime|timestamp)$",         # underscore-delimited suffix
-        r"^dob$", r".*_at$", r".*_ts$",
-        r"^(chart|admit|disch|event|start|end|birth|death)time$",
-        r"^(birth|death|chart|admit|disch)date$",      # bare compound date forms
+        r"^(time|date|datetime|timestamp)$",
+        r".*_(time|date|datetime|timestamp|dt|dttm)$",   # +Epic _DT/_DTTM suffix
+        r"^dob$", r"^dod$",                              # date of birth / death
+        r".*_at$", r".*_ts$",
+        # bare concatenated *time forms (incl. MIMIC in/out/store/edreg/edout)
+        r"^(chart|admit|disch|event|start|end|birth|death|store|in|out|edreg|edout|reg)time$",
+        r"^(birth|death|chart|admit|disch)date$",
     ]),
     (ROLE_OUTCOME, [
         r"^(mortality|death|deceased|expired|alive|survival|disposition)$",
         r"^discharge_disposition$", r"^readmit\w*$", r"^outcome$",
-        r"^(death|deceased|mortality|expired|survival|discharge|readmission|readmit|vital|alive)_(flag|status)$",
+        # clinically-stemmed flag/status/ind ONLY (marital_status/active_flag stay 'other')
+        r".*(death|deceased|mortality|expire|expired|survival|vital|discharge|readmission|readmit|alive)_(flag|status|ind)$",
     ]),
     (ROLE_TEXT, [
         r"^(note|notes|text|narrative|comment|comments|report|description|reason)$",
-        r".*_(text|note|narrative|comment|description)$", r"^note_\w+$",
+        r".*_(text|note|narrative|comment|description)$",
+        r".*_blob$",                         # i2b2 observation_blob etc.
+        # NOTE: removed the old r"^note_\w+$" — it stole note_id/note_type/note_*_concept_id
     ]),
 ]
 

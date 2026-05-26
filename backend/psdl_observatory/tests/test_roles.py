@@ -117,3 +117,69 @@ def test_infer_role_false_positives_and_edge_cases(col, role):
 def test_normalize_col_handles_allcaps_acronyms():
     assert normalize_col("MRNNumber") == "mrn_number"
     assert normalize_col("CDWPatientKey") == "cdw_patient_key"
+
+
+def test_normalize_col_preserves_non_ascii():
+    # CJK: must return non-empty and preserve the characters
+    result_cjk = normalize_col("注射时间")
+    assert result_cjk != ""
+    assert result_cjk == "注射时间"
+    # accents preserved
+    assert normalize_col("naïve_café") == "naïve_café"
+    assert normalize_col("DÉCÈS") == "décès"
+
+
+@pytest.mark.parametrize("col,role", [
+    # OMOP *_concept_id backbone -> code (the big fix)
+    ("condition_concept_id", ROLE_CODE),
+    ("gender_concept_id", ROLE_CODE),
+    ("measurement_concept_id", ROLE_CODE),
+    ("value_as_concept_id", ROLE_CODE),
+    ("visit_concept_id", ROLE_CODE),
+    ("source_concept_id", ROLE_CODE),
+    # encounter/patient FKs still win over code (precedence)
+    ("visit_occurrence_id", ROLE_ENCOUNTER),
+    ("person_id", ROLE_PATIENT),
+    # i2b2 codes (conservative whitelist) + non-code _cd stays other
+    ("concept_cd", ROLE_CODE),
+    ("modifier_cd", ROLE_CODE),
+    ("units_cd", ROLE_OTHER),
+    ("sex_cd", ROLE_OTHER),
+    # embedded vocab token
+    ("lab_loinc", ROLE_CODE),
+    # icd_version must NOT be code (was a false positive)
+    ("icd_version", ROLE_OTHER),
+    ("icd10", ROLE_CODE),
+    ("cpt4", ROLE_CODE),
+    # Epic vendor tokens
+    ("pat_enc_csn_id", ROLE_ENCOUNTER),
+    ("note_csn_id", ROLE_ENCOUNTER),
+    ("pat_mrn_id", ROLE_PATIENT),
+    # time: Epic _DT suffix + MIMIC bare *time + dod
+    ("effective_date_dt", ROLE_TIME),
+    ("death_date_dt", ROLE_TIME),
+    ("intime", ROLE_TIME),
+    ("outtime", ROLE_TIME),
+    ("storetime", ROLE_TIME),
+    ("edregtime", ROLE_TIME),
+    ("dod", ROLE_TIME),
+    # note_* no longer all text
+    ("note_id", ROLE_OTHER),
+    ("note_type", ROLE_OTHER),
+    ("note_text", ROLE_TEXT),
+    ("clinical_note", ROLE_TEXT),
+    # outcome: clinical flags yes, demographic/technical no (anti-phantom-outcome)
+    ("hospital_expire_flag", ROLE_OUTCOME),
+    ("vital_status", ROLE_OUTCOME),
+    ("death_flag", ROLE_OUTCOME),
+    ("marital_status", ROLE_OTHER),
+    ("active_flag", ROLE_OTHER),
+    ("employment_status", ROLE_OTHER),
+    # i2b2 blob -> text
+    ("observation_blob", ROLE_TEXT),
+    # measurement value stays other
+    ("value_as_number", ROLE_OTHER),
+    ("valuenum", ROLE_OTHER),
+])
+def test_infer_role_new_cases(col, role):
+    assert infer_role(col) == role

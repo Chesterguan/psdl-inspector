@@ -61,6 +61,18 @@ def test_build_catalog_empty_scan(tmp_path):
     assert cat.schemas == []
 
 
+def test_build_catalog_preserves_distinct_non_ascii_columns():
+    from psdl_observatory.models import ParquetFileInfo, ScanResult
+    f = ParquetFileInfo(
+        relative_path="x/f.parquet", size_bytes=1, num_rows=1, num_row_groups=1,
+        columns=("注射时间", "日期"), schema_signature="sigU",
+    )
+    cat = build_catalog(ScanResult(root="/r", files=[f], errors=[]))
+    norms = {c.normalized for c in cat.columns}
+    assert len(cat.columns) == 2          # NOT collapsed to 1 empty-string entry
+    assert "" not in norms
+
+
 def test_build_catalog_dedups_normalized_columns_in_schema_profile():
     from psdl_observatory.models import ParquetFileInfo, ScanResult
     from psdl_observatory.roles import ROLE_TEXT
