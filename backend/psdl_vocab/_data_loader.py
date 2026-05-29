@@ -34,10 +34,10 @@ from pathlib import Path
 
 # Pinned release asset. Bump VOCAB_DATA_VERSION (and the URL tag) when a new
 # vocab build is published so caches don't collide across versions.
-VOCAB_DATA_VERSION = "v1"
+VOCAB_DATA_VERSION = "v2"
 VOCAB_DATA_URL = (
     "https://github.com/Chesterguan/psdl-inspector/releases/download/"
-    "vocab-data-v1/vocabulary_final.json.gz"
+    "vocab-data-v2/vocabulary_final.json.gz"
 )
 
 VOCAB_FILENAME = "vocabulary_final.json"
