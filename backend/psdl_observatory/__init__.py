@@ -17,7 +17,19 @@ from psdl_observatory.writers import (
     write_inventory_csv,
     write_summary_txt,
 )
-from psdl_observatory.report import render_html_report
+from psdl_observatory.report import render_catalog_html, render_html_report
+from psdl_observatory.roles import infer_role, normalize_col
+from psdl_observatory.catalog import (
+    CatalogResult,
+    ColumnInfo,
+    SchemaProfile,
+    build_catalog,
+)
+from psdl_observatory.catalog_writers import (
+    write_catalog_all,
+    write_column_catalog_csv,
+    write_schema_semantic_catalog_csv,
+)
 
 __all__ = [
     "ParquetFileInfo",
@@ -31,4 +43,14 @@ __all__ = [
     "write_duplicates_csv",
     "write_summary_txt",
     "render_html_report",
+    "infer_role",
+    "normalize_col",
+    "CatalogResult",
+    "ColumnInfo",
+    "SchemaProfile",
+    "build_catalog",
+    "write_catalog_all",
+    "write_column_catalog_csv",
+    "write_schema_semantic_catalog_csv",
+    "render_catalog_html",
 ]

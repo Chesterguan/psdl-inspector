@@ -54,3 +54,62 @@ def test_cli_out_is_file_errors(parquet_lake, tmp_path):
     r = _run("scan", str(parquet_lake), "--out", str(bad_out), cwd=tmp_path)
     assert r.returncode == 2
     assert "not a directory" in r.stderr
+
+
+def test_cli_catalog_writes_outputs(parquet_lake, tmp_path):
+    out = tmp_path / "reports"
+    r = _run("catalog", str(parquet_lake), "--out", str(out), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (out / "column_catalog.csv").exists()
+    assert (out / "schema_semantic_catalog.csv").exists()
+    assert "columns" in r.stdout  # summary mentions column/schema counts
+
+
+def test_cli_catalog_html_flag(parquet_lake, tmp_path):
+    out = tmp_path / "reports"
+    r = _run("catalog", str(parquet_lake), "--out", str(out), "--html", cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (out / "catalog.html").exists()
+    assert "<!DOCTYPE html>" in (out / "catalog.html").read_text()
+
+
+def test_cli_catalog_bad_root_errors(tmp_path):
+    r = _run("catalog", str(tmp_path / "nope"), "--out", str(tmp_path / "r"), cwd=tmp_path)
+    assert r.returncode == 2
+    assert "not a directory" in r.stderr
+
+
+def test_cli_help_lists_catalog(tmp_path):
+    r = _run("--help", cwd=tmp_path)
+    assert r.returncode == 0
+    assert "catalog" in r.stdout
+
+
+def test_cli_catalog_workers_zero_errors(parquet_lake, tmp_path):
+    r = _run("catalog", str(parquet_lake), "--out", str(tmp_path / "reports"), "--workers", "0", cwd=tmp_path)
+    assert r.returncode == 2
+    assert "workers must be >= 1" in r.stderr
+
+
+def test_cli_catalog_out_is_file_errors(parquet_lake, tmp_path):
+    bad_out = tmp_path / "afile"
+    bad_out.write_text("x")
+    r = _run("catalog", str(parquet_lake), "--out", str(bad_out), cwd=tmp_path)
+    assert r.returncode == 2
+    assert "not a directory" in r.stderr
+
+
+def test_cli_catalog_reports_scan_errors(tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    root = tmp_path / "lake"
+    root.mkdir()
+    pq.write_table(pa.table({"patient_id": [1, 2]}), root / "good.parquet")
+    (root / "bad.parquet").write_text("not a parquet")
+    out = tmp_path / "reports"
+    r = _run("catalog", str(root), "--out", str(out), cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert "1 scan error" in r.stdout or "errors" in r.stdout.lower()
+    # the corrupt file must not have aborted the catalog of the good file
+    assert (out / "column_catalog.csv").exists()

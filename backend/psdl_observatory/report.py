@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from html import escape
 
+from psdl_observatory.catalog import CatalogResult
 from psdl_observatory.models import ScanResult
 
 
@@ -64,6 +65,63 @@ def render_html_report(result: ScanResult) -> str:
 <table>
 <tr><th>Filename</th><th>Count</th><th>Paths</th></tr>
 {dup_rows}
+</table>
+</body>
+</html>
+"""
+
+
+def render_catalog_html(catalog: CatalogResult) -> str:
+    """Render the semantic catalog (columns + schema profiles) as static HTML.
+
+    All dynamic text is HTML-escaped. `catalog` is a CatalogResult.
+    """
+    col_rows = "\n".join(
+        "<tr>"
+        f"<td>{escape(c.normalized)}</td>"
+        f"<td>{escape(c.role)}</td>"
+        f"<td>{c.file_count}</td>"
+        f"<td>{c.schema_count}</td>"
+        f"<td>{escape(c.example_path)}</td>"
+        "</tr>"
+        for c in catalog.columns
+    ) or '<tr><td colspan="5">none</td></tr>'
+    schema_rows = "\n".join(
+        "<tr>"
+        f"<td><code>{escape(s.schema_signature)}</code></td>"
+        f"<td>{s.num_files}</td>"
+        f"<td>{len(s.columns)}</td>"
+        f"<td>{escape(s.table_kind)}</td>"
+        f"<td>{escape('|'.join(s.roles_present))}</td>"
+        f"<td>{escape('|'.join(s.columns))}</td>"
+        "</tr>"
+        for s in catalog.schemas
+    ) or '<tr><td colspan="6">none</td></tr>'
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PSDL Observatory — Semantic Catalog</title>
+<style>
+ body {{ font-family: -apple-system, system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }}
+ h1 {{ font-size: 1.4rem; }}
+ table {{ border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.85rem; }}
+ th, td {{ border: 1px solid #ddd; padding: 4px 8px; text-align: left; }}
+ th {{ background: #f0f0f3; }}
+ code {{ font-size: 0.8rem; }}
+</style>
+</head>
+<body>
+<h1>PSDL Observatory — Semantic Schema Catalog</h1>
+<h2>Schemas ({len(catalog.schemas)})</h2>
+<table>
+<tr><th>Schema sig</th><th>Files</th><th>Cols</th><th>Table kind</th><th>Roles present</th><th>Columns</th></tr>
+{schema_rows}
+</table>
+<h2>Columns ({len(catalog.columns)})</h2>
+<table>
+<tr><th>Column</th><th>Role</th><th>File count</th><th>Schema count</th><th>Example path</th></tr>
+{col_rows}
 </table>
 </body>
 </html>
