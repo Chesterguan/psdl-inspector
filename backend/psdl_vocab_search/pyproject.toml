@@ -25,6 +25,15 @@ dev = [
     "pytest>=7.4.0",
 ]
 
+[tool.pytest.ini_options]
+# Add the backend scripts directory to sys.path so that tests which import
+# build_biolord_embeddings (a script, not a package) can find it without
+# requiring callers to set PYTHONPATH manually.
+pythonpath = ["../scripts"]
+markers = [
+    "integration: marks tests that require the downloaded BioLORD v2 index (deselect with '-m not integration')",
+]
+
 [tool.setuptools]
 # This pyproject.toml lives INSIDE the package directory (flat layout).
 # Tell setuptools to treat the current directory as the source of the
