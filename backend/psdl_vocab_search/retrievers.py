@@ -240,9 +240,77 @@ class HNSWRetriever(BaseRetriever):
             return False
 
 
+class PreloadedFAISSRetriever(BaseRetriever):
+    """FAISS retriever that loads a pre-built index from disk.
+
+    Unlike FAISSRetriever (which builds the index from embeddings), this
+    retriever reads an already-built index.faiss + index.faiss.meta file pair
+    produced by the offline BioLORD build script.  The *index_dir* argument is
+    primarily an injection point for tests; production code resolves it via
+    ``_index_loader.get_index_dir()``.
+
+    ``build_index()`` is intentionally a no-op because the index is pre-built.
+    """
+
+    def __init__(self, index_dir=None):
+        # index_dir: Path | str | None.  None → resolved lazily on first search.
+        self._index_dir = index_dir
+        self._index = None
+        self._concept_ids: List[int] = []
+        self._loaded = False
+
+    def _ensure_loaded(self) -> None:
+        if self._loaded:
+            return
+
+        import faiss
+        import pickle
+        from pathlib import Path
+
+        if self._index_dir is None:
+            from psdl_vocab_search._index_loader import get_index_dir
+            self._index_dir = get_index_dir()
+
+        index_dir = Path(self._index_dir)
+        index_path = index_dir / "index.faiss"
+        meta_path = index_dir / "index.faiss.meta"
+
+        self._index = faiss.read_index(str(index_path))
+        with open(meta_path, "rb") as f:
+            self._concept_ids = pickle.load(f)
+
+        self._loaded = True
+
+    # build_index is a no-op — the index is pre-built offline.
+    def build_index(self, embeddings, concept_ids: List[int]) -> None:  # type: ignore[override]
+        pass
+
+    def search(self, query_embedding, k: int) -> List[tuple[int, float]]:
+        self._ensure_loaded()
+
+        query = query_embedding.reshape(1, -1).astype("float32")
+        scores, indices = self._index.search(query, k)
+
+        results = []
+        for score, idx in zip(scores[0], indices[0]):
+            if 0 <= idx < len(self._concept_ids):
+                results.append((self._concept_ids[idx], float(score)))
+
+        return results
+
+    def save(self, path: str) -> None:
+        # Pre-built index — saving is a no-op (the source-of-truth is the cached files).
+        pass
+
+    def load(self, path: str) -> bool:
+        # Pre-built index — the standard path-based load is not used.
+        return False
+
+
 # Registry of available retrievers
 RETRIEVER_REGISTRY = {
     "faiss": FAISSRetriever,
+    "faiss-preloaded": PreloadedFAISSRetriever,
     "numpy": NumpyRetriever,
     "hnsw": HNSWRetriever,
 }

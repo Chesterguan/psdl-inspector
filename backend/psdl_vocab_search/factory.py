@@ -104,6 +104,69 @@ class SearchEngineConfig:
         """Highest quality configuration (slower)."""
         return cls(embedder="biolord", retriever="faiss", reranker="hybrid")
 
+    @classmethod
+    def biolord_v2(cls) -> "SearchEngineConfig":
+        """BioLORD v2 configuration backed by pre-built FAISS index.
+
+        Uses the pre-built BioLORD v2 FAISS index (downloaded/cached on first
+        use via ``_index_loader``).  The vocabulary JSON is resolved via
+        ``psdl_vocab``'s data loader so both data assets share the same
+        download/cache discipline.
+        """
+        try:
+            from psdl_vocab._data_loader import get_vocab_data_path
+
+            vocab_path = str(get_vocab_data_path() / "vocabulary_final.json")
+        except Exception:
+            # psdl_vocab not installed or vocab not yet downloaded; fall back
+            # to the default path resolution so __post_init__ handles it.
+            vocab_path = None
+
+        return cls(
+            embedder="biolord",
+            retriever="faiss-preloaded",
+            reranker="rules",
+            vocab_path=vocab_path,
+        )
+
+
+class PreloadedVocabularySearchEngine(VocabularySearchEngine):
+    """Search engine variant that uses a pre-built FAISS index.
+
+    Overrides ``load()`` to skip the embedding + index-build phase entirely —
+    it only loads the vocabulary JSON (needed for result metadata lookup) and
+    then calls ``retriever._ensure_loaded()`` so the pre-built index is ready.
+
+    This prevents ``VocabularySearchEngine.load()`` from falling through to
+    ``_build_index()`` when no standard cache files are found.
+    """
+
+    def load(self) -> None:
+        if self._loaded:
+            return
+
+        import json
+        from pathlib import Path
+
+        # Load vocabulary JSON for _concepts_by_id (concept metadata lookup).
+        vocab_file = Path(self.vocab_path)
+        if not vocab_file.exists():
+            raise FileNotFoundError(f"Vocabulary file not found: {self.vocab_path}")
+
+        with open(vocab_file) as f:
+            self._concepts = json.load(f)
+
+        self._concepts_by_id = {c["concept_id"]: c for c in self._concepts}
+
+        # Trigger pre-built index load (downloads if not yet cached).
+        # The retriever is a PreloadedFAISSRetriever — call its _ensure_loaded
+        # directly rather than going through the standard load(path) path which
+        # would return False and trigger a full re-embed.
+        if hasattr(self.retriever, "_ensure_loaded"):
+            self.retriever._ensure_loaded()
+
+        self._loaded = True
+
 
 def create_search_engine(config: SearchEngineConfig) -> VocabularySearchEngine:
     """Create a search engine with the given configuration.
@@ -118,7 +181,17 @@ def create_search_engine(config: SearchEngineConfig) -> VocabularySearchEngine:
     retriever = get_retriever(config.retriever)
     reranker = get_reranker(config.reranker)
 
-    return VocabularySearchEngine(
+    # Use the preloaded engine variant for retrievers that carry a pre-built
+    # index (identified by the presence of _ensure_loaded).  This skips the
+    # embedding + index-build phase so no re-embedding happens at runtime.
+    from psdl_vocab_search.retrievers import PreloadedFAISSRetriever
+    engine_cls = (
+        PreloadedVocabularySearchEngine
+        if isinstance(retriever, PreloadedFAISSRetriever)
+        else VocabularySearchEngine
+    )
+
+    return engine_cls(
         embedder=embedder,
         retriever=retriever,
         reranker=reranker,
@@ -161,6 +234,26 @@ def reset_engine() -> None:
     global _default_engine, _current_config
     _default_engine = None
     _current_config = None
+
+
+# BioLORD v2 singleton — lazily created on first call.
+_biolord_v2_engine: Optional[VocabularySearchEngine] = None
+
+
+def get_biolord_v2_engine() -> VocabularySearchEngine:
+    """Return the singleton BioLORD v2 search engine.
+
+    On first call this creates the engine using ``SearchEngineConfig.biolord_v2()``
+    (which uses the pre-built FAISS index via ``PreloadedFAISSRetriever``).
+    Subsequent calls return the cached instance.
+    """
+    global _biolord_v2_engine
+
+    if _biolord_v2_engine is None:
+        config = SearchEngineConfig.biolord_v2()
+        _biolord_v2_engine = create_search_engine(config)
+
+    return _biolord_v2_engine
 
 
 def list_available_components() -> dict:

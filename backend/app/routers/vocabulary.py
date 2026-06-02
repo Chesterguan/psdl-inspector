@@ -15,6 +15,16 @@ try:
 except ImportError:
     SEMANTIC_AVAILABLE = False
 
+# Try to import the BioLORD v2 modular engine (psdl_vocab_search package).
+# When available it replaces the OpenAI/SQLite semantic service for the two
+# search endpoints; the old service is kept as a fallback and for the
+# population concept-lookup / stats routes that don't use it yet.
+try:
+    from psdl_vocab_search.factory import get_biolord_v2_engine
+    BIOLORD_V2_AVAILABLE = True
+except ImportError:
+    BIOLORD_V2_AVAILABLE = False
+
 
 router = APIRouter()
 
@@ -262,11 +272,44 @@ async def semantic_search_vocabulary(
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     category: Optional[str] = Query(None, description="Filter by category"),
 ) -> SearchResponse:
-    """Semantic search LOINC vocabulary using embeddings.
+    """Semantic search vocabulary using BioLORD v2 embeddings.
 
-    Uses text-embedding-3-small embeddings for semantic similarity search.
-    Falls back to text search if embeddings unavailable.
+    Primarily uses the modular BioLORD v2 engine (pre-built FAISS index,
+    563k concepts).  Falls back to the legacy OpenAI/SQLite service if the
+    BioLORD engine is unavailable.
     """
+    # --- BioLORD v2 path (preferred) ---
+    if BIOLORD_V2_AVAILABLE:
+        try:
+            engine = get_biolord_v2_engine()
+            raw_results = engine.search(q, limit=limit)
+
+            # Apply category filter post-hoc if requested.
+            if category:
+                raw_results = [r for r in raw_results if r.metadata.get("category") == category]
+
+            concepts = [
+                ConceptResponse(**clean_concept({
+                    "concept_id": r.concept_id,
+                    "concept_name": r.concept_name,
+                    "concept_code": r.concept_code,
+                    "vocabulary_id": r.vocabulary_id,
+                    "domain_id": r.domain_id,
+                    "abbreviations": r.metadata.get("abbreviations"),
+                    "search_terms": r.metadata.get("search_terms"),
+                    "category": r.metadata.get("category"),
+                    "typical_units": r.metadata.get("typical_units"),
+                }))
+                for r in raw_results
+            ]
+            return SearchResponse(query=q, total=len(concepts), results=concepts)
+
+        except Exception as exc:
+            # Engine error — fall through to legacy service if available.
+            if not SEMANTIC_AVAILABLE:
+                raise HTTPException(status_code=500, detail=f"BioLORD v2 search error: {exc}")
+
+    # --- Legacy OpenAI/SQLite fallback ---
     if not SEMANTIC_AVAILABLE:
         raise HTTPException(status_code=503, detail="Semantic search not available")
 
@@ -297,15 +340,67 @@ async def search_population(
 
     Args:
         q: Search query string
-        type: Filter by 'conditions' (SNOMED) or 'medications' (RxNorm)
+        type: Filter by 'conditions' (SNOMED) or 'medications' (RxNorm); maps to
+              vocabulary_id SNOMED (conditions) or RxNorm (medications).
         limit: Maximum number of results
         semantic: Use semantic (embedding) search if available
 
     Returns:
         Matching concepts ranked by relevance
     """
+    # Vocabulary-ID filter map for population type.
+    VOCAB_MAP = {
+        "conditions": "SNOMED",
+        "medications": "RxNorm",
+    }
+    target_vocab = VOCAB_MAP.get(type) if type else None
+
+    # --- BioLORD v2 path (preferred) ---
+    if BIOLORD_V2_AVAILABLE and semantic:
+        try:
+            engine = get_biolord_v2_engine()
+            # Fetch more candidates than requested so the vocabulary filter
+            # has enough headroom after slicing.
+            fetch_limit = limit * 5 if target_vocab else limit
+            raw_results = engine.search(q, limit=fetch_limit)
+
+            # Filter by vocabulary_id for conditions / medications.
+            if target_vocab:
+                raw_results = [r for r in raw_results if r.vocabulary_id == target_vocab]
+
+            raw_results = raw_results[:limit]
+
+            concepts = [
+                PopulationConceptResponse(**clean_concept({
+                    "concept_id": r.concept_id,
+                    "concept_name": r.concept_name,
+                    "concept_code": r.concept_code,
+                    "vocabulary_id": r.vocabulary_id,
+                    "domain_id": r.domain_id,
+                    "abbreviations": r.metadata.get("abbreviations"),
+                    "search_terms": r.metadata.get("search_terms"),
+                    "category": r.metadata.get("category"),
+                }))
+                for r in raw_results
+            ]
+            return PopulationSearchResponse(
+                query=q,
+                vocab_type=type,
+                total=len(concepts),
+                results=concepts,
+            )
+
+        except Exception as exc:
+            # Engine error — fall through to legacy service if available.
+            if not SEMANTIC_AVAILABLE:
+                raise HTTPException(status_code=500, detail=f"BioLORD v2 population search error: {exc}")
+
+    # --- Legacy OpenAI/SQLite fallback ---
     if not SEMANTIC_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Population search not available - semantic service missing")
+        raise HTTPException(
+            status_code=503,
+            detail="Population search not available - semantic service missing",
+        )
 
     service = get_semantic_vocabulary_service()
 
