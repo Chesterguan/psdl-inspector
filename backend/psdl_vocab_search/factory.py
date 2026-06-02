@@ -104,6 +104,31 @@ class SearchEngineConfig:
         """Highest quality configuration (slower)."""
         return cls(embedder="biolord", retriever="faiss", reranker="hybrid")
 
+    @classmethod
+    def biolord_v2(cls) -> "SearchEngineConfig":
+        """BioLORD v2 configuration backed by pre-built FAISS index.
+
+        Uses the pre-built BioLORD v2 FAISS index (downloaded/cached on first
+        use via ``_index_loader``).  The vocabulary JSON is resolved via
+        ``psdl_vocab``'s data loader so both data assets share the same
+        download/cache discipline.
+        """
+        try:
+            from psdl_vocab._data_loader import get_vocab_data_path
+
+            vocab_path = str(get_vocab_data_path() / "vocabulary_final.json")
+        except Exception:
+            # psdl_vocab not installed or vocab not yet downloaded; fall back
+            # to the default path resolution so __post_init__ handles it.
+            vocab_path = None
+
+        return cls(
+            embedder="biolord",
+            retriever="faiss-preloaded",
+            reranker="rules",
+            vocab_path=vocab_path,
+        )
+
 
 def create_search_engine(config: SearchEngineConfig) -> VocabularySearchEngine:
     """Create a search engine with the given configuration.
@@ -161,6 +186,26 @@ def reset_engine() -> None:
     global _default_engine, _current_config
     _default_engine = None
     _current_config = None
+
+
+# BioLORD v2 singleton — lazily created on first call.
+_biolord_v2_engine: Optional[VocabularySearchEngine] = None
+
+
+def get_biolord_v2_engine() -> VocabularySearchEngine:
+    """Return the singleton BioLORD v2 search engine.
+
+    On first call this creates the engine using ``SearchEngineConfig.biolord_v2()``
+    (which uses the pre-built FAISS index via ``PreloadedFAISSRetriever``).
+    Subsequent calls return the cached instance.
+    """
+    global _biolord_v2_engine
+
+    if _biolord_v2_engine is None:
+        config = SearchEngineConfig.biolord_v2()
+        _biolord_v2_engine = create_search_engine(config)
+
+    return _biolord_v2_engine
 
 
 def list_available_components() -> dict:
