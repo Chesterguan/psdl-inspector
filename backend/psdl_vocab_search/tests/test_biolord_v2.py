@@ -86,6 +86,52 @@ def test_preloaded_faiss_retriever_search(tmp_path):
     assert res[0][0] == 100 and res[0][1] > 0.99
 
 
+def test_preloaded_engine_skips_reembed(tmp_path):
+    """PreloadedVocabularySearchEngine must not re-embed; it loads the pre-built index."""
+    import json
+    import numpy as np
+    import faiss
+    import pickle
+    from psdl_vocab_search.factory import PreloadedVocabularySearchEngine
+    from psdl_vocab_search.retrievers import PreloadedFAISSRetriever
+    from psdl_vocab_search.embedders import get_embedder
+    from psdl_vocab_search.rerankers import get_reranker
+
+    # Build a tiny 4-dim index with two concepts.
+    dim = 4
+    emb = np.array([[1.0, 0, 0, 0], [0, 1.0, 0, 0]], dtype=np.float32)
+    idx = faiss.IndexFlatIP(dim)
+    idx.add(emb)
+    index_dir = tmp_path / "idx"
+    index_dir.mkdir()
+    faiss.write_index(idx, str(index_dir / "index.faiss"))
+    with open(index_dir / "index.faiss.meta", "wb") as f:
+        pickle.dump([3016723, 999999], f)
+
+    # Write a minimal vocab JSON.
+    vocab_path = tmp_path / "vocab.json"
+    vocab_path.write_text(json.dumps([
+        {"concept_id": 3016723, "concept_name": "Creatinine [Mass/volume]",
+         "concept_code": "2160-0", "vocabulary_id": "LOINC", "domain_id": "Measurement"},
+        {"concept_id": 999999, "concept_name": "Glucose [Mass/volume]",
+         "concept_code": "2345-7", "vocabulary_id": "LOINC", "domain_id": "Measurement"},
+    ]))
+
+    retriever = PreloadedFAISSRetriever(index_dir=index_dir)
+    engine = PreloadedVocabularySearchEngine(
+        embedder=get_embedder("minilm"),  # will NOT be called during load()
+        retriever=retriever,
+        reranker=get_reranker("rules"),
+        vocab_path=str(vocab_path),
+        cache_dir=str(tmp_path / "cache"),
+    )
+    engine.load()  # should NOT trigger embedding
+
+    assert engine._loaded
+    assert 3016723 in engine._concepts_by_id
+    assert retriever._loaded  # pre-built index is ready
+
+
 # ---------------------------------------------------------------------------
 # Task 6: router import test
 # ---------------------------------------------------------------------------

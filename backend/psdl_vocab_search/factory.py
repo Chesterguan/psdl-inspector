@@ -130,6 +130,44 @@ class SearchEngineConfig:
         )
 
 
+class PreloadedVocabularySearchEngine(VocabularySearchEngine):
+    """Search engine variant that uses a pre-built FAISS index.
+
+    Overrides ``load()`` to skip the embedding + index-build phase entirely —
+    it only loads the vocabulary JSON (needed for result metadata lookup) and
+    then calls ``retriever._ensure_loaded()`` so the pre-built index is ready.
+
+    This prevents ``VocabularySearchEngine.load()`` from falling through to
+    ``_build_index()`` when no standard cache files are found.
+    """
+
+    def load(self) -> None:
+        if self._loaded:
+            return
+
+        import json
+        from pathlib import Path
+
+        # Load vocabulary JSON for _concepts_by_id (concept metadata lookup).
+        vocab_file = Path(self.vocab_path)
+        if not vocab_file.exists():
+            raise FileNotFoundError(f"Vocabulary file not found: {self.vocab_path}")
+
+        with open(vocab_file) as f:
+            self._concepts = json.load(f)
+
+        self._concepts_by_id = {c["concept_id"]: c for c in self._concepts}
+
+        # Trigger pre-built index load (downloads if not yet cached).
+        # The retriever is a PreloadedFAISSRetriever — call its _ensure_loaded
+        # directly rather than going through the standard load(path) path which
+        # would return False and trigger a full re-embed.
+        if hasattr(self.retriever, "_ensure_loaded"):
+            self.retriever._ensure_loaded()
+
+        self._loaded = True
+
+
 def create_search_engine(config: SearchEngineConfig) -> VocabularySearchEngine:
     """Create a search engine with the given configuration.
 
@@ -143,7 +181,17 @@ def create_search_engine(config: SearchEngineConfig) -> VocabularySearchEngine:
     retriever = get_retriever(config.retriever)
     reranker = get_reranker(config.reranker)
 
-    return VocabularySearchEngine(
+    # Use the preloaded engine variant for retrievers that carry a pre-built
+    # index (identified by the presence of _ensure_loaded).  This skips the
+    # embedding + index-build phase so no re-embedding happens at runtime.
+    from psdl_vocab_search.retrievers import PreloadedFAISSRetriever
+    engine_cls = (
+        PreloadedVocabularySearchEngine
+        if isinstance(retriever, PreloadedFAISSRetriever)
+        else VocabularySearchEngine
+    )
+
+    return engine_cls(
         embedder=embedder,
         retriever=retriever,
         reranker=reranker,
