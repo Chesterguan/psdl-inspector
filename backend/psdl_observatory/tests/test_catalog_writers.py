@@ -14,7 +14,8 @@ def _sample():
     ]
     schemas = [
         SchemaProfile(
-            schema_signature="sigA", num_files=2, columns=["patient_id", "value"],
+            schema_signature="sigA", num_files=2, num_rows=0,
+            columns=["patient_id", "value"],
             role_counts={"patient": 1, "other": 1}, roles_present=["patient"],
             table_kind="patient_dimension", example_path="EHR/labs/part-0.parquet",
         ),

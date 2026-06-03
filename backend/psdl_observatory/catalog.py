@@ -41,6 +41,7 @@ class SchemaProfile:
 
     schema_signature: str
     num_files: int
+    num_rows: int                            # total rows across files of this signature
     columns: List[str]                       # normalized column names
     role_counts: Dict[str, int]              # role -> count of columns
     roles_present: List[str]                 # roles with count > 0 (stable order)
@@ -107,9 +108,11 @@ def build_catalog(scan: ScanResult) -> CatalogResult:
 
     # --- per-schema profiles (one representative file per signature) ---
     sig_files: Dict[str, int] = Counter()
+    sig_rows: Dict[str, int] = Counter()
     sig_repr = {}  # signature -> representative ParquetFileInfo
     for f in scan.files:
         sig_files[f.schema_signature] += 1
+        sig_rows[f.schema_signature] += f.num_rows
         sig_repr.setdefault(f.schema_signature, f)
 
     schemas = []
@@ -132,6 +135,7 @@ def build_catalog(scan: ScanResult) -> CatalogResult:
         schemas.append(SchemaProfile(
             schema_signature=sig,
             num_files=sig_files[sig],
+            num_rows=sig_rows[sig],
             columns=norm_cols,
             role_counts=counts,
             roles_present=roles_present,

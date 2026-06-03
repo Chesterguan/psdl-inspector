@@ -11,7 +11,7 @@ def _catalog():
         ColumnInfo("note_text", ROLE_TEXT, 1, 1, "NOTES/notes-0.parquet"),
     ]
     schemas = [
-        SchemaProfile("sigA", 2, ["patient_id", "value"],
+        SchemaProfile("sigA", 2, 0, ["patient_id", "value"],
                       {"patient": 1, "other": 1}, ["patient"],
                       "patient_dimension", "EHR/labs/part-0.parquet"),
     ]
