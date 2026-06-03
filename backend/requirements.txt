@@ -18,3 +18,11 @@ meds>=0.3,<0.4
 # (pip install -e ./psdl_anchoring).
 # psdl_observatory is installed editable from ./psdl_observatory during development
 # (pip install -e ./psdl_observatory). EDW inventory scanner (O1).
+# preflight (offline SQL preflight core; import name `preflight`) is installed
+# editable during development from the sibling checkout:
+#   pip install -e /path/to/psdl-workbench-preflight
+#   pip install -r /path/to/psdl-workbench-preflight/requirements.txt  # sqlglot, duckdb, pydantic, pyyaml
+# Used offline only: run_preflight(sql, catalog, connector=None) — no live DB
+# connectors (those are a `live` extra / Workbench). The /api/preflight router
+# degrades gracefully (503) when this package is absent. To ship to OSS users,
+# publish as `psdl_preflight>=0.1,<0.2` and replace this block with that pin.
