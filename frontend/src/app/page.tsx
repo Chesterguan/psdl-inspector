@@ -418,6 +418,9 @@ export default function Home() {
               >
                 <Package className="w-5 h-5" />
               </a>
+              <a href="/catalog" title="Institutional Data Catalog" className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors">
+                <Package className="w-4 h-4" /> Data Catalog
+              </a>
             </div>
             {versionInfo && (
               <span className="text-[10px] text-muted font-mono hidden sm:block">v{versionInfo.psdl_lang}</span>
