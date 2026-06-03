@@ -79,6 +79,7 @@ def write_catalog_json(
             "root": scan.root,
             "file_count": scan.total_files,
             "schema_count": scan.distinct_schema_count,
+            "scan_error_count": len(scan.errors),
             "scanner_version": _scanner_version(),
         },
         "schemas": [
@@ -105,5 +106,5 @@ def write_catalog_json(
             for c in catalog.columns
         ],
     }
-    path.write_text(json.dumps(payload, indent=2))
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path

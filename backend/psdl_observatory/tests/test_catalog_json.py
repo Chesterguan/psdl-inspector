@@ -22,7 +22,9 @@ def test_write_catalog_json_shape(parquet_lake, tmp_path):
     scan = scan_inventory(parquet_lake)
     cat = build_catalog(scan)
     out = tmp_path / "catalog.json"
-    write_catalog_json(cat, scan, out, scanned_at="2026-06-03T10:00:00+00:00")
+    from pathlib import Path
+    result = write_catalog_json(cat, scan, out, scanned_at="2026-06-03T10:00:00+00:00")
+    assert isinstance(result, Path)
 
     data = json.loads(out.read_text())
     assert data["catalog_version"] == "1.1"
@@ -31,8 +33,10 @@ def test_write_catalog_json_shape(parquet_lake, tmp_path):
     assert prov["root"] == str(parquet_lake)
     assert prov["file_count"] == scan.total_files
     assert prov["schema_count"] == scan.distinct_schema_count
+    assert prov["scan_error_count"] == len(scan.errors)
     assert isinstance(prov["scanner_version"], str)
     # schemas carry num_rows; columns carry role
     assert all("num_rows" in s for s in data["schemas"])
     assert all("role" in c for c in data["columns"])
     assert len(data["schemas"]) == scan.distinct_schema_count
+    assert len(data["columns"]) == len(cat.columns)
