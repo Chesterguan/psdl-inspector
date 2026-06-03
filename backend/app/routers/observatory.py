@@ -58,7 +58,7 @@ class StatusResponse(BaseModel):
 def _load() -> Dict[str, Any]:
     path = _catalog_path()
     assert path is not None  # callers guard configured/exists first
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -86,7 +86,7 @@ def observatory_status() -> StatusResponse:
                               reason="No catalog published yet")
     try:
         data = _load()
-    except (json.JSONDecodeError, OSError) as exc:
+    except (ValueError, OSError) as exc:
         return StatusResponse(configured=True, available=False,
                               stale_threshold_days=threshold,
                               reason=f"Catalog unreadable: {exc}")
@@ -110,5 +110,5 @@ def observatory_catalog() -> Dict[str, Any]:
         return {"configured": True, "available": False, "reason": "No catalog published yet"}
     try:
         return _load()
-    except (json.JSONDecodeError, OSError) as exc:
+    except (ValueError, OSError) as exc:
         return {"configured": True, "available": False, "reason": f"Catalog unreadable: {exc}"}
