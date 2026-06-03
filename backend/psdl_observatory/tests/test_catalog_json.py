@@ -40,3 +40,15 @@ def test_write_catalog_json_shape(parquet_lake, tmp_path):
     assert all("role" in c for c in data["columns"])
     assert len(data["schemas"]) == scan.distinct_schema_count
     assert len(data["columns"]) == len(cat.columns)
+
+
+def test_cli_catalog_json_emits_file(parquet_lake, tmp_path):
+    from psdl_observatory.cli import main
+
+    rc = main(["catalog", str(parquet_lake), "--out", str(tmp_path), "--json"])
+    assert rc == 0
+    out = tmp_path / "catalog.json"
+    assert out.exists()
+    data = json.loads(out.read_text())
+    assert data["catalog_version"] == "1.1"
+    assert data["provenance"]["scanned_at"]  # non-empty timestamp

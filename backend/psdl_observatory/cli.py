@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from psdl_observatory.catalog import build_catalog
-from psdl_observatory.catalog_writers import write_catalog_all
+from psdl_observatory.catalog_writers import write_catalog_all, write_catalog_json
 from psdl_observatory.report import render_catalog_html, render_html_report
 from psdl_observatory.scanner import scan_inventory
 from psdl_observatory.writers import write_all
@@ -59,6 +59,12 @@ def _cmd_catalog(args: argparse.Namespace) -> int:
     result = scan_inventory(root, workers=args.workers)
     catalog = build_catalog(result)
     paths = write_catalog_all(catalog, out_dir)
+    if args.json:
+        from datetime import datetime, timezone
+        scanned_at = datetime.now(timezone.utc).isoformat()
+        paths["json"] = write_catalog_json(
+            catalog, result, out_dir / "catalog.json", scanned_at
+        )
     if args.html:
         html_path = out_dir / "catalog.html"
         html_path.write_text(render_catalog_html(catalog))
@@ -83,6 +89,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     p_cat.add_argument("root", help="Root directory of the parquet lake")
     p_cat.add_argument("--out", required=True, help="Output directory for the catalog artifacts")
     p_cat.add_argument("--html", action="store_true", help="Also write catalog.html")
+    p_cat.add_argument("--json", action="store_true", help="Also write catalog.json (contract v1.1)")
     p_cat.add_argument("--workers", type=int, default=8, help="Parallel footer-read workers (default 8)")
     p_cat.set_defaults(func=_cmd_catalog)
     ns = parser.parse_args(list(argv) if argv is not None else None)
