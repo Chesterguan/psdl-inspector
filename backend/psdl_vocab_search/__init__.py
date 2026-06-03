@@ -17,6 +17,7 @@ from psdl_vocab_search.base import (
 )
 from psdl_vocab_search.factory import (
     get_vocabulary_search_engine,
+    get_biolord_v2_engine,
     create_search_engine,
     SearchEngineConfig,
     list_available_components,
@@ -30,6 +31,7 @@ __all__ = [
     "BaseReranker",
     "VocabularySearchEngine",
     "get_vocabulary_search_engine",
+    "get_biolord_v2_engine",
     "create_search_engine",
     "SearchEngineConfig",
     "list_available_components",

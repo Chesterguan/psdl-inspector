@@ -13,6 +13,7 @@ Last updated: 2026-05-22
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Set
 
@@ -24,10 +25,29 @@ from psdl_vocab import get_vocabulary_service
 # Try to import modular search system (preferred)
 _modular_search_available = False
 try:
-    from psdl_vocab_search import get_vocabulary_search_engine, SearchEngineConfig
+    from psdl_vocab_search import (
+        get_vocabulary_search_engine,
+        get_biolord_v2_engine,
+        SearchEngineConfig,
+    )
     _modular_search_available = True
 except ImportError:
     pass
+
+
+def _get_anchoring_engine():
+    """Select the vocabulary search engine used by the modular anchoring path.
+
+    Env-gated experiment toggle (default unchanged):
+      ANCHORING_ENGINE=biolord_v2  -> the BioLORD v2 preset (get_biolord_v2_engine)
+      anything else / unset        -> the default engine (get_vocabulary_search_engine)
+
+    Lets the eval-report A/B the embedder while keeping production behavior the
+    same until BioLORD is proven better; reversible by unsetting the env var.
+    """
+    if os.environ.get("ANCHORING_ENGINE") == "biolord_v2":
+        return get_biolord_v2_engine()
+    return get_vocabulary_search_engine()
 
 
 class TerminologyAnchoringService:
@@ -189,7 +209,7 @@ class TerminologyAnchoringService:
         omop_domain: Optional[str] = None,
     ) -> TerminologyAnchor:
         """Anchor using modular search engine (configurable embedder/retriever/reranker)."""
-        search_engine = get_vocabulary_search_engine()
+        search_engine = _get_anchoring_engine()
 
         # Build search query
         search_query = ref_spaced
