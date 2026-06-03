@@ -11,13 +11,16 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8200';
 export default function CatalogPage() {
   const [status, setStatus] = useState<CatalogStatus | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<'schemas' | 'columns'>('schemas');
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/observatory/status`).then((r) => r.json()).then(setStatus).catch(() => setStatus(null));
-    fetch(`${API_BASE}/api/observatory/catalog`).then((r) => r.json()).then(setCatalog).catch(() => setCatalog(null));
+    Promise.allSettled([
+      fetch(`${API_BASE}/api/observatory/status`).then((r) => r.json()).then(setStatus),
+      fetch(`${API_BASE}/api/observatory/catalog`).then((r) => r.json()).then(setCatalog),
+    ]).finally(() => setLoaded(true));
   }, []);
 
   const columns = catalog?.columns ?? [];
@@ -28,9 +31,12 @@ export default function CatalogPage() {
     (c) => (!query || c.normalized.toLowerCase().includes(query.toLowerCase())) && (!roleFilter || c.role === roleFilter),
   ), [columns, query, roleFilter]);
 
-  const filteredSchemas = useMemo(() => schemas.filter(
-    (s) => !query || s.table_kind.includes(query.toLowerCase()) || s.columns.some((c) => c.includes(query.toLowerCase())),
-  ), [schemas, query]);
+  const filteredSchemas = useMemo(() => {
+    const q = query.toLowerCase();
+    return schemas.filter(
+      (s) => !q || s.table_kind.toLowerCase().includes(q) || s.columns.some((c) => c.toLowerCase().includes(q)),
+    );
+  }, [schemas, query]);
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-8">
@@ -38,6 +44,11 @@ export default function CatalogPage() {
         <h1 className="text-xl font-semibold text-foreground">Institutional Data Catalog</h1>
         <a href="/" className="text-sm text-accent hover:underline">← Back to Inspector</a>
       </div>
+
+      {!loaded && <div className="text-muted text-sm py-8">Loading…</div>}
+      {loaded && status === null && (
+        <div className="text-accent-warning text-sm py-8">Couldn&apos;t reach the backend.</div>
+      )}
 
       {status && !status.configured && (
         <div className="text-muted text-sm py-8">Data catalog not set up — ask your data team to publish one.</div>
