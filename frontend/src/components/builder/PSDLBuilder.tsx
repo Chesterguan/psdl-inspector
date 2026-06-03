@@ -15,7 +15,8 @@ export interface Signal {
   concept_code: string;
   vocabulary_id: string;
   typical_units?: { code: string; name: string }[];
-  _score?: number;
+  category?: string;
+  abbreviations?: string[];
 }
 
 // Updated: LogicRule replaces Condition with full PSDL spec support
@@ -44,6 +45,8 @@ export interface PopulationItem {
   concept_name: string;
   concept_code: string;
   vocabulary_id: string;
+  category?: string;
+  abbreviations?: string[];
 }
 
 export interface OutputDecision {

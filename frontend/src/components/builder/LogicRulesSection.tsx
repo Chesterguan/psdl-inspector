@@ -153,9 +153,14 @@ export default function LogicRulesSection({
                   onClick={() => selectSignal(rule.id, field, r)}
                 >
                   <div className="text-sm text-foreground">{r.concept_name}</div>
-                  <div className="flex gap-1.5 mt-0.5">
+                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                     <span className="font-mono text-xs px-1.5 py-0.5 bg-accent-cyan/10 text-accent-cyan rounded">{r.vocabulary_id || 'LOINC'}</span>
-                    {r._score && <span className="font-mono text-xs text-muted">{(r._score * 100).toFixed(0)}%</span>}
+                    {r.category && (
+                      <span className="text-xs px-1.5 py-0.5 bg-accent-purple/10 text-accent-purple rounded capitalize">{r.category.replace(/_/g, ' ')}</span>
+                    )}
+                    {r.abbreviations && r.abbreviations.length > 0 && (
+                      <span className="text-xs text-muted truncate" title={r.abbreviations.join(', ')}>also: {r.abbreviations.slice(0, 3).join(', ')}</span>
+                    )}
                   </div>
                 </div>
               ))

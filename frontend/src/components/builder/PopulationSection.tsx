@@ -135,9 +135,15 @@ export default function PopulationSection({ population, onUpdateItems, onUpdateD
                     }}
                   >
                     <div className="result-name text-sm font-medium text-foreground">{r.concept_name}</div>
-                    <div className="result-meta flex gap-1.5 mt-1">
+                    <div className="result-meta flex flex-wrap items-center gap-1.5 mt-1">
                       <span className="result-badge font-mono text-xs px-1.5 py-0.5 bg-accent-cyan/10 text-accent-cyan rounded">{r.vocabulary_id}</span>
                       <span className="result-badge font-mono text-xs px-1.5 py-0.5 bg-background-tertiary text-muted rounded">{r.concept_code}</span>
+                      {r.category && (
+                        <span className="result-badge text-xs px-1.5 py-0.5 bg-accent-purple/10 text-accent-purple rounded capitalize">{r.category.replace(/_/g, ' ')}</span>
+                      )}
+                      {r.abbreviations && r.abbreviations.length > 0 && (
+                        <span className="text-xs text-muted truncate" title={r.abbreviations.join(', ')}>also: {r.abbreviations.slice(0, 3).join(', ')}</span>
+                      )}
                     </div>
                   </div>
                 ))
