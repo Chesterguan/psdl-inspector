@@ -1,0 +1,27 @@
+{
+  "yaml": "scenario: AKI_Staging_KDIGO\nversion: 1.0.0\ndescription: Detect and stage acute kidney injury based on KDIGO criteria using serum\n  creatinine\nsignals:\n  Cr:\n    ref: creatinine\n    expected_unit: mg/dL\n    description: Serum creatinine level\n    concept_id: 19071968\n    concept_code: '2913'\n    vocabulary_id: RxNorm\ntrends:\n  cr_delta_48h:\n    expr: delta(Cr, 48h)\n    description: Creatinine change over 48 hours\n  cr_delta_24h:\n    expr: delta(Cr, 24h)\n    description: Creatinine change over 24 hours\n  cr_current:\n    expr: last(Cr)\n    description: Current creatinine value\n  cr_baseline:\n    expr: first(Cr, 7d)\n    description: Baseline creatinine value over the past 7 days\nlogic:\n  aki_stage1_rise:\n    when: cr_delta_48h >= 0.3\n    severity: medium\n    description: 'AKI Stage 1: Cr rise >= 0.3 mg/dL in 48h'\n  aki_stage1_baseline:\n    when: cr_current >= cr_baseline * 1.5 AND cr_current < cr_baseline * 2.0\n    severity: medium\n    description: 'AKI Stage 1: Cr 1.5 to 1.9 times baseline'\n  aki_stage2:\n    when: cr_current >= cr_baseline * 2.0 AND cr_current < cr_baseline * 3.0\n    severity: high\n    description: 'AKI Stage 2: Cr 2.0 to 2.9 times baseline'\n  aki_stage3_absolute:\n    when: cr_current >= 4.0\n    severity: critical\n    description: 'AKI Stage 3: Absolute Cr >= 4.0 mg/dL'\n  aki_stage3_relative:\n    when: cr_current >= cr_baseline * 3.0\n    severity: critical\n    description: 'AKI Stage 3: Cr >= 3.0 times baseline'\n  aki_present:\n    when: aki_stage1_rise OR aki_stage1_baseline OR aki_stage2 OR aki_stage3_absolute\n      OR aki_stage3_relative\n    severity: high\n    description: AKI detected by any criterion\noutputs:\n  decision:\n    has_aki:\n      type: boolean\n      from: logic.aki_present\n      description: Patient has acute kidney injury\n    stage1:\n      type: boolean\n      from: logic.aki_stage1_rise OR logic.aki_stage1_baseline\n      description: Patient is in AKI Stage 1\n    stage2:\n      type: boolean\n      from: logic.aki_stage2\n      description: Patient is in AKI Stage 2\n    stage3:\n      type: boolean\n      from: logic.aki_stage3_absolute OR logic.aki_stage3_relative\n      description: Patient is in AKI Stage 3\n  features:\n    creatinine_change_48h:\n      type: float\n      from: trends.cr_delta_48h\n      description: 48-hour creatinine change for risk modeling\n    creatinine_change_24h:\n      type: float\n      from: trends.cr_delta_24h\n      description: 24-hour creatinine change for risk modeling\n    creatinine_current:\n      type: float\n      from: trends.cr_current\n      description: Current creatinine level\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [
+    "Trend 'cr_delta_24h' is defined but not used in any logic rule"
+  ],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 1,
+    "matched": 1,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "Cr",
+        "ref": "creatinine",
+        "matched_concept": "creatinine",
+        "concept_id": 19071968,
+        "concept_code": "2913",
+        "vocabulary_id": "RxNorm",
+        "unit": "mg/dL",
+        "error": null
+      }
+    ]
+  }
+}

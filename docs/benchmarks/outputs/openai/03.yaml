@@ -1,0 +1,119 @@
+scenario: SIRS_Screening_ACCP_SCCM
+version: 1.0.0
+description: Screen for SIRS criteria based on 1992 ACCP/SCCM guidelines
+signals:
+  Temp:
+    ref: body_temperature
+    expected_unit: C
+    description: Body temperature
+    concept_id: 4302666
+    concept_code: '386725007'
+    vocabulary_id: SNOMED
+  HR:
+    ref: heart_rate
+    expected_unit: bpm
+    description: Heart rate
+    concept_id: 3027018
+    concept_code: 8867-4
+    vocabulary_id: LOINC
+  RR:
+    ref: respiratory_rate
+    expected_unit: bpm
+    description: Respiratory rate
+    concept_id: 3024171
+    concept_code: 9279-1
+    vocabulary_id: LOINC
+  WBC:
+    ref: white_blood_cell_count
+    expected_unit: x10^9/L
+    description: White blood cell count
+    concept_id: 4298431
+    concept_code: '767002'
+    vocabulary_id: SNOMED
+trends:
+  temp_current:
+    expr: last(Temp)
+    description: Current temperature
+  hr_current:
+    expr: last(HR)
+    description: Current heart rate
+  rr_current:
+    expr: last(RR)
+    description: Current respiratory rate
+  wbc_current:
+    expr: last(WBC)
+    description: Current WBC count
+logic:
+  fever:
+    when: temp_current > 38
+    severity: low
+    description: Temperature above 38C
+  hypothermia:
+    when: temp_current < 36
+    severity: low
+    description: Temperature below 36C
+  tachycardia:
+    when: hr_current > 90
+    severity: low
+    description: Heart rate above 90 bpm
+  tachypnea:
+    when: rr_current > 20
+    severity: low
+    description: Respiratory rate above 20 bpm
+  leukocytosis:
+    when: wbc_current > 12
+    severity: low
+    description: WBC above 12 x10^9/L
+  leukopenia:
+    when: wbc_current < 4
+    severity: low
+    description: WBC below 4 x10^9/L
+  sirs_criteria:
+    when: (fever OR hypothermia) AND (tachycardia OR tachypnea OR leukocytosis OR
+      leukopenia)
+    severity: high
+    description: At least two SIRS criteria met
+outputs:
+  decision:
+    sirs_positive:
+      type: boolean
+      from: logic.sirs_criteria
+      description: Patient meets SIRS criteria
+    has_fever:
+      type: boolean
+      from: logic.fever
+      description: Patient has fever
+    has_tachycardia:
+      type: boolean
+      from: logic.tachycardia
+      description: Patient has tachycardia
+    has_tachypnea:
+      type: boolean
+      from: logic.tachypnea
+      description: Patient has tachypnea
+    has_leukocyte_abnormality:
+      type: boolean
+      from: logic.leukocytosis
+      description: Abnormal WBC count
+  features:
+    temperature:
+      type: float
+      from: trends.temp_current
+      description: Current body temperature
+    heart_rate:
+      type: float
+      from: trends.hr_current
+      description: Current heart rate
+    respiratory_rate:
+      type: float
+      from: trends.rr_current
+      description: Current respiratory rate
+    wbc_count:
+      type: float
+      from: trends.wbc_current
+      description: Current WBC count
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed

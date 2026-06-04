@@ -1,0 +1,94 @@
+scenario: Tumor_Lysis_Syndrome_Detection
+version: 1.0.0
+description: Detect laboratory tumor lysis syndrome based on Cairo-Bishop classification
+signals:
+  UricAcid:
+    ref: uric_acid
+    expected_unit: mg/dL
+    description: Serum uric acid level
+    concept_id: 43532213
+    concept_code: '1427088'
+    vocabulary_id: RxNorm
+  Potassium:
+    ref: potassium
+    expected_unit: mEq/L
+    description: Serum potassium level
+    concept_id: 19049024
+    concept_code: '8588'
+    vocabulary_id: RxNorm
+  Phosphate:
+    ref: phosphate
+    expected_unit: mg/dL
+    description: Serum phosphate level
+    concept_id: 19112944
+    concept_code: '486961'
+    vocabulary_id: RxNorm
+  Calcium:
+    ref: calcium
+    expected_unit: mg/dL
+    description: Serum calcium level
+    concept_id: 19018544
+    concept_code: '1895'
+    vocabulary_id: RxNorm
+trends:
+  uric_acid_current:
+    expr: last(UricAcid)
+    description: Current uric acid level
+  potassium_current:
+    expr: last(Potassium)
+    description: Current potassium level
+  phosphate_current:
+    expr: last(Phosphate)
+    description: Current phosphate level
+  calcium_current:
+    expr: last(Calcium)
+    description: Current calcium level
+logic:
+  hyperuricemia:
+    when: uric_acid_current >= 8.0
+    severity: low
+    description: Uric acid level 8 mg/dL or higher
+  hyperkalemia:
+    when: potassium_current >= 6.0
+    severity: low
+    description: Potassium level 6.0 mEq/L or higher
+  hyperphosphatemia:
+    when: phosphate_current >= 4.5
+    severity: low
+    description: Phosphate level 4.5 mg/dL or higher
+  hypocalcemia:
+    when: calcium_current <= 7.0
+    severity: low
+    description: Calcium level 7.0 mg/dL or lower
+  tls_flag:
+    when: (hyperuricemia + hyperkalemia + hyperphosphatemia + hypocalcemia) >= 2
+    severity: high
+    description: Laboratory tumor lysis syndrome detected with two or more abnormalities
+outputs:
+  decision:
+    has_tls:
+      type: boolean
+      from: logic.tls_flag
+      description: Patient has laboratory tumor lysis syndrome
+  features:
+    uric_acid_value:
+      type: float
+      from: trends.uric_acid_current
+      description: Current uric acid level
+    potassium_value:
+      type: float
+      from: trends.potassium_current
+      description: Current potassium level
+    phosphate_value:
+      type: float
+      from: trends.phosphate_current
+      description: Current phosphate level
+    calcium_value:
+      type: float
+      from: trends.calcium_current
+      description: Current calcium level
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed

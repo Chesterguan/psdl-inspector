@@ -1,0 +1,25 @@
+{
+  "yaml": "scenario: CKD_Staging\nversion: 1.0.0\ndescription: Stage chronic kidney disease based on eGFR using KDIGO G categories\nsignals:\n  eGFR:\n    ref: estimated_glomerular_filtration_rate\n    expected_unit: mL/min/1.73m2\n    description: Estimated glomerular filtration rate\n    concept_id: 37208635\n    concept_code: '1107411000000104'\n    vocabulary_id: SNOMED\ntrends:\n  egfr_current:\n    expr: last(eGFR)\n    description: Current eGFR value\nlogic:\n  stage_G1:\n    when: egfr_current >= 90\n    severity: low\n    description: 'Stage G1: eGFR >= 90 mL/min/1.73m2'\n  stage_G2:\n    when: egfr_current >= 60 AND egfr_current < 90\n    severity: low\n    description: 'Stage G2: eGFR 60 to 89 mL/min/1.73m2'\n  stage_G3a:\n    when: egfr_current >= 45 AND egfr_current < 60\n    severity: medium\n    description: 'Stage G3a: eGFR 45 to 59 mL/min/1.73m2'\n  stage_G3b:\n    when: egfr_current >= 30 AND egfr_current < 45\n    severity: medium\n    description: 'Stage G3b: eGFR 30 to 44 mL/min/1.73m2'\n  stage_G4:\n    when: egfr_current >= 15 AND egfr_current < 30\n    severity: high\n    description: 'Stage G4: eGFR 15 to 29 mL/min/1.73m2'\n  stage_G5:\n    when: egfr_current < 15\n    severity: critical\n    description: 'Stage G5: eGFR < 15 mL/min/1.73m2'\n  ckd_stage:\n    when: stage_G1 OR stage_G2 OR stage_G3a OR stage_G3b OR stage_G4 OR stage_G5\n    severity: high\n    description: Chronic kidney disease stage determined\noutputs:\n  decision:\n    ckd_stage_detected:\n      type: boolean\n      from: logic.ckd_stage\n      description: Chronic kidney disease stage detected\n  features:\n    egfr_value:\n      type: float\n      from: trends.egfr_current\n      description: Current eGFR value for staging\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 1,
+    "matched": 1,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "eGFR",
+        "ref": "estimated_glomerular_filtration_rate",
+        "matched_concept": "Estimated glomerular filtration rate by laboratory calculation",
+        "concept_id": 37208635,
+        "concept_code": "1107411000000104",
+        "vocabulary_id": "SNOMED",
+        "unit": "mL/min/1.73m2",
+        "error": null
+      }
+    ]
+  }
+}

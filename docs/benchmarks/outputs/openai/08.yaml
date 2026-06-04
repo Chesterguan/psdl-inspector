@@ -1,0 +1,56 @@
+scenario: Febrile_Neutropenia_Detection
+version: "1.0.0"
+description: "Detect febrile neutropenia based on absolute neutrophil count and temperature criteria"
+
+signals:
+  ANC:
+    ref: absolute_neutrophil_count
+    expected_unit: cells/uL
+    description: "Absolute neutrophil count"
+  Temp:
+    ref: body_temperature
+    expected_unit: C
+    description: "Body temperature"
+
+trends:
+  temp_current:
+    expr: last(Temp)
+    description: "Current temperature"
+  temp_sustained:
+    expr: sma(Temp, 1h)
+    description: "Sustained temperature over the last hour"
+
+logic:
+  neutropenia:
+    when: ANC < 500
+    severity: critical
+    description: "Absolute neutrophil count below 500 cells/uL"
+  fever:
+    when: temp_current >= 38.3 OR temp_sustained >= 38.0
+    severity: critical
+    description: "Single oral temperature of 38.3C or higher (or 38.0C sustained for an hour)"
+  febrile_neutropenia:
+    when: neutropenia AND fever
+    severity: critical
+    description: "Febrile neutropenia detected"
+
+outputs:
+  decision:
+    has_febrile_neutropenia:
+      type: boolean
+      from: febrile_neutropenia
+      description: "Patient has febrile neutropenia"
+  features:
+    neutrophil_count:
+      type: float
+      from: ANC
+      description: "Current absolute neutrophil count"
+    temperature:
+      type: float
+      from: temp_current
+      description: "Current body temperature"
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: "When this evaluation was performed"

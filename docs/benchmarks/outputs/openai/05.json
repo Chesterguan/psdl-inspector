@@ -1,0 +1,55 @@
+{
+  "yaml": "scenario: Tumor_Lysis_Syndrome_Detection\nversion: 1.0.0\ndescription: Detect laboratory tumor lysis syndrome based on Cairo-Bishop classification\nsignals:\n  UricAcid:\n    ref: uric_acid\n    expected_unit: mg/dL\n    description: Serum uric acid level\n    concept_id: 43532213\n    concept_code: '1427088'\n    vocabulary_id: RxNorm\n  Potassium:\n    ref: potassium\n    expected_unit: mEq/L\n    description: Serum potassium level\n    concept_id: 19049024\n    concept_code: '8588'\n    vocabulary_id: RxNorm\n  Phosphate:\n    ref: phosphate\n    expected_unit: mg/dL\n    description: Serum phosphate level\n    concept_id: 19112944\n    concept_code: '486961'\n    vocabulary_id: RxNorm\n  Calcium:\n    ref: calcium\n    expected_unit: mg/dL\n    description: Serum calcium level\n    concept_id: 19018544\n    concept_code: '1895'\n    vocabulary_id: RxNorm\ntrends:\n  uric_acid_current:\n    expr: last(UricAcid)\n    description: Current uric acid level\n  potassium_current:\n    expr: last(Potassium)\n    description: Current potassium level\n  phosphate_current:\n    expr: last(Phosphate)\n    description: Current phosphate level\n  calcium_current:\n    expr: last(Calcium)\n    description: Current calcium level\nlogic:\n  hyperuricemia:\n    when: uric_acid_current >= 8.0\n    severity: low\n    description: Uric acid level 8 mg/dL or higher\n  hyperkalemia:\n    when: potassium_current >= 6.0\n    severity: low\n    description: Potassium level 6.0 mEq/L or higher\n  hyperphosphatemia:\n    when: phosphate_current >= 4.5\n    severity: low\n    description: Phosphate level 4.5 mg/dL or higher\n  hypocalcemia:\n    when: calcium_current <= 7.0\n    severity: low\n    description: Calcium level 7.0 mg/dL or lower\n  tls_flag:\n    when: (hyperuricemia + hyperkalemia + hyperphosphatemia + hypocalcemia) >= 2\n    severity: high\n    description: Laboratory tumor lysis syndrome detected with two or more abnormalities\noutputs:\n  decision:\n    has_tls:\n      type: boolean\n      from: logic.tls_flag\n      description: Patient has laboratory tumor lysis syndrome\n  features:\n    uric_acid_value:\n      type: float\n      from: trends.uric_acid_current\n      description: Current uric acid level\n    potassium_value:\n      type: float\n      from: trends.potassium_current\n      description: Current potassium level\n    phosphate_value:\n      type: float\n      from: trends.phosphate_current\n      description: Current phosphate level\n    calcium_value:\n      type: float\n      from: trends.calcium_current\n      description: Current calcium level\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 4,
+    "matched": 4,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "UricAcid",
+        "ref": "uric_acid",
+        "matched_concept": "uric acid",
+        "concept_id": 43532213,
+        "concept_code": "1427088",
+        "vocabulary_id": "RxNorm",
+        "unit": "mg/dL",
+        "error": null
+      },
+      {
+        "signal": "Potassium",
+        "ref": "potassium",
+        "matched_concept": "potassium",
+        "concept_id": 19049024,
+        "concept_code": "8588",
+        "vocabulary_id": "RxNorm",
+        "unit": "mEq/L",
+        "error": null
+      },
+      {
+        "signal": "Phosphate",
+        "ref": "phosphate",
+        "matched_concept": "phosphate ion",
+        "concept_id": 19112944,
+        "concept_code": "486961",
+        "vocabulary_id": "RxNorm",
+        "unit": "mg/dL",
+        "error": null
+      },
+      {
+        "signal": "Calcium",
+        "ref": "calcium",
+        "matched_concept": "calcium",
+        "concept_id": 19018544,
+        "concept_code": "1895",
+        "vocabulary_id": "RxNorm",
+        "unit": "mg/dL",
+        "error": null
+      }
+    ]
+  }
+}

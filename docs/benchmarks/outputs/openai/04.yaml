@@ -1,0 +1,112 @@
+scenario: Diabetic_Ketoacidosis_Detection
+version: 1.0.0
+description: Detect diabetic ketoacidosis based on ADA criteria and stage severity
+signals:
+  Glucose:
+    ref: plasma_glucose
+    expected_unit: mg/dL
+    description: Plasma glucose level
+    concept_id: 3052381
+    concept_code: 48986-4
+    vocabulary_id: LOINC
+  pH:
+    ref: arterial_ph
+    expected_unit: unitless
+    description: Arterial blood pH
+    concept_id: 3019977
+    concept_code: 2744-1
+    vocabulary_id: LOINC
+  Bicarbonate:
+    ref: serum_bicarbonate
+    expected_unit: mEq/L
+    description: Serum bicarbonate level
+    concept_id: 607488
+    concept_code: '1153484001'
+    vocabulary_id: SNOMED
+  AnionGap:
+    ref: anion_gap
+    expected_unit: mEq/L
+    description: Anion gap
+    concept_id: 4009397
+    concept_code: '102637000'
+    vocabulary_id: SNOMED
+trends:
+  glucose_current:
+    expr: last(Glucose)
+    description: Current plasma glucose level
+  ph_current:
+    expr: last(pH)
+    description: Current arterial pH
+  bicarbonate_current:
+    expr: last(Bicarbonate)
+    description: Current serum bicarbonate level
+  anion_gap_current:
+    expr: last(AnionGap)
+    description: Current anion gap
+logic:
+  hyperglycemia:
+    when: glucose_current > 250
+    severity: medium
+    description: Plasma glucose above 250 mg/dL
+  acidosis:
+    when: ph_current < 7.30
+    severity: medium
+    description: Arterial pH below 7.30
+  bicarbonate_low:
+    when: bicarbonate_current < 18
+    severity: medium
+    description: Serum bicarbonate below 18 mEq/L
+  anion_gap_high:
+    when: anion_gap_current > 10
+    severity: medium
+    description: Anion gap above 10 mEq/L
+  dka_present:
+    when: hyperglycemia AND acidosis AND bicarbonate_low AND anion_gap_high
+    severity: high
+    description: Diabetic ketoacidosis detected
+  severity_mild:
+    when: ph_current >= 7.25 AND ph_current < 7.30 AND bicarbonate_current >= 15 AND
+      bicarbonate_current < 18
+    severity: low
+    description: Mild DKA
+  severity_moderate:
+    when: (ph_current >= 7.00 AND ph_current < 7.25) OR (bicarbonate_current >= 10
+      AND bicarbonate_current < 15)
+    severity: medium
+    description: Moderate DKA
+  severity_severe:
+    when: ph_current < 7.00 OR bicarbonate_current < 10
+    severity: critical
+    description: Severe DKA
+outputs:
+  decision:
+    has_dka:
+      type: boolean
+      from: logic.dka_present
+      description: Patient has diabetic ketoacidosis
+    severity_level:
+      type: string
+      from: (severity_mild OR severity_moderate OR severity_severe)
+      description: Severity of diabetic ketoacidosis
+  features:
+    glucose_value:
+      type: float
+      from: trends.glucose_current
+      description: Current plasma glucose level
+    ph_value:
+      type: float
+      from: trends.ph_current
+      description: Current arterial pH
+    bicarbonate_value:
+      type: float
+      from: trends.bicarbonate_current
+      description: Current serum bicarbonate level
+    anion_gap_value:
+      type: float
+      from: trends.anion_gap_current
+      description: Current anion gap
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed

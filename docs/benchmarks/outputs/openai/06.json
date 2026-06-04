@@ -1,0 +1,47 @@
+{
+  "yaml": "scenario: QT_Prolongation_Flag\nversion: 1.0.0\ndescription: Flag drug-induced QT prolongation based on AHA/ACCF criteria\nsignals:\n  QTc:\n    ref: corrected_qt_interval\n    expected_unit: ms\n    description: Corrected QT interval\n    concept_id: 3026258\n    concept_code: 8636-3\n    vocabulary_id: LOINC\n  K:\n    ref: potassium\n    expected_unit: mEq/L\n    description: Serum potassium level\n    concept_id: 19049024\n    concept_code: '8588'\n    vocabulary_id: RxNorm\n  Mg:\n    ref: magnesium\n    expected_unit: mg/dL\n    description: Serum magnesium level\n    concept_id: 19124906\n    concept_code: '6574'\n    vocabulary_id: RxNorm\ntrends:\n  qtc_current:\n    expr: last(QTc)\n    description: Current corrected QT interval\n  qtc_baseline:\n    expr: first(QTc, 1w)\n    description: Baseline corrected QT interval\n  qtc_change:\n    expr: delta(QTc, 1w)\n    description: Change in corrected QT interval from baseline over the last week\n  potassium_current:\n    expr: last(K)\n    description: Current serum potassium level\n  magnesium_current:\n    expr: last(Mg)\n    description: Current serum magnesium level\nlogic:\n  qtc_high:\n    when: qtc_current > 500\n    severity: high\n    description: Corrected QT interval above 500 ms\n  qtc_increase:\n    when: qtc_change >= 60\n    severity: high\n    description: Increase in QT interval of 60 ms or more from baseline\n  hypokalemia:\n    when: potassium_current < 3.5\n    severity: medium\n    description: Potassium level below 3.5 mEq/L\n  hypomagnesemia:\n    when: magnesium_current < 1.7\n    severity: medium\n    description: Magnesium level below 1.7 mg/dL\n  qt_concern:\n    when: qtc_high OR qtc_increase OR hypokalemia OR hypomagnesemia\n    severity: high\n    description: Concern for drug-induced QT prolongation\noutputs:\n  decision:\n    has_qt_prolongation:\n      type: boolean\n      from: logic.qt_concern\n      description: Patient flagged for drug-induced QT prolongation risk\n  features:\n    current_qtc:\n      type: float\n      from: trends.qtc_current\n      description: Current corrected QT interval\n    qtc_change_value:\n      type: float\n      from: trends.qtc_change\n      description: Change in QT interval from baseline\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [
+    "Trend 'qtc_baseline' is defined but not used in any logic rule"
+  ],
+  "attempts": 2,
+  "enrichment": {
+    "total_signals": 3,
+    "matched": 3,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "QTc",
+        "ref": "corrected_qt_interval",
+        "matched_concept": "Q-T interval corrected",
+        "concept_id": 3026258,
+        "concept_code": "8636-3",
+        "vocabulary_id": "LOINC",
+        "unit": "ms",
+        "error": null
+      },
+      {
+        "signal": "K",
+        "ref": "potassium",
+        "matched_concept": "potassium",
+        "concept_id": 19049024,
+        "concept_code": "8588",
+        "vocabulary_id": "RxNorm",
+        "unit": "mEq/L",
+        "error": null
+      },
+      {
+        "signal": "Mg",
+        "ref": "magnesium",
+        "matched_concept": "magnesium",
+        "concept_id": 19124906,
+        "concept_code": "6574",
+        "vocabulary_id": "RxNorm",
+        "unit": "mg/dL",
+        "error": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+scenario: QT_Prolongation_Flag
+version: 1.0.0
+description: Flag drug-induced QT prolongation based on AHA/ACCF criteria
+signals:
+  QTc:
+    ref: corrected_qt_interval
+    expected_unit: ms
+    description: Corrected QT interval
+    concept_id: 3026258
+    concept_code: 8636-3
+    vocabulary_id: LOINC
+  K:
+    ref: potassium
+    expected_unit: mEq/L
+    description: Serum potassium level
+    concept_id: 19049024
+    concept_code: '8588'
+    vocabulary_id: RxNorm
+  Mg:
+    ref: magnesium
+    expected_unit: mg/dL
+    description: Serum magnesium level
+    concept_id: 19124906
+    concept_code: '6574'
+    vocabulary_id: RxNorm
+trends:
+  qtc_current:
+    expr: last(QTc)
+    description: Current corrected QT interval
+  qtc_baseline:
+    expr: first(QTc, 1w)
+    description: Baseline corrected QT interval
+  qtc_change:
+    expr: delta(QTc, 1w)
+    description: Change in corrected QT interval from baseline over the last week
+  potassium_current:
+    expr: last(K)
+    description: Current serum potassium level
+  magnesium_current:
+    expr: last(Mg)
+    description: Current serum magnesium level
+logic:
+  qtc_high:
+    when: qtc_current > 500
+    severity: high
+    description: Corrected QT interval above 500 ms
+  qtc_increase:
+    when: qtc_change >= 60
+    severity: high
+    description: Increase in QT interval of 60 ms or more from baseline
+  hypokalemia:
+    when: potassium_current < 3.5
+    severity: medium
+    description: Potassium level below 3.5 mEq/L
+  hypomagnesemia:
+    when: magnesium_current < 1.7
+    severity: medium
+    description: Magnesium level below 1.7 mg/dL
+  qt_concern:
+    when: qtc_high OR qtc_increase OR hypokalemia OR hypomagnesemia
+    severity: high
+    description: Concern for drug-induced QT prolongation
+outputs:
+  decision:
+    has_qt_prolongation:
+      type: boolean
+      from: logic.qt_concern
+      description: Patient flagged for drug-induced QT prolongation risk
+  features:
+    current_qtc:
+      type: float
+      from: trends.qtc_current
+      description: Current corrected QT interval
+    qtc_change_value:
+      type: float
+      from: trends.qtc_change
+      description: Change in QT interval from baseline
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed

@@ -1,0 +1,55 @@
+{
+  "yaml": "scenario: SIRS_Screening_ACCP_SCCM\nversion: 1.0.0\ndescription: Screen for SIRS criteria based on 1992 ACCP/SCCM guidelines\nsignals:\n  Temp:\n    ref: body_temperature\n    expected_unit: C\n    description: Body temperature\n    concept_id: 4302666\n    concept_code: '386725007'\n    vocabulary_id: SNOMED\n  HR:\n    ref: heart_rate\n    expected_unit: bpm\n    description: Heart rate\n    concept_id: 3027018\n    concept_code: 8867-4\n    vocabulary_id: LOINC\n  RR:\n    ref: respiratory_rate\n    expected_unit: bpm\n    description: Respiratory rate\n    concept_id: 3024171\n    concept_code: 9279-1\n    vocabulary_id: LOINC\n  WBC:\n    ref: white_blood_cell_count\n    expected_unit: x10^9/L\n    description: White blood cell count\n    concept_id: 4298431\n    concept_code: '767002'\n    vocabulary_id: SNOMED\ntrends:\n  temp_current:\n    expr: last(Temp)\n    description: Current temperature\n  hr_current:\n    expr: last(HR)\n    description: Current heart rate\n  rr_current:\n    expr: last(RR)\n    description: Current respiratory rate\n  wbc_current:\n    expr: last(WBC)\n    description: Current WBC count\nlogic:\n  fever:\n    when: temp_current > 38\n    severity: low\n    description: Temperature above 38C\n  hypothermia:\n    when: temp_current < 36\n    severity: low\n    description: Temperature below 36C\n  tachycardia:\n    when: hr_current > 90\n    severity: low\n    description: Heart rate above 90 bpm\n  tachypnea:\n    when: rr_current > 20\n    severity: low\n    description: Respiratory rate above 20 bpm\n  leukocytosis:\n    when: wbc_current > 12\n    severity: low\n    description: WBC above 12 x10^9/L\n  leukopenia:\n    when: wbc_current < 4\n    severity: low\n    description: WBC below 4 x10^9/L\n  sirs_criteria:\n    when: (fever OR hypothermia) AND (tachycardia OR tachypnea OR leukocytosis OR\n      leukopenia)\n    severity: high\n    description: At least two SIRS criteria met\noutputs:\n  decision:\n    sirs_positive:\n      type: boolean\n      from: logic.sirs_criteria\n      description: Patient meets SIRS criteria\n    has_fever:\n      type: boolean\n      from: logic.fever\n      description: Patient has fever\n    has_tachycardia:\n      type: boolean\n      from: logic.tachycardia\n      description: Patient has tachycardia\n    has_tachypnea:\n      type: boolean\n      from: logic.tachypnea\n      description: Patient has tachypnea\n    has_leukocyte_abnormality:\n      type: boolean\n      from: logic.leukocytosis\n      description: Abnormal WBC count\n  features:\n    temperature:\n      type: float\n      from: trends.temp_current\n      description: Current body temperature\n    heart_rate:\n      type: float\n      from: trends.hr_current\n      description: Current heart rate\n    respiratory_rate:\n      type: float\n      from: trends.rr_current\n      description: Current respiratory rate\n    wbc_count:\n      type: float\n      from: trends.wbc_current\n      description: Current WBC count\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 4,
+    "matched": 4,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "Temp",
+        "ref": "body_temperature",
+        "matched_concept": "Body temperature",
+        "concept_id": 4302666,
+        "concept_code": "386725007",
+        "vocabulary_id": "SNOMED",
+        "unit": "C",
+        "error": null
+      },
+      {
+        "signal": "HR",
+        "ref": "heart_rate",
+        "matched_concept": "Heart rate",
+        "concept_id": 3027018,
+        "concept_code": "8867-4",
+        "vocabulary_id": "LOINC",
+        "unit": "bpm",
+        "error": null
+      },
+      {
+        "signal": "RR",
+        "ref": "respiratory_rate",
+        "matched_concept": "Respiratory rate",
+        "concept_id": 3024171,
+        "concept_code": "9279-1",
+        "vocabulary_id": "LOINC",
+        "unit": "bpm",
+        "error": null
+      },
+      {
+        "signal": "WBC",
+        "ref": "white_blood_cell_count",
+        "matched_concept": "White blood cell count",
+        "concept_id": 4298431,
+        "concept_code": "767002",
+        "vocabulary_id": "SNOMED",
+        "unit": "x10^9/L",
+        "error": null
+      }
+    ]
+  }
+}

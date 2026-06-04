@@ -1,0 +1,45 @@
+{
+  "yaml": "scenario: qSOFA_Sepsis_Screen\nversion: 1.0.0\ndescription: Screen for sepsis using qSOFA criteria\nsignals:\n  RR:\n    ref: respiratory_rate\n    expected_unit: bpm\n    description: Respiratory rate\n    concept_id: 3024171\n    concept_code: 9279-1\n    vocabulary_id: LOINC\n  SBP:\n    ref: systolic_blood_pressure\n    expected_unit: mmHg\n    description: Systolic blood pressure\n    concept_id: 3004249\n    concept_code: 8480-6\n    vocabulary_id: LOINC\n  GCS:\n    ref: glasgow_coma_scale\n    expected_unit: score\n    description: Glasgow Coma Scale score\n    concept_id: 3032652\n    concept_code: 35088-4\n    vocabulary_id: LOINC\ntrends:\n  rr_current:\n    expr: last(RR)\n    description: Current respiratory rate\n  sbp_current:\n    expr: last(SBP)\n    description: Current systolic blood pressure\n  gcs_current:\n    expr: last(GCS)\n    description: Current Glasgow Coma Scale score\nlogic:\n  high_rr:\n    when: rr_current >= 22\n    severity: low\n    description: Respiratory rate of 22 or more\n  low_sbp:\n    when: sbp_current <= 100\n    severity: low\n    description: Systolic blood pressure of 100 mmHg or less\n  low_gcs:\n    when: gcs_current < 15\n    severity: low\n    description: Glasgow Coma Scale score below 15\n  sepsis_risk:\n    when: (high_rr + low_sbp + low_gcs) >= 2\n    severity: high\n    description: Patient at high risk for sepsis based on qSOFA criteria\noutputs:\n  decision:\n    high_sepsis_risk:\n      type: boolean\n      from: logic.sepsis_risk\n      description: Patient is at high risk for sepsis\n  features:\n    respiratory_rate:\n      type: float\n      from: trends.rr_current\n      description: Current respiratory rate\n    systolic_blood_pressure:\n      type: float\n      from: trends.sbp_current\n      description: Current systolic blood pressure\n    gcs_score:\n      type: float\n      from: trends.gcs_current\n      description: Current Glasgow Coma Scale score\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 3,
+    "matched": 3,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "RR",
+        "ref": "respiratory_rate",
+        "matched_concept": "Respiratory rate",
+        "concept_id": 3024171,
+        "concept_code": "9279-1",
+        "vocabulary_id": "LOINC",
+        "unit": "bpm",
+        "error": null
+      },
+      {
+        "signal": "SBP",
+        "ref": "systolic_blood_pressure",
+        "matched_concept": "Systolic blood pressure",
+        "concept_id": 3004249,
+        "concept_code": "8480-6",
+        "vocabulary_id": "LOINC",
+        "unit": "mmHg",
+        "error": null
+      },
+      {
+        "signal": "GCS",
+        "ref": "glasgow_coma_scale",
+        "matched_concept": "Glasgow coma scale",
+        "concept_id": 3032652,
+        "concept_code": "35088-4",
+        "vocabulary_id": "LOINC",
+        "unit": "score",
+        "error": null
+      }
+    ]
+  }
+}

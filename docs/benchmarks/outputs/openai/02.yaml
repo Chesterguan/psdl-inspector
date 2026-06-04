@@ -1,0 +1,76 @@
+scenario: qSOFA_Sepsis_Screen
+version: 1.0.0
+description: Screen for sepsis using qSOFA criteria
+signals:
+  RR:
+    ref: respiratory_rate
+    expected_unit: bpm
+    description: Respiratory rate
+    concept_id: 3024171
+    concept_code: 9279-1
+    vocabulary_id: LOINC
+  SBP:
+    ref: systolic_blood_pressure
+    expected_unit: mmHg
+    description: Systolic blood pressure
+    concept_id: 3004249
+    concept_code: 8480-6
+    vocabulary_id: LOINC
+  GCS:
+    ref: glasgow_coma_scale
+    expected_unit: score
+    description: Glasgow Coma Scale score
+    concept_id: 3032652
+    concept_code: 35088-4
+    vocabulary_id: LOINC
+trends:
+  rr_current:
+    expr: last(RR)
+    description: Current respiratory rate
+  sbp_current:
+    expr: last(SBP)
+    description: Current systolic blood pressure
+  gcs_current:
+    expr: last(GCS)
+    description: Current Glasgow Coma Scale score
+logic:
+  high_rr:
+    when: rr_current >= 22
+    severity: low
+    description: Respiratory rate of 22 or more
+  low_sbp:
+    when: sbp_current <= 100
+    severity: low
+    description: Systolic blood pressure of 100 mmHg or less
+  low_gcs:
+    when: gcs_current < 15
+    severity: low
+    description: Glasgow Coma Scale score below 15
+  sepsis_risk:
+    when: (high_rr + low_sbp + low_gcs) >= 2
+    severity: high
+    description: Patient at high risk for sepsis based on qSOFA criteria
+outputs:
+  decision:
+    high_sepsis_risk:
+      type: boolean
+      from: logic.sepsis_risk
+      description: Patient is at high risk for sepsis
+  features:
+    respiratory_rate:
+      type: float
+      from: trends.rr_current
+      description: Current respiratory rate
+    systolic_blood_pressure:
+      type: float
+      from: trends.sbp_current
+      description: Current systolic blood pressure
+    gcs_score:
+      type: float
+      from: trends.gcs_current
+      description: Current Glasgow Coma Scale score
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed

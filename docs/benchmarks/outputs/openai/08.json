@@ -1,0 +1,10 @@
+{
+  "yaml": "scenario: Febrile_Neutropenia_Detection\nversion: \"1.0.0\"\ndescription: \"Detect febrile neutropenia based on absolute neutrophil count and temperature criteria\"\n\nsignals:\n  ANC:\n    ref: absolute_neutrophil_count\n    expected_unit: cells/uL\n    description: \"Absolute neutrophil count\"\n  Temp:\n    ref: body_temperature\n    expected_unit: C\n    description: \"Body temperature\"\n\ntrends:\n  temp_current:\n    expr: last(Temp)\n    description: \"Current temperature\"\n  temp_sustained:\n    expr: sma(Temp, 1h)\n    description: \"Sustained temperature over the last hour\"\n\nlogic:\n  neutropenia:\n    when: ANC < 500\n    severity: critical\n    description: \"Absolute neutrophil count below 500 cells/uL\"\n  fever:\n    when: temp_current >= 38.3 OR temp_sustained >= 38.0\n    severity: critical\n    description: \"Single oral temperature of 38.3C or higher (or 38.0C sustained for an hour)\"\n  febrile_neutropenia:\n    when: neutropenia AND fever\n    severity: critical\n    description: \"Febrile neutropenia detected\"\n\noutputs:\n  decision:\n    has_febrile_neutropenia:\n      type: boolean\n      from: febrile_neutropenia\n      description: \"Patient has febrile neutropenia\"\n  features:\n    neutrophil_count:\n      type: float\n      from: ANC\n      description: \"Current absolute neutrophil count\"\n    temperature:\n      type: float\n      from: temp_current\n      description: \"Current body temperature\"\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: \"When this evaluation was performed\"",
+  "valid": false,
+  "errors": [
+    "PSDL Parse Error: Validation errors: Logic 'neutropenia' references unknown term 'ANC'"
+  ],
+  "warnings": [],
+  "attempts": 4,
+  "enrichment": null
+}

@@ -1,0 +1,55 @@
+{
+  "yaml": "scenario: Diabetic_Ketoacidosis_Detection\nversion: 1.0.0\ndescription: Detect diabetic ketoacidosis based on ADA criteria and stage severity\nsignals:\n  Glucose:\n    ref: plasma_glucose\n    expected_unit: mg/dL\n    description: Plasma glucose level\n    concept_id: 3052381\n    concept_code: 48986-4\n    vocabulary_id: LOINC\n  pH:\n    ref: arterial_ph\n    expected_unit: unitless\n    description: Arterial blood pH\n    concept_id: 3019977\n    concept_code: 2744-1\n    vocabulary_id: LOINC\n  Bicarbonate:\n    ref: serum_bicarbonate\n    expected_unit: mEq/L\n    description: Serum bicarbonate level\n    concept_id: 607488\n    concept_code: '1153484001'\n    vocabulary_id: SNOMED\n  AnionGap:\n    ref: anion_gap\n    expected_unit: mEq/L\n    description: Anion gap\n    concept_id: 4009397\n    concept_code: '102637000'\n    vocabulary_id: SNOMED\ntrends:\n  glucose_current:\n    expr: last(Glucose)\n    description: Current plasma glucose level\n  ph_current:\n    expr: last(pH)\n    description: Current arterial pH\n  bicarbonate_current:\n    expr: last(Bicarbonate)\n    description: Current serum bicarbonate level\n  anion_gap_current:\n    expr: last(AnionGap)\n    description: Current anion gap\nlogic:\n  hyperglycemia:\n    when: glucose_current > 250\n    severity: medium\n    description: Plasma glucose above 250 mg/dL\n  acidosis:\n    when: ph_current < 7.30\n    severity: medium\n    description: Arterial pH below 7.30\n  bicarbonate_low:\n    when: bicarbonate_current < 18\n    severity: medium\n    description: Serum bicarbonate below 18 mEq/L\n  anion_gap_high:\n    when: anion_gap_current > 10\n    severity: medium\n    description: Anion gap above 10 mEq/L\n  dka_present:\n    when: hyperglycemia AND acidosis AND bicarbonate_low AND anion_gap_high\n    severity: high\n    description: Diabetic ketoacidosis detected\n  severity_mild:\n    when: ph_current >= 7.25 AND ph_current < 7.30 AND bicarbonate_current >= 15 AND\n      bicarbonate_current < 18\n    severity: low\n    description: Mild DKA\n  severity_moderate:\n    when: (ph_current >= 7.00 AND ph_current < 7.25) OR (bicarbonate_current >= 10\n      AND bicarbonate_current < 15)\n    severity: medium\n    description: Moderate DKA\n  severity_severe:\n    when: ph_current < 7.00 OR bicarbonate_current < 10\n    severity: critical\n    description: Severe DKA\noutputs:\n  decision:\n    has_dka:\n      type: boolean\n      from: logic.dka_present\n      description: Patient has diabetic ketoacidosis\n    severity_level:\n      type: string\n      from: (severity_mild OR severity_moderate OR severity_severe)\n      description: Severity of diabetic ketoacidosis\n  features:\n    glucose_value:\n      type: float\n      from: trends.glucose_current\n      description: Current plasma glucose level\n    ph_value:\n      type: float\n      from: trends.ph_current\n      description: Current arterial pH\n    bicarbonate_value:\n      type: float\n      from: trends.bicarbonate_current\n      description: Current serum bicarbonate level\n    anion_gap_value:\n      type: float\n      from: trends.anion_gap_current\n      description: Current anion gap\n  evidence:\n    timestamp:\n      type: datetime\n      expr: evaluation_time()\n      description: When this evaluation was performed\n",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "attempts": 1,
+  "enrichment": {
+    "total_signals": 4,
+    "matched": 4,
+    "unmatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      {
+        "signal": "Glucose",
+        "ref": "plasma_glucose",
+        "matched_concept": "Glucose [Mass/volume] in Serum or Plasma --8 AM specimen",
+        "concept_id": 3052381,
+        "concept_code": "48986-4",
+        "vocabulary_id": "LOINC",
+        "unit": "mg/dL",
+        "error": null
+      },
+      {
+        "signal": "pH",
+        "ref": "arterial_ph",
+        "matched_concept": "pH of Arterial blood",
+        "concept_id": 3019977,
+        "concept_code": "2744-1",
+        "vocabulary_id": "LOINC",
+        "unit": "unitless",
+        "error": null
+      },
+      {
+        "signal": "Bicarbonate",
+        "ref": "serum_bicarbonate",
+        "matched_concept": "Serum bicarbonate above reference range",
+        "concept_id": 607488,
+        "concept_code": "1153484001",
+        "vocabulary_id": "SNOMED",
+        "unit": "mEq/L",
+        "error": null
+      },
+      {
+        "signal": "AnionGap",
+        "ref": "anion_gap",
+        "matched_concept": "Anion gap",
+        "concept_id": 4009397,
+        "concept_code": "102637000",
+        "vocabulary_id": "SNOMED",
+        "unit": "mEq/L",
+        "error": null
+      }
+    ]
+  }
+}
