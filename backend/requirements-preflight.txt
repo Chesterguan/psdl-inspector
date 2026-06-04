@@ -1,0 +1,11 @@
+# Optional add-on: offline SQL Preflight feature (/api/preflight/* endpoints and
+# the /preflight UI). Inspector runs fine WITHOUT this — the preflight router
+# degrades to 503 when the package is absent. Enable the feature with:
+#
+#   pip install -r requirements-preflight.txt
+#
+# This pulls the offline core (sqlglot, duckdb, pydantic, PyYAML, rich) via the
+# package's [project.dependencies]. The live DB connectors (psycopg/pyodbc) are
+# the package's `live` extra and are intentionally NOT installed here — Inspector
+# is offline-only (run_preflight is always called with connector=None).
+preflight @ git+https://github.com/Chesterguan/psdl-workbench-preflight.git@v0.1.0
