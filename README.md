@@ -32,6 +32,12 @@ PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Ch
 
 ![PSDL Inspector wizard walkthrough](assets/psdl-inspector-workflow.gif)
 
+### Author → certify → preflight against a live database
+
+The AKI early-detection scenario goes end-to-end — **Input → Preview (DAG) → Export (certified bundle) → Prepare** — then a realistic cohort extraction is **preflighted against a real local database** (MIMIC-IV in OMOP CDM). A forgotten join (cartesian blow-up) is caught as 🔴 **BLOCK**; the fixed, scoped query reads 🟢 **GO** — driven by a real `EXPLAIN`, metadata only, never executing the query.
+
+![AKI scenario → certify → live preflight: BLOCK the mistake, fix the SQL, GO](assets/aki-preflight-walkthrough.gif)
+
 ### ▶ Watch the sepsis walkthrough on YouTube → [youtu.be/j-3UHeCyHDk](https://youtu.be/j-3UHeCyHDk)
 
 [![PSDL Inspector — Sepsis-3 qSOFA walkthrough on YouTube](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "Click to watch on YouTube — PSDL Inspector Sepsis-3 walkthrough")
@@ -70,6 +76,8 @@ Inspector **always tracks the latest `psdl-lang`** — the requirements pin is `
 | **Bundle** | Generate checksummed certified bundles with terminology anchors |
 | **Export** | IRB preparation with AI-enriched Word document export |
 | **MEDS Preview** | Synthesize a 10-row MEDS-format Parquet preview from anchored signals, no DB required; ships with `psdl-meds` CLI for offline conversion |
+| **Data Catalog** | Read-only browse of an Observatory-scanned data lake (schemas, columns, inferred roles) with provenance + staleness — see what institutional data exists |
+| **Preflight** | SQL cost/risk check (GO / CAUTION / BLOCK) *before* a query touches the warehouse — offline by default; optionally run a real `EXPLAIN` against your own local DB for a tightened, high-confidence plan (metadata only, never executes) |
 
 ## What Inspector Does NOT Do
 
@@ -77,10 +85,12 @@ Inspector is **governance middleware** — it certifies that algorithms are corr
 
 | Out of Scope | Reason |
 |--------------|--------|
-| Connect to patient data (EHR, OMOP, FHIR) | Execution platform responsibility |
+| Read patient data (EHR, OMOP, FHIR rows) | Execution platform responsibility |
 | Execute scenarios in production | Execution platform responsibility |
 | Send clinical alerts | Execution platform responsibility |
 | Handle PHI/HIPAA data | No patient data in certification |
+
+> Preflight's **optional** live plan connects to *your own local* database for an `EXPLAIN` only — it reads query-plan metadata (estimated rows, scan types), never patient rows. No data is fetched and no query is executed.
 
 ## Try It Out
 
