@@ -26,19 +26,15 @@ This update embeds both into Inspector as **read-only, offline, single-user**
 features. The DS brings their own SQL; Inspector vets it offline. Inspector never
 chooses tables, writes SQL, binds data, or touches PHI.
 
-## Open-core boundary (why this scope)
+## Scope (why this is bounded the way it is)
 
-Per the product strategy (synced to Workbench in `Chesterguan/PSDL-workbench#10`):
-**split features by individual vs. organization.**
+This feature is deliberately **offline, catalog-only, single-user**: no auth, no DB,
+no live database connection, no PHI, no LLM.
 
-- **Inspector (OSS, individual):** offline, catalog-only, single-user. No auth, no DB,
-  no live database connection, no PHI, no LLM.
-- **Workbench (commercial, org):** live connectors at scale, batch worklists,
-  governed/RBAC catalog + scheduled scans, multi-source `datasetSpec` binding,
-  hosting. **All explicitly out of scope here.**
-
-The role-based / institutional / periodic-governance framing from earlier
-discussion is an *organizational* concern → it lives in Workbench, not Inspector.
+Explicitly **out of scope** (not built here): live connectors at scale, batch
+worklists, role-based / governed catalogs, scheduled scans, multi-source
+`datasetSpec` binding, and hosting. Those are larger, separate concerns and don't
+belong in this read-only, single-user surface.
 
 ## Constraints (from the codebase)
 
@@ -185,7 +181,7 @@ BLOCK + confidence), `ScaleCard`, `RiskList`, `LineageList`, `BottleneckList`,
 ### Honest limitations (in the spec)
 
 - Offline (catalog-only) estimates are deliberately **conservative**; tightening them
-  with a live `EXPLAIN` plan is a **Workbench** capability (not in Inspector).
+  with a live `EXPLAIN` plan is out of scope here (this surface stays offline).
 - The Observatory-fed catalog's table mapping is best-effort; bundled schemas are the
   reliable default.
 - Inspector never executes SQL and never connects to a database.
@@ -216,7 +212,7 @@ BLOCK + confidence), `ScaleCard`, `RiskList`, `LineageList`, `BottleneckList`,
   connection; bad SQL degrades gracefully).
 - **Frontend:** typecheck + manual. The repo has no FE test framework; none is added.
 
-## Out of scope (explicitly → Workbench, see `PSDL-workbench#10`)
+## Out of scope
 
 - Live database connectors / `EXPLAIN`-based tightened estimates.
 - Batch / worklist triage at organizational scale.

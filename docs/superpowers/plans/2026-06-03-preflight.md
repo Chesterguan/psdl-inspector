@@ -930,10 +930,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ## Out of scope
 
-- **Live database connectors / `EXPLAIN`-tightened plans** — `connector` is hardcoded `None`; live plans are a Workbench capability. The `QueryPlan` subtree is never populated and never rendered.
+- **Live database connectors / `EXPLAIN`-tightened plans** — `connector` is hardcoded `None`; live plans are out of scope here. The `QueryPlan` subtree is never populated and never rendered.
 - **Observatory→Preflight adapter (`observatory_to_preflight.py`) and real-number catalogs** — Plan 3 / Capability 2b. Here `catalog_source` resolves to bundled schema names only; `observatory_available` is hardcoded `false`.
 - **Custom catalog directories** (`load_catalog(..., catalog_dir=...)` / `PREFLIGHT_CATALOG_DIR`) — only bundled seed schemas are exposed in this plan.
-- **Batch / worklist triage at organizational scale** — Workbench.
+- **Batch / worklist triage at large scale** — out of scope here.
 - **Governance:** RBAC, scheduled scans, multi-user, shared/owned catalogs, in-app auth, accounts, hosting, persistence (no DB).
 - **SQL execution of any kind** — Inspector never runs SQL and never opens a connection.
 - **Frontend automated test framework** — none exists; verification is `npx tsc --noEmit` only.
