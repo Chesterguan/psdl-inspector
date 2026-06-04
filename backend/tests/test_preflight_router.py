@@ -78,3 +78,35 @@ def test_check_503_when_core_unavailable(monkeypatch):
         json={"sql": "SELECT 1 FROM person", "dialect": "generic", "catalog_source": "omop"},
     )
     assert resp.status_code == 503, resp.text
+
+
+def test_router_imports_when_preflight_absent(monkeypatch):
+    # The headline promise of this feature: when the optional `preflight` core is
+    # NOT installed, the router module must still import (no crash at app startup),
+    # with PREFLIGHT_AVAILABLE=False and the optional symbols left unbound.
+    # Simulate genuine absence by making `import preflight[...]` raise, then
+    # reload the module fresh.
+    import builtins
+    import importlib
+    import sys
+
+    real_import = builtins.__import__
+
+    def blocked_import(name, *args, **kwargs):
+        if name == "preflight" or name.startswith("preflight."):
+            raise ImportError("simulated: preflight not installed")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", blocked_import)
+    # Drop cached modules so the reload re-runs the guarded import block.
+    for mod in list(sys.modules):
+        if mod == "preflight" or mod.startswith("preflight.") or mod == "app.routers.preflight":
+            monkeypatch.delitem(sys.modules, mod, raising=False)
+
+    reloaded = importlib.import_module("app.routers.preflight")
+    assert reloaded.PREFLIGHT_AVAILABLE is False
+    # Optional symbols must not be bound at module scope when the core is absent.
+    assert not hasattr(reloaded, "run_preflight")
+    assert not hasattr(reloaded, "load_catalog")
+    # /catalogs still works without the core (static list + the availability bool).
+    assert reloaded.list_catalogs().preflight_available is False
