@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Editor, DAGView, GovernancePanel, ExportButton, GenerationPanel, ThemeToggle, Logo } from '@/components';
 import MedsPreviewCard from '@/components/MedsPreviewCard';
+import PrepareStep from '@/components/PrepareStep';
 import { PSDLBuilder } from '@/components/builder';
 import WelcomeGuide, { useWelcomeGuide } from '@/components/WelcomeGuide';
 import { api, ValidationResponse, OutlineResponse, CertifiedBundle, VersionInfo } from '@/lib/api';
@@ -60,7 +61,7 @@ logic:
     description: "Combined renal function concern"
 `;
 
-type WizardStep = 'input' | 'preview' | 'export';
+type WizardStep = 'input' | 'preview' | 'export' | 'prepare';
 type InputMode = 'builder' | 'llm' | 'manual';
 
 interface StepInfo {
@@ -73,6 +74,7 @@ const STEPS: StepInfo[] = [
   { id: 'input', label: 'Input', icon: <Edit3 className="w-4 h-4" /> },
   { id: 'preview', label: 'Preview', icon: <Eye className="w-4 h-4" /> },
   { id: 'export', label: 'Export', icon: <Download className="w-4 h-4" /> },
+  { id: 'prepare', label: 'Prepare', icon: <Gauge className="w-4 h-4" /> },
 ];
 
 export default function Home() {
@@ -257,7 +259,7 @@ export default function Home() {
   };
 
   const goNext = () => {
-    const stepOrder: WizardStep[] = ['input', 'preview', 'export'];
+    const stepOrder: WizardStep[] = ['input', 'preview', 'export', 'prepare'];
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex < stepOrder.length - 1) {
       goToStep(stepOrder[currentIndex + 1]);
@@ -265,7 +267,7 @@ export default function Home() {
   };
 
   const goBack = () => {
-    const stepOrder: WizardStep[] = ['input', 'preview', 'export'];
+    const stepOrder: WizardStep[] = ['input', 'preview', 'export', 'prepare'];
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
@@ -274,7 +276,7 @@ export default function Home() {
 
   // Step status for indicators
   const getStepStatus = (step: WizardStep): 'complete' | 'current' | 'upcoming' | 'error' => {
-    const stepOrder: WizardStep[] = ['input', 'preview', 'export'];
+    const stepOrder: WizardStep[] = ['input', 'preview', 'export', 'prepare'];
     const currentIndex = stepOrder.indexOf(currentStep);
     const stepIndex = stepOrder.indexOf(step);
 
@@ -375,7 +377,7 @@ export default function Home() {
                     </div>
                   );
                 })}
-                {currentStep !== 'export' && canProceed && (
+                {currentStep !== 'prepare' && canProceed && (
                   <button
                     onClick={goNext}
                     className="p-1 rounded-full hover:bg-background text-muted hover:text-foreground transition-colors ml-1"
@@ -990,6 +992,13 @@ onContinue={async () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Step 4: Prepare for execution (Data Catalog + Preflight) */}
+        {currentStep === 'prepare' && (
+          <div className="max-w-5xl mx-auto px-6 py-8">
+            <PrepareStep />
           </div>
         )}
         </div>
