@@ -6,11 +6,13 @@ interface Props {
   runtimeCategory: RuntimeCategory;
 }
 
-function verdict(risk: RiskLevel): { label: string; cls: string } {
-  if (risk === 'LOW') return { label: 'GO', cls: 'bg-green-700 text-white' };
-  if (risk === 'MEDIUM')
-    return { label: 'CAUTION', cls: 'bg-accent-warning text-black' };
-  return { label: 'BLOCK', cls: 'bg-red-700 text-white' };
+// The go/no-go verdict tracks feasibility (estimated runtime/cost), not the raw
+// table-risk score — a well-scoped query against a high-risk table can still be
+// cheap to run. FAST → GO, EXTREME → BLOCK, everything in between → CAUTION.
+function verdict(runtime: RuntimeCategory): { label: string; cls: string } {
+  if (runtime === 'FAST') return { label: 'GO', cls: 'bg-green-700 text-white' };
+  if (runtime === 'EXTREME') return { label: 'BLOCK', cls: 'bg-red-700 text-white' };
+  return { label: 'CAUTION', cls: 'bg-accent-warning text-black' };
 }
 
 export default function VerdictBanner({
@@ -18,7 +20,7 @@ export default function VerdictBanner({
   confidence,
   runtimeCategory,
 }: Props) {
-  const v = verdict(riskLevel);
+  const v = verdict(runtimeCategory);
   return (
     <div className={`rounded-md p-4 flex items-center gap-4 ${v.cls}`}>
       <span className="text-2xl font-bold">{v.label}</span>

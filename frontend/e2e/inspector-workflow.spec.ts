@@ -100,6 +100,37 @@ test('full workflow: author → validate → DAG → certify → live preflight 
   await expect(page.getByText(/Live plan from your local database/)).toBeVisible();
   await expect(page.getByText('confidence: HIGH').first()).toBeVisible();
   await expect(page.getByText('runtime: FAST')).toBeVisible();
+  await expect(page.getByText('GO', { exact: true })).toBeVisible();
+});
+
+test('iterate: BLOCK a cartesian mistake, fix the SQL, re-check → GO (live on real MIMIC)', async ({ page }) => {
+  await page.goto('/preflight');
+  await dismissGuide(page);
+  await page.getByRole('checkbox').check();
+  await page.getByRole('combobox', { name: 'Dialect' }).selectOption('postgres');
+
+  // The classic mistake: missing JOIN conditions → a cartesian explosion.
+  await page.getByRole('textbox', { name: /SELECT person_id FROM person/i }).fill(
+    `SELECT p.person_id, m.value_as_number
+FROM person p, visit_occurrence v, measurement m
+WHERE m.measurement_concept_id IN (3016723, 3013682)`,
+  );
+  await page.getByRole('button', { name: 'Run on local DB' }).click();
+  await expect(page.getByText('runtime: EXTREME')).toBeVisible();
+  await expect(page.getByText('BLOCK', { exact: true })).toBeVisible();
+
+  // Fix it — add the join conditions + concept/date filter — and re-check.
+  await page.getByRole('textbox', { name: /SELECT person_id FROM person/i }).fill(
+    `SELECT p.person_id, m.measurement_concept_id, m.measurement_datetime, m.value_as_number
+FROM person p
+JOIN visit_occurrence v ON v.person_id = p.person_id
+JOIN measurement m ON m.person_id = p.person_id AND m.visit_occurrence_id = v.visit_occurrence_id
+WHERE m.measurement_concept_id IN (3016723, 3013682)
+  AND m.measurement_datetime >= '2150-01-01'`,
+  );
+  await page.getByRole('button', { name: 'Run on local DB' }).click();
+  await expect(page.getByText('runtime: FAST')).toBeVisible();
+  await expect(page.getByText('GO', { exact: true })).toBeVisible();
 });
 
 test('preflight flags the naive full-scan as expensive (live plan on real MIMIC)', async ({ page }) => {
