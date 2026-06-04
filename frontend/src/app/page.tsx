@@ -5,7 +5,7 @@ import {
   FileUp, Play, RefreshCw, ChevronRight, ChevronLeft,
   Check, AlertCircle, Loader2, Edit3, Sparkles,
   Download, Eye, FileText, Shield, Maximize2, X,
-  Github, Package, Heart, ExternalLink, HelpCircle
+  Github, Package, Heart, ExternalLink, HelpCircle, Gauge
 } from 'lucide-react';
 import { Editor, DAGView, GovernancePanel, ExportButton, GenerationPanel, ThemeToggle, Logo } from '@/components';
 import MedsPreviewCard from '@/components/MedsPreviewCard';
@@ -420,6 +420,9 @@ export default function Home() {
               </a>
               <a href="/catalog" title="Institutional Data Catalog" className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors">
                 <Package className="w-4 h-4" /> Data Catalog
+              </a>
+              <a href="/preflight" title="SQL Preflight — cost & risk check before you run" className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors">
+                <Gauge className="w-4 h-4" /> Preflight
               </a>
             </div>
             {versionInfo && (
