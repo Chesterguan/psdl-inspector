@@ -331,6 +331,7 @@ export default function Home() {
                 {currentStep !== 'input' && (
                   <button
                     onClick={goBack}
+                    aria-label="Previous step"
                     className="p-1 rounded-full hover:bg-background text-muted hover:text-foreground transition-colors mr-1"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -380,6 +381,7 @@ export default function Home() {
                 {currentStep !== 'prepare' && canProceed && (
                   <button
                     onClick={goNext}
+                    aria-label="Next step"
                     className="p-1 rounded-full hover:bg-background text-muted hover:text-foreground transition-colors ml-1"
                   >
                     <ChevronRight className="w-3.5 h-3.5" />
