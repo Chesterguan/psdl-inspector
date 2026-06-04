@@ -9,3 +9,8 @@
 # the package's `live` extra and are intentionally NOT installed here — Inspector
 # is offline-only (run_preflight is always called with connector=None).
 preflight @ git+https://github.com/Chesterguan/psdl-workbench-preflight.git@v0.1.0
+
+# OPTIONAL live-plan add-on: to let /api/preflight/check run a real EXPLAIN against
+# a local Postgres DB (set PREFLIGHT_DB_URL on the server), also install psycopg.
+# Offline checks do NOT need this. Uncomment to enable the live-DB option:
+# psycopg[binary]>=3.1

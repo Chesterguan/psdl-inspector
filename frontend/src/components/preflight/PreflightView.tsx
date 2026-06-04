@@ -24,6 +24,7 @@ export default function PreflightView({ initialSql = '' }: Props) {
   const [sql, setSql] = useState(initialSql);
   const [dialect, setDialect] = useState('generic');
   const [catalogSource, setCatalogSource] = useState('omop');
+  const [useLive, setUseLive] = useState(false);
   const [report, setReport] = useState<PreflightReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -50,7 +51,7 @@ export default function PreflightView({ initialSql = '' }: Props) {
       const resp = await fetch(`${API_BASE}/api/preflight/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sql, dialect, catalog_source: catalogSource }),
+        body: JSON.stringify({ sql, dialect, catalog_source: catalogSource, use_live: useLive }),
       });
       const data = await resp.json();
       if (!resp.ok) {
@@ -85,9 +86,11 @@ export default function PreflightView({ initialSql = '' }: Props) {
         catalogSource={catalogSource}
         catalogs={catalogs}
         running={running}
+        useLive={useLive}
         onSqlChange={setSql}
         onDialectChange={setDialect}
         onCatalogChange={setCatalogSource}
+        onUseLiveChange={setUseLive}
         onRun={run}
       />
 
@@ -99,6 +102,11 @@ export default function PreflightView({ initialSql = '' }: Props) {
 
       {report && (
         <>
+          {report.query_plan != null ? (
+            <div className="text-xs text-accent-success">✓ Live plan from your local database (real EXPLAIN, metadata only) — estimates are from the actual query planner.</div>
+          ) : (
+            <div className="text-xs text-muted">Offline catalog estimate (conservative). Tick &quot;Live plan&quot; to tighten it against your local DB.</div>
+          )}
           <VerdictBanner
             riskLevel={report.risk_level}
             confidence={report.confidence}

@@ -6,6 +6,37 @@ from app.main import app
 client = TestClient(app)
 
 
+def test_catalogs_live_db_unavailable_by_default(monkeypatch):
+    # With no PREFLIGHT_DB_URL configured, the live-plan option is off.
+    monkeypatch.delenv("PREFLIGHT_DB_URL", raising=False)
+    data = client.get("/api/preflight/catalogs").json()
+    assert data["live_db_available"] is False
+
+
+def test_check_use_live_503_when_no_db(monkeypatch):
+    # Opting into a live plan with no server-configured DB must 503, not crash.
+    monkeypatch.delenv("PREFLIGHT_DB_URL", raising=False)
+    resp = client.post(
+        "/api/preflight/check",
+        json={"sql": "SELECT 1 FROM person", "dialect": "postgres",
+              "catalog_source": "omop", "use_live": True},
+    )
+    assert resp.status_code == 503, resp.text
+    assert "local database" in resp.json()["detail"]
+
+
+def test_check_offline_default_ignores_live(monkeypatch):
+    # Even if a DB URL is set, the default (use_live False) stays offline:
+    # query_plan must be null and no connection is attempted.
+    monkeypatch.setenv("PREFLIGHT_DB_URL", "postgresql://nope:nope@127.0.0.1:1/none")
+    resp = client.post(
+        "/api/preflight/check",
+        json={"sql": "SELECT person_id FROM person", "dialect": "generic", "catalog_source": "omop"},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["query_plan"] is None
+
+
 def test_catalogs_lists_bundled_sources():
     resp = client.get("/api/preflight/catalogs")
     assert resp.status_code == 200, resp.text

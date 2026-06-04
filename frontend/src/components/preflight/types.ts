@@ -80,4 +80,5 @@ export interface CatalogsResponse {
   default: string;
   observatory_available: boolean;
   preflight_available: boolean;
+  live_db_available: boolean;
 }

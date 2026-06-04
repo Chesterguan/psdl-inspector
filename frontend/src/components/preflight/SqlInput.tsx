@@ -8,9 +8,11 @@ interface Props {
   catalogSource: string;
   catalogs: CatalogsResponse | null;
   running: boolean;
+  useLive: boolean;
   onSqlChange: (v: string) => void;
   onDialectChange: (v: string) => void;
   onCatalogChange: (v: string) => void;
+  onUseLiveChange: (v: boolean) => void;
   onRun: () => void;
 }
 
@@ -20,12 +22,15 @@ export default function SqlInput({
   catalogSource,
   catalogs,
   running,
+  useLive,
   onSqlChange,
   onDialectChange,
   onCatalogChange,
+  onUseLiveChange,
   onRun,
 }: Props) {
   const bundled = catalogs?.bundled ?? [];
+  const liveAvailable = catalogs?.live_db_available ?? false;
   return (
     <div className="border border-border rounded-md p-4 bg-background-tertiary">
       <textarea
@@ -63,12 +68,22 @@ export default function SqlInput({
             ))}
           </select>
         </label>
+        {liveAvailable && (
+          <label className="flex items-center gap-1.5 text-sm text-muted cursor-pointer" title="Run a real EXPLAIN against the server's configured local database (metadata only — never executes the query)">
+            <input
+              type="checkbox"
+              checked={useLive}
+              onChange={(e) => onUseLiveChange(e.target.checked)}
+            />
+            Live plan (local DB)
+          </label>
+        )}
         <button
           className="ml-auto bg-accent text-foreground px-4 py-1.5 rounded disabled:opacity-50"
           disabled={running || !sql.trim()}
           onClick={onRun}
         >
-          {running ? 'Running…' : 'Run preflight'}
+          {running ? 'Running…' : useLive && liveAvailable ? 'Run on local DB' : 'Run preflight'}
         </button>
       </div>
     </div>
