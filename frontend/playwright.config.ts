@@ -3,11 +3,12 @@ import path from 'path';
 
 const BACKEND = path.resolve(__dirname, '../backend');
 
-// The real local database for the live-plan e2e: MIMIC-IV loaded into OMOP CDM
-// (prometheno-postgres). Override via PREFLIGHT_DB_URL in the environment.
+// The real local database for the live-plan e2e: the complete MIMIC-IV → OMOP CDM
+// test bed (native PG15 on localhost:5435, schema omop_cdm; data on /Volumes/extraSupply).
+// Override via PREFLIGHT_DB_URL in the environment.
 const MIMIC_DSN =
   process.env.PREFLIGHT_DB_URL ||
-  'postgresql://prometheno:prometheno_dev_2024@localhost:5434/prometheno_omop';
+  'postgresql://postgres@localhost:5435/mimiciv_omop?options=-csearch_path%3Domop_cdm';
 
 export default defineConfig({
   testDir: './e2e',
