@@ -1,0 +1,87 @@
+scenario: AKI_Staging_KDIGO
+version: 1.0.0
+description: Detect and stage acute kidney injury based on KDIGO criteria using serum
+  creatinine
+signals:
+  Cr:
+    ref: creatinine
+    expected_unit: mg/dL
+    description: Serum creatinine level
+    concept_id: 19071968
+    concept_code: '2913'
+    vocabulary_id: RxNorm
+trends:
+  cr_delta_48h:
+    expr: delta(Cr, 48h)
+    description: Creatinine change over 48 hours
+  cr_delta_24h:
+    expr: delta(Cr, 24h)
+    description: Creatinine change over 24 hours
+  cr_current:
+    expr: last(Cr)
+    description: Current creatinine value
+  cr_baseline:
+    expr: first(Cr, 7d)
+    description: Baseline creatinine value over the past 7 days
+logic:
+  aki_stage1_rise:
+    when: cr_delta_48h >= 0.3
+    severity: medium
+    description: 'AKI Stage 1: Cr rise >= 0.3 mg/dL in 48h'
+  aki_stage1_baseline:
+    when: cr_current >= cr_baseline * 1.5 AND cr_current < cr_baseline * 2.0
+    severity: medium
+    description: 'AKI Stage 1: Cr 1.5 to 1.9 times baseline'
+  aki_stage2:
+    when: cr_current >= cr_baseline * 2.0 AND cr_current < cr_baseline * 3.0
+    severity: high
+    description: 'AKI Stage 2: Cr 2.0 to 2.9 times baseline'
+  aki_stage3_absolute:
+    when: cr_current >= 4.0
+    severity: critical
+    description: 'AKI Stage 3: Absolute Cr >= 4.0 mg/dL'
+  aki_stage3_relative:
+    when: cr_current >= cr_baseline * 3.0
+    severity: critical
+    description: 'AKI Stage 3: Cr >= 3.0 times baseline'
+  aki_present:
+    when: aki_stage1_rise OR aki_stage1_baseline OR aki_stage2 OR aki_stage3_absolute
+      OR aki_stage3_relative
+    severity: high
+    description: AKI detected by any criterion
+outputs:
+  decision:
+    has_aki:
+      type: boolean
+      from: logic.aki_present
+      description: Patient has acute kidney injury
+    stage1:
+      type: boolean
+      from: logic.aki_stage1_rise OR logic.aki_stage1_baseline
+      description: Patient is in AKI Stage 1
+    stage2:
+      type: boolean
+      from: logic.aki_stage2
+      description: Patient is in AKI Stage 2
+    stage3:
+      type: boolean
+      from: logic.aki_stage3_absolute OR logic.aki_stage3_relative
+      description: Patient is in AKI Stage 3
+  features:
+    creatinine_change_48h:
+      type: float
+      from: trends.cr_delta_48h
+      description: 48-hour creatinine change for risk modeling
+    creatinine_change_24h:
+      type: float
+      from: trends.cr_delta_24h
+      description: 24-hour creatinine change for risk modeling
+    creatinine_current:
+      type: float
+      from: trends.cr_current
+      description: Current creatinine level
+  evidence:
+    timestamp:
+      type: datetime
+      expr: evaluation_time()
+      description: When this evaluation was performed
