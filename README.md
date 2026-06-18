@@ -1,85 +1,75 @@
 <p align="center">
-  <img src="assets/logo.jpeg" alt="PSDL Inspector" width="400">
+  <img src="assets/logo.jpeg" alt="PSDL Inspector" width="320">
 </p>
 
 <p align="center">
   <a href="https://github.com/Chesterguan/psdl-inspector"><img src="https://img.shields.io/badge/version-0.2.0-blue.svg" alt="Version"></a>
   <a href="https://pypi.org/project/psdl-lang/"><img src="https://img.shields.io/badge/psdl--lang-latest-green.svg" alt="psdl-lang"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey.svg" alt="License"></a>
-  <a href="https://zread.ai/Chesterguan/psdl-inspector" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
 </p>
 
-# PSDL Inspector
+<h1 align="center">PSDL Inspector</h1>
 
-**Governance middleware for clinical scenarios.**
+<p align="center"><b>Describe a clinical cohort or detection rule in one sentence — get back a validated, audit-ready algorithm.</b></p>
 
-PSDL Inspector validates, visualizes, and certifies [PSDL](https://github.com/Chesterguan/PSDL) scenarios, producing audit-ready bundles for regulatory compliance.
+PSDL Inspector turns plain English into a **checked clinical scenario**: a visual DAG, OMOP terminology anchoring, a checksummed *certified bundle*, and a real-database **cost preflight** — without writing a line of [PSDL](https://github.com/Chesterguan/PSDL) by hand.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PSDL ECOSYSTEM                           │
-│                                                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐ │
-│  │  AUTHORING  │ →  │  INSPECTOR  │ →  │    PLATFORM     │ │
-│  │  (YAML)     │    │ (Certify)   │    │   (Execute)     │ │
-│  └─────────────┘    └─────────────┘    └─────────────────┘ │
-│                                                             │
-│  psdl-lang          psdl-inspector     (your runtime)      │
-└─────────────────────────────────────────────────────────────┘
+![One sentence → AI-generated, validated PSDL scenario → DAG → certified bundle → live preflight 🟢 GO](assets/aki-preflight-walkthrough.gif)
+
+```bash
+git clone https://github.com/Chesterguan/psdl-inspector.git
+cd psdl-inspector && docker compose up        # → http://localhost:9806
 ```
 
-## Demo
+**[▶ 13-second demo](docs/demos/aki-preflight.gif) · [5-minute quickstart](QUICKSTART.md) · [Full walkthrough on YouTube](https://youtu.be/j-3UHeCyHDk)**
 
-![PSDL Inspector wizard walkthrough](assets/psdl-inspector-workflow.gif)
+- **Describe it, don't code it** — one sentence → a validated PSDL scenario, AI-generated and auto-checked against `psdl-lang`. No new syntax to learn.
+- **See the logic** — an interactive DAG + semantic outline surface errors at authoring time, not at IRB review.
+- **Hand it off** — a checksummed certified bundle with OMOP anchors + an IRB-ready Word doc, and a SQL preflight that reads **GO / CAUTION / BLOCK** *before* a query ever touches the warehouse.
 
-### Author → certify → preflight against a live database
+<!-- Workbench has no public landing page yet; CTA points at email. Swap for a domain address / form when ready. -->
+> Inspector is the free, single-user tool. Need a scenario **registry**, role-based review/approval, IRB templates, and SSO across a team? → **PSDL Workbench** *(commercial)* — [request access or info](mailto:chesterfield199512@gmail.com?subject=PSDL%20Workbench%20inquiry).
 
-The AKI early-detection scenario goes end-to-end — **Input → Preview (DAG) → Export (certified bundle) → Prepare** — then a realistic cohort extraction is **preflighted against a real local database** (MIMIC-IV in OMOP CDM). A forgotten join (cartesian blow-up) is caught as 🔴 **BLOCK**; the fixed, scoped query reads 🟢 **GO** — driven by a real `EXPLAIN`, metadata only, never executing the query.
+---
 
-![AKI scenario → certify → live preflight: BLOCK the mistake, fix the SQL, GO](assets/aki-preflight-walkthrough.gif)
+## How it works, in 30 seconds
 
-### ▶ Watch the sepsis walkthrough on YouTube → [youtu.be/j-3UHeCyHDk](https://youtu.be/j-3UHeCyHDk)
+One clinical sentence becomes a scenario that is generated, validated, and costed against a real **288M-row MIMIC-IV/OMOP** database — the preflight runs a real `EXPLAIN` (metadata only; it never executes the query or reads a patient row):
 
-[![PSDL Inspector — Sepsis-3 qSOFA walkthrough on YouTube](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "Click to watch on YouTube — PSDL Inspector Sepsis-3 walkthrough")
+![sentence → scenario → checked → costed on real data](docs/demos/aki-preflight.gif)
 
-The recording follows a Sepsis-3 qSOFA + lactate screen end-to-end through the full pipeline (Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → **MEDS Preview**).
+```
+"Detect and stage acute kidney injury by the KDIGO criteria using serum creatinine."
+        ↓  AI generates PSDL          (gpt-4o-mini, auto-retried until valid)
+        ↓  validates                  (real thresholds, real KDIGO stages)
+        ↓  anchors to OMOP            (creatinine → LOINC 2160-0, concept 3016723)
+        ↓  certifies                  (checksummed bundle, IRB Word doc)
+        ↓  preflights on real data    🟢 GO   (real EXPLAIN, nothing executed)
+```
 
-Two reproducible scenarios are shipped under [`docs/demos/`](docs/demos/) — scenario YAMLs, narrator cue sheets, and a DevTools loader:
+Reproduce it yourself: [`docs/demos/`](docs/demos/) ships the scenario YAMLs, narrator cue sheets, and the recording script.
 
-| # | Scenario | Audience | Recording |
-|---|----------|----------|-----------|
-| 1 | Sepsis-3 qSOFA + lactate screen | Clinical informatics | ▶ YouTube above |
-| 2 | T2DM + diabetic nephropathy on metformin cohort | Research / cohort builders | Self-record kit (cue sheet ready) |
+## Who it's for
 
-## Compatibility
+| You are… | Inspector gives you… |
+|----------|----------------------|
+| A **clinical researcher / cohort builder** | A sentence → a checked, shareable algorithm you can hand to a data team — no SQL, no DSL to learn first |
+| A **data engineer / informaticist** | A readable DAG + semantic diff of the logic, OMOP anchoring, and a preflight that catches a cartesian-join blow-up before it hits the warehouse |
+| An **IRB / compliance reviewer** | A checksummed certified bundle + AI-enriched Word doc with intent, rationale, provenance, and a clear audit boundary |
 
-Inspector **always tracks the latest `psdl-lang`** — the requirements pin is `psdl-lang>=0.4.0` so the most recent compatible release is installed. The table below records the spec/bundle versions consumed at the time of each Inspector release; older Inspector versions are not retroactively bumped.
+Where Inspector sits in the chain — it **certifies** algorithms; it never executes them:
 
-| Inspector Version | psdl-lang at release | PSDL Spec | Bundle Version | Status |
-|-------------------|----------------------|-----------|----------------|--------|
-| 0.2.x | 0.4.x (latest) | 0.4 | 1.1 | **Current** |
-| 0.1.x | 0.3.1 | 0.3 | 1.0 | Maintained (legacy spec) |
-| - | < 0.2 | - | - | Not supported |
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────────┐
+│  AUTHORING  │ →  │  INSPECTOR  │ →  │    PLATFORM     │
+│  (sentence  │    │ (validate + │    │   (execute on   │
+│   or YAML)  │    │   certify)  │    │  patient data)  │
+└─────────────┘    └─────────────┘    └─────────────────┘
+   psdl-lang        psdl-inspector      your runtime / Workbench
+```
 
-> **Note**: Inspector follows psdl-lang's latest release. Pin `psdl-lang>=0.4.0` in your own requirements to track along — the package provides parsing, validation, and IR generation that Inspector builds upon.
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Build** | Visual scenario builder with guided workflow and OMOP vocabulary search |
-| **Generate** | AI-assisted scenario creation with OpenAI or local Ollama |
-| **Validate** | Real-time syntax and semantic validation via psdl-lang |
-| **Visualize** | Interactive DAG view with ReactFlow (signal → trend → logic) |
-| **Outline** | Semantic tree navigation of scenario structure |
-| **Anchor** | Automatic terminology binding to OMOP vocabulary at export |
-| **Bundle** | Generate checksummed certified bundles with terminology anchors |
-| **Export** | IRB preparation with AI-enriched Word document export |
-| **MEDS Preview** | Synthesize a 10-row MEDS-format Parquet preview from anchored signals, no DB required; ships with `psdl-meds` CLI for offline conversion |
-| **Data Catalog** | Read-only browse of an Observatory-scanned data lake (schemas, columns, inferred roles) with provenance + staleness — see what institutional data exists |
-| **Preflight** | SQL cost/risk check (GO / CAUTION / BLOCK) *before* a query touches the warehouse — offline by default; optionally run a real `EXPLAIN` against your own local DB for a tightened, high-confidence plan (metadata only, never executes) |
-
-## What Inspector Does NOT Do
+<details>
+<summary><b>What Inspector does NOT do</b> (and why that's the point)</summary>
 
 Inspector is **governance middleware** — it certifies that algorithms are correct. It does not execute them.
 
@@ -90,138 +80,82 @@ Inspector is **governance middleware** — it certifies that algorithms are corr
 | Send clinical alerts | Execution platform responsibility |
 | Handle PHI/HIPAA data | No patient data in certification |
 
-> Preflight's **optional** live plan connects to *your own local* database for an `EXPLAIN` only — it reads query-plan metadata (estimated rows, scan types), never patient rows. No data is fetched and no query is executed.
+Preflight's **optional** live plan connects to *your own local* database for an `EXPLAIN` only — it reads query-plan metadata (estimated rows, scan types), never patient rows. No data is fetched and no query is executed.
+</details>
 
-## Try It Out
+## Try it
 
-### Option 1: Docker (Recommended)
+**Docker (recommended):**
 
 ```bash
 git clone https://github.com/Chesterguan/psdl-inspector.git
-cd psdl-inspector
-docker-compose up
+cd psdl-inspector && docker compose up        # → http://localhost:9806
 ```
 
-Open http://localhost:9806
+The image bundles the full OMOP vocabulary (~1GB) for terminology search, so the first build takes a few minutes. **AI generation** needs a key (optional):
 
-> **Note**: The Docker image includes the full OMOP vocabulary (~1GB) for immediate terminology search. First build may take a few minutes.
-
-**Optional**: Add your API keys for AI generation:
 ```bash
-cp .env.example .env
-# Edit .env with OPENAI_API_KEY=sk-...
-docker-compose up
+cp .env.example .env        # set OPENAI_API_KEY=sk-...
+docker compose up
 ```
 
-### Option 2: Deploy Your Own
+No key? Use a local model instead — `brew install ollama && ollama serve && ollama pull mistral-small`. Full local (non-Docker) setup is in the [5-minute quickstart](QUICKSTART.md); self-hosting is in the [Deployment Guide](docs/DEPLOYMENT.md).
 
-See [Deployment Guide](docs/DEPLOYMENT.md) for Vercel + Render setup.
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Generate** | One sentence → a validated scenario, via OpenAI or local Ollama, auto-retried until it passes |
+| **Build** | Visual scenario builder with guided workflow and OMOP vocabulary search |
+| **Validate** | Real-time syntax and semantic validation via psdl-lang |
+| **Visualize** | Interactive DAG view (signal → trend → logic) + semantic outline tree |
+| **Anchor** | Automatic terminology binding to OMOP vocabulary at export |
+| **Bundle** | Checksummed certified bundles with terminology anchors |
+| **Export** | IRB preparation with AI-enriched Word document export |
+| **MEDS Preview** | Synthesize a 10-row MEDS-format Parquet preview from anchored signals, no DB required |
+| **Data Catalog** | Read-only browse of an Observatory-scanned data lake (schemas, columns, inferred roles) with provenance + staleness |
+| **Preflight** | SQL cost/risk check (GO / CAUTION / BLOCK) *before* a query touches the warehouse — offline by default; optional real `EXPLAIN` against your own local DB |
+
+## More demos
+
+▶ **[Sepsis-3 qSOFA walkthrough on YouTube](https://youtu.be/j-3UHeCyHDk)** — a full pipeline run (Builder/YAML → Validate → Outline → DAG → Anchor → Certified Bundle → IRB Word export → MEDS Preview).
+
+[![PSDL Inspector — Sepsis-3 qSOFA walkthrough on YouTube](https://img.youtube.com/vi/j-3UHeCyHDk/hqdefault.jpg)](https://youtu.be/j-3UHeCyHDk "Watch on YouTube")
+
+Two reproducible scenarios ship under [`docs/demos/`](docs/demos/) with scenario YAMLs, narrator cue sheets, and a DevTools loader:
+
+| # | Scenario | Audience |
+|---|----------|----------|
+| 1 | Sepsis-3 qSOFA + lactate screen | Clinical informatics |
+| 2 | T2DM + diabetic nephropathy on metformin cohort | Research / cohort builders |
 
 ---
 
-## Development Setup
+<details>
+<summary><b>Wizard workflow</b> (Input → Preview → Export → Prepare)</summary>
 
-### Requirements
-
-- Python 3.9+
-- Node.js 18+
-- psdl-lang (latest, installed automatically)
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/Chesterguan/psdl-inspector.git
-cd psdl-inspector
-```
-
-### 2. Backend Setup
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8200
-```
-
-API available at http://localhost:8200
-
-### 3. Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-App available at http://localhost:9806
-
-### 4. Configure AI (Optional)
-
-For AI-assisted scenario generation:
-
-```bash
-# Option 1: OpenAI (recommended - fast, accurate)
-export OPENAI_API_KEY="sk-your-key-here"
-
-# Option 2: Local Ollama (private, no API key needed)
-brew install ollama
-ollama serve
-ollama pull mistral-small
-```
-
-### 5. Verify Installation
-
-Navigate to http://localhost:9806. The header should display:
-```
-Inspector v0.2.0
-psdl-lang v0.4.x  # whichever latest pip resolved
-```
-
-## Wizard Workflow
-
-PSDL Inspector uses a 3-step wizard workflow:
-
-### Step 1: Input
-
-Three input modes are available:
-
-- **Builder Mode** (New in v0.2.0): Constrained visual builder with guided workflow
-  - Signal selection with OMOP vocabulary search
-  - Trend configuration with metric selection
-  - Logic rule builder with severity levels
-  - Outputs configuration (decisions, features, evidence)
-  - Audit section (intent, rationale, provenance)
-
-- **Generate Mode**: AI-assisted scenario creation from natural language
-  - OpenAI GPT-4o-mini (cloud, recommended)
-  - Ollama (local, privacy-preserving)
-  - Auto-validation and error correction
-  - Optional clinical context for accurate thresholds
-
-- **Editor Mode**: Manual YAML editing with CodeMirror
-  - Syntax highlighting and auto-completion
-  - Line numbers and template insertion
-  - Real-time validation feedback
+### Step 1: Input — three modes
+- **Generate** — natural language → scenario (OpenAI GPT-4o-mini cloud, or Ollama local), auto-validation and error correction, optional clinical context for accurate thresholds.
+- **Builder** — constrained visual builder: signal selection with OMOP search, trend config, logic rules with severity, outputs, and the audit section (intent, rationale, provenance).
+- **Editor** — manual YAML with CodeMirror: syntax highlighting, auto-completion, line numbers, template insertion, real-time validation.
 
 ### Step 2: Preview
-- **Outline**: Tree view of signals, trends, and logic with dependency tracking
-- **DAG**: Interactive ReactFlow graph visualization
-  - Custom node shapes (parallelogram, rounded rect, diamond, hexagon)
-  - Severity-based coloring for logic nodes
-  - Node details panel on hover
-- **Bundle**: Certified audit bundle preview with checksum and governance checklist
+- **Outline** — tree of signals, trends, and logic with dependency tracking.
+- **DAG** — interactive ReactFlow graph: custom node shapes, severity-based coloring, hover detail panel.
+- **Bundle** — certified audit bundle preview with checksum and governance checklist.
 
 ### Step 3: Export
-- **Governance Documentation**: Clinical summary, justification, risk assessment
-- **JSON Bundle**: Checksummed certified audit bundle with terminology anchors
-- **Word Document**: AI-enriched IRB documentation with:
-  - Executive summary and clinical background
-  - Algorithm overview and data elements
-  - Safety considerations and limitations
-  - Technical appendix
+- **Governance Documentation** — clinical summary, justification, risk assessment.
+- **JSON Bundle** — checksummed certified audit bundle with terminology anchors.
+- **Word Document** — AI-enriched IRB doc: executive summary, clinical background, algorithm overview, data elements, safety considerations, limitations, technical appendix.
 
-## Architecture
+### Step 4: Prepare
+- **Data Catalog** — browse an Observatory-scanned data lake (read-only).
+- **Preflight** — offline or live-DB SQL cost/risk check before extraction.
+</details>
+
+<details>
+<summary><b>Architecture</b></summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -246,36 +180,31 @@ Three input modes are available:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## API Reference
+| Component | Technology |
+|-----------|------------|
+| Frontend | Next.js 14, React 18, Tailwind CSS |
+| Editor | CodeMirror 6 |
+| Visualization | ReactFlow, dagre (auto-layout) |
+| Backend | FastAPI, Python 3.9+ |
+| Validation | psdl-lang (latest) |
+| AI Generation | OpenAI GPT-4o-mini, Ollama |
+| Document Export | python-docx |
+</details>
+
+<details>
+<summary><b>API reference</b></summary>
 
 ### GET /api/version
-Returns version information.
 ```json
-{
-  "inspector": "0.2.0",
-  "psdl_lang": "0.4.0"
-}
+{ "inspector": "0.2.0", "psdl_lang": "0.4.0" }
 ```
 
 ### GET /api/generate/status
 Check LLM provider availability.
-```json
-{
-  "openai": { "available": true, "model": "gpt-4o-mini" },
-  "ollama": { "available": true, "model": "mistral-small", "models": [...] },
-  "default_provider": "openai"
-}
-```
 
 ### POST /api/generate/scenario
-Generate PSDL scenario from natural language.
 ```json
-{
-  "prompt": "Detect AKI using creatinine changes",
-  "provider": "openai",
-  "max_retries": 3,
-  "clinical_context": "KDIGO criteria..."
-}
+{ "prompt": "Detect AKI using creatinine changes", "provider": "openai", "max_retries": 3, "clinical_context": "KDIGO criteria..." }
 ```
 
 ### POST /api/validate
@@ -291,126 +220,68 @@ Export certified audit bundle with checksum.
 Export AI-enriched Word document for IRB preparation.
 
 ### POST /api/meds/preview
-Synthesize a 10-row MEDS preview shard from anchored signals.
-```json
-// Request
-{
-  "anchors": [
-    {
-      "psdl_signal": "serum_creatinine",
-      "omop_vocabulary": "LOINC",
-      "omop_concept_code": "2160-0",
-      "expected_unit": "mg/dL"
-    }
-  ],
-  "n": 10
-}
+Synthesize a 10-row MEDS preview shard from anchored signals. Subjects are synthetic negative integers and timestamps step from 2024-01-01, so the output can never collide with real PHI; the shard is validated against `meds.schema.data_schema()` before return.
+</details>
 
-// Response
-{
-  "n_events": 10,
-  "n_subjects": 3,
-  "path": "/tmp/psdl_inspector_meds/preview.parquet",
-  "codes_used": ["LOINC/2160-0"]
-}
-```
-Subjects are synthetic negative integers and timestamps step by one day from 2024-01-01, so the output can never collide with real PHI. The shard is validated against `meds.schema.data_schema()` before return.
-
-## MEDS Preview (`psdl_meds`)
-
-Inspector embeds the [`psdl_meds`](backend/psdl_meds/) shared library so authors can see what their scenario will produce in [MEDS](https://github.com/Medical-Event-Data-Standard/meds) format **before** running it against any real data. Use the "Preview MEDS shape" card on the Export step, or the `psdl-meds` CLI for offline work:
-
-```bash
-# Convert a CSV of (subject_id, time, code, numeric_value) rows to MEDS Parquet
-psdl-meds convert --input cohort.csv --out cohort.parquet
-
-# Synthesize a preview shard from anchored signals (no DB needed)
-psdl-meds preview --anchors anchors.json --out preview.parquet -n 10
-```
-
-The same library is used by [PSDL Workbench](https://github.com/Chesterguan/PSDL-workbench) for live OMOP-backed cohort exports.
-
-## Certified Audit Bundle
-
-Inspector outputs **Certified Audit Bundles** — the contract between authoring and execution:
+<details>
+<summary><b>Certified audit bundle</b> (the authoring → execution contract)</summary>
 
 ```json
 {
-  "bundle_version": "1.1",
+  "bundle_version": "1.2",
   "certified_at": "2026-01-26T10:30:00Z",
   "checksum": "sha256:abc123...",
-
-  "scenario": {
-    "name": "AKI_Detection",
-    "version": "0.3.1",
-    "raw_yaml": "...",
-    "parsed": { /* Full IR */ }
-  },
-
+  "scenario": { "name": "AKI_Detection", "version": "0.3.1", "raw_yaml": "...", "parsed": { } },
   "terminology_anchors": {
     "anchors": {
       "creatinine": {
-        "concept_id": 3016723,
-        "vocabulary_id": "LOINC",
-        "concept_code": "2160-0",
+        "concept_id": 3016723, "vocabulary_id": "LOINC", "concept_code": "2160-0",
         "concept_name": "Creatinine [Mass/volume] in Serum or Plasma",
-        "standard_unit": "mg/dL",
-        "match_confidence": "high"
+        "standard_unit": "mg/dL", "match_confidence": "high"
       }
     },
-    "unanchored_refs": [],
-    "anchored_count": 1,
-    "total_refs": 1
+    "unanchored_refs": [], "anchored_count": 1, "total_refs": 1
   },
-
-  "validation": {
-    "psdl_lang_version": "0.4.0",
-    "inspector_version": "0.2.0",
-    "valid": true,
-    "errors": [],
-    "warnings": []
-  },
-
-  "audit": {
-    "intent": "Detect early AKI for timely intervention",
-    "rationale": "Based on KDIGO guidelines",
-    "provenance": "doi:10.1038/..."
-  },
-
+  "validation": { "psdl_lang_version": "0.4.0", "inspector_version": "0.2.0", "valid": true, "errors": [], "warnings": [] },
+  "audit": { "intent": "Detect early AKI for timely intervention", "rationale": "Based on KDIGO guidelines", "provenance": "doi:10.1038/..." },
   "summary": "Human-readable summary for IRB..."
 }
 ```
 
-### Terminology Anchors (v1.1)
+The `terminology_anchors` section maps semantic refs (e.g., "creatinine") to OMOP concept IDs, enabling portable execution across any OMOP-compliant site, standard vocabulary binding (LOINC, SNOMED, RxNorm), and a clear audit trail. See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platforms consume it.
 
-The `terminology_anchors` section maps semantic refs (e.g., "creatinine") to OMOP concept IDs. This enables:
+### MEDS Preview (`psdl_meds`)
 
-- **Portable execution**: Same scenario runs on any OMOP-compliant site
-- **Interoperability**: Standard vocabulary binding (LOINC, SNOMED, RxNorm)
-- **Audit trail**: Clear mapping from algorithm refs to standard concepts
+Inspector embeds the [`psdl_meds`](backend/psdl_meds/) library so authors can see what their scenario produces in [MEDS](https://github.com/Medical-Event-Data-Standard/meds) format **before** running it against real data — the "Preview MEDS shape" card on Export, or the CLI:
 
-See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platforms use these anchors.
+```bash
+psdl-meds convert --input cohort.csv --out cohort.parquet
+psdl-meds preview --anchors anchors.json --out preview.parquet -n 10
+```
 
-## Tech Stack
+The same library backs **PSDL Workbench** for live OMOP-backed cohort exports.
+</details>
 
-| Component | Technology |
-|-----------|------------|
-| Frontend | Next.js 14, React 18, Tailwind CSS |
-| Editor | CodeMirror 6 |
-| Visualization | ReactFlow, dagre (auto-layout) |
-| Backend | FastAPI, Python 3.9+ |
-| Validation | psdl-lang (latest) |
-| AI Generation | OpenAI GPT-4o-mini, Ollama |
-| Document Export | python-docx |
+<details>
+<summary><b>Compatibility</b></summary>
 
-## Related Projects
+Inspector **always tracks the latest `psdl-lang`** — the requirements pin is `psdl-lang>=0.4.0`. The table records the spec/bundle versions consumed at each Inspector release; older Inspector versions are not retroactively bumped.
+
+| Inspector Version | psdl-lang at release | PSDL Spec | Bundle Version | Status |
+|-------------------|----------------------|-----------|----------------|--------|
+| 0.2.x | 0.4.x (latest) | 0.4 | 1.1 | **Current** |
+| 0.1.x | 0.3.1 | 0.3 | 1.0 | Maintained (legacy spec) |
+| - | < 0.2 | - | - | Not supported |
+</details>
+
+## Related projects
 
 | Project | Description | Link |
 |---------|-------------|------|
 | **PSDL** | Patient Scenario Definition Language spec | [GitHub](https://github.com/Chesterguan/PSDL) |
 | **psdl-lang** | Python library for PSDL parsing | [PyPI](https://pypi.org/project/psdl-lang/) |
-| **psdl_meds** | MEDS (Medical Event Data Standard) writer + validator, embedded here and reused by Workbench | [backend/psdl_meds/](backend/psdl_meds/) |
-| **PSDL Workbench** | Institutional platform for live cohort execution + governance | [GitHub](https://github.com/Chesterguan/PSDL-workbench) |
+| **psdl_meds** | MEDS writer + validator, embedded here and reused by Workbench | [backend/psdl_meds/](backend/psdl_meds/) |
+| **PSDL Workbench** | Institutional platform for live cohort execution + governance | Commercial (closed-source / SaaS) |
 
 ## Roadmap
 
@@ -419,7 +290,6 @@ See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platfo
 - [x] AI-enriched IRB Word document export
 - [x] Visual scenario builder with guided workflow
 - [x] Terminology anchoring (OMOP vocabulary binding)
-- [x] Modular vocabulary search (embedders, retrievers, rerankers)
 - [x] MEDS preview + `psdl-meds` CLI (shared library with PSDL Workbench)
 - [ ] Editable DAG (visual scenario editing)
 - [ ] Lint rules (best practices, style checks)
@@ -428,29 +298,11 @@ See [EXECUTION_CONTRACT.md](docs/EXECUTION_CONTRACT.md) for how execution platfo
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-Quick start:
-
-```bash
-# Backend (with hot reload)
-cd backend && source .venv/bin/activate
-pip install psdl-lang --upgrade  # Always get latest
-uvicorn app.main:app --reload --port 8200
-
-# Frontend (with hot reload)
-cd frontend && npm run dev
-```
-
-### Code Style
-
-- Python: Follow PEP 8, use type hints
-- TypeScript: ESLint + Prettier, strict mode
-- Commits: [Conventional commits](https://www.conventionalcommits.org/) (feat:, fix:, docs:, etc.)
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Python: PEP 8 + type hints. TypeScript: ESLint + Prettier, strict mode. Commits: [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
 
 ---
 
