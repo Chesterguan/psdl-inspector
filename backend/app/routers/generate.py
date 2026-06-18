@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import GenerateRequest, GenerateResponse, EnrichmentSummary, EnrichmentDetail
@@ -120,9 +122,12 @@ async def generate_scenario(request: GenerateRequest):
             # Re-validate
             scenario, errors, warnings = validate_scenario(generated_yaml)
 
-        # Enrich with vocabulary data if validation passed
+        # Enrich with vocabulary data if validation passed.
+        # ponytail: enrich_yaml runs an unbounded CPU-bound vocab search and can hang for
+        # minutes; GENERATE_SKIP_ENRICHMENT=1 skips it (anchoring still happens at export).
+        # Upgrade path: give vocab_service.search a timeout / cache and drop this escape hatch.
         enrichment_summary = None
-        if len(errors) == 0:
+        if len(errors) == 0 and os.getenv("GENERATE_SKIP_ENRICHMENT", "").lower() not in ("1", "true", "yes"):
             try:
                 enriched_yaml, enrichments = vocab_enrichment_service.enrich_yaml(generated_yaml)
                 generated_yaml = enriched_yaml

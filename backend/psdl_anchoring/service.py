@@ -173,6 +173,11 @@ class TerminologyAnchoringService:
         # Normalize reference for search
         ref_lower = ref.lower().strip()
         ref_spaced = ref_lower.replace("_", " ").replace("-", " ")
+        # psdl-lang returns `domain` as a Domain enum; use its string value
+        # (plain strings pass through unchanged). Without this the .strip()
+        # calls below raise and anchoring is silently skipped.
+        # ponytail: coerce here, don't re-type the whole chain.
+        psdl_domain = getattr(psdl_domain, "value", psdl_domain)
         omop_domain = self._psdl_domain_to_omop(psdl_domain)
 
         # Demographic signals (age, sex, race, ...) are computed from
