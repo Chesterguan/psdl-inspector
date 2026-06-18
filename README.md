@@ -101,6 +101,17 @@ docker compose up
 
 No key? Use a local model instead — `brew install ollama && ollama serve && ollama pull mistral-small`. Full local (non-Docker) setup is in the [5-minute quickstart](QUICKSTART.md); self-hosting is in the [Deployment Guide](docs/DEPLOYMENT.md).
 
+<details>
+<summary><b>Terminology anchoring engine</b> — BioLORD (default) vs legacy</summary>
+
+OMOP anchoring (and vocab search) can run on two engines, set via `ANCHORING_ENGINE` in `docker-compose.yml`:
+
+- **`biolord_v2` (default)** — highest quality (BioLORD-2023 embeddings + clinical reranker). The embedder is baked into the image; a ~1.7GB concept index downloads **once** on the first anchor and is cached in the `vocab_cache` Docker volume (first anchor ~100s, instant after). Best for accuracy.
+- **`` (empty) → legacy** — lighter and offline (no 1.7GB download), but lower-quality matches (no domain reranking). Set `ANCHORING_ENGINE=` to use it.
+
+Either way, the cold cost is one-time; subsequent anchors are instant.
+</details>
+
 ## Features
 
 | Feature | Description |

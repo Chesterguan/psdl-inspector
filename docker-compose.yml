@@ -12,6 +12,18 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      # Terminology-anchoring (+ vocab search) engine. Default biolord_v2 = best
+      # quality. The embedder model is baked into the image; the ~1.7GB BioLORD v2
+      # index downloads on the FIRST anchor and is cached in the vocab_cache volume
+      # below (one-time). Set this to "" (empty) to use the lighter legacy engine
+      # instead — no 1.7GB download, lower quality.
+      - ANCHORING_ENGINE=biolord_v2
+      # Skip generation-time vocab enrichment (lower-quality legacy engine + a
+      # second heavy cold-load). OMOP binding still happens at export anchoring.
+      - GENERATE_SKIP_ENRICHMENT=1
+    volumes:
+      # Persist the ~1.7GB BioLORD v2 index so it's downloaded only once.
+      - vocab_cache:/home/appuser/.cache/psdl_vocab_search
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8200/health"]
@@ -40,5 +52,6 @@ services:
 #      - ollama_data:/root/.ollama
 #    restart: unless-stopped
 
-# volumes:
-#  ollama_data:
+volumes:
+  vocab_cache:        # BioLORD v2 index cache (one-time ~1.7GB download)
+#  ollama_data:       # uncomment if you enable the optional ollama service above
