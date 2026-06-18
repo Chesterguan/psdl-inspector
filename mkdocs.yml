@@ -1,0 +1,66 @@
+site_name: PSDL Inspector
+site_description: Turn one plain-English sentence into a validated, audit-ready clinical algorithm.
+site_url: https://chesterguan.github.io/psdl-inspector/
+repo_url: https://github.com/Chesterguan/psdl-inspector
+repo_name: Chesterguan/psdl-inspector
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Using Inspector: usage.md
+  - Reference:
+      - API & bundle: reference.md
+      - Architecture & scope: architecture.md
+      - Execution contract: EXECUTION_CONTRACT.md
+      - Execution architecture: ARCHITECTURE_EXECUTION.md
+  - Deployment: DEPLOYMENT.md
+
+# Files kept in the repo for GitHub but excluded from the rendered site.
+exclude_docs: |
+  README.md
+  superpowers/
+  demos/
+  benchmarks/
+  OMOP_VOCABULARY_KNOWLEDGE.md

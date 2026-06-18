@@ -58,7 +58,7 @@ The `terminology_anchors` section maps semantic refs (e.g., "creatinine") to OMO
 
 ### MEDS Preview (`psdl_meds`)
 
-Inspector embeds the [`psdl_meds`](../backend/psdl_meds/) library so authors can see what their scenario produces in [MEDS](https://github.com/Medical-Event-Data-Standard/meds) format **before** running it against real data — the "Preview MEDS shape" card on Export, or the CLI:
+Inspector embeds the [`psdl_meds`](https://github.com/Chesterguan/psdl-inspector/tree/main/backend/psdl_meds) library so authors can see what their scenario produces in [MEDS](https://github.com/Medical-Event-Data-Standard/meds) format **before** running it against real data — the "Preview MEDS shape" card on Export, or the CLI:
 
 ```bash
 psdl-meds convert --input cohort.csv --out cohort.parquet

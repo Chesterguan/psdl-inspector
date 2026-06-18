@@ -1,6 +1,5 @@
 # Deployment Guide
 
-*Last updated: 2026-01-27*
 
 PSDL Inspector can be deployed in two ways:
 
@@ -131,17 +130,21 @@ The app will detect Ollama automatically.
 | Service | Port | Image Size | Description |
 |---------|------|------------|-------------|
 | `frontend` | 9806 | ~200MB | Next.js web interface |
-| `backend` | 8200 | ~2.5GB | FastAPI REST API + OMOP vocabulary |
+| `backend` | 8200 | ~5.3GB | FastAPI REST API + OMOP vocabulary + BioLORD anchoring stack |
 
-**Note**: The backend image is large because it includes the full OMOP vocabulary database with enriched LOINC concepts (~1GB). This enables immediate semantic terminology search without additional setup.
+**Note**: The backend image is large because it bundles the OMOP vocabulary (~1GB) plus the BioLORD anchoring stack (CPU torch + the embedder model). On the first anchor it downloads the ~1.7GB BioLORD v2 index once into the `vocab_cache` volume. Set `ANCHORING_ENGINE=` (empty) to use the lighter legacy engine instead (no 1.7GB download).
 
 ### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | - | OpenAI API key (optional) |
+| `OPENAI_API_KEY` | - | OpenAI API key for AI generation (optional) |
 | `OLLAMA_HOST` | `http://host.docker.internal:11434` | Ollama server URL |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8200` | Backend API URL |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8200` | Backend API URL (frontend) |
+| `ANCHORING_ENGINE` | `biolord_v2` | Anchoring engine; set empty for the lighter legacy engine. See [Using Inspector](usage.md) |
+| `GENERATE_SKIP_ENRICHMENT` | `1` | Skip generation-time vocab enrichment (anchoring still runs at export) |
+| `PREFLIGHT_DB_URL` | - | Postgres URL to enable the live `EXPLAIN` preflight (metadata only) |
+| `OBSERVATORY_CATALOG_DIR` | - | Path to a generated Observatory `catalog.json` for the Data Catalog view |
 
 ### Building from Source
 
@@ -149,8 +152,8 @@ The app will detect Ollama automatically.
 # Build images
 docker-compose build
 
-# Run in development mode (with hot reload)
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Run
+docker-compose up
 ```
 
 ### Stopping Services

@@ -1,6 +1,5 @@
 # PSDL Execution Architecture
 
-*Last updated: 2026-01-27*
 
 ## Overview
 
@@ -47,7 +46,7 @@ PSDL separates **clinical logic** (scenarios) from **data binding** (datasetSpec
 │  │  │ (standard)     │  │ (PhysioNet)    │  │ (custom institution)   │  │   │
 │  │  └────────────────┘  └────────────────┘  └────────────────────────┘  │   │
 │  │                                                                       │   │
-│  │  All follow spec/dataset_schema.json                                  │   │
+│  │  All follow the PSDL dataset spec                                     │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │           │                                                                  │
 │           ↓                                                                  │
@@ -62,13 +61,13 @@ PSDL separates **clinical logic** (scenarios) from **data binding** (datasetSpec
 
 | Layer | Purpose | Who Creates | Schema |
 |-------|---------|-------------|--------|
-| **Scenario** | Clinical logic (WHAT to detect) | Clinician/Author | `spec/schema.json` |
-| **terminologyAnchors** | Standard vocabulary binding (OMOP) | Inspector (auto) | TBD |
-| **datasetSpec** | Physical data binding (WHERE data lives) | Site data analyst | `spec/dataset_schema.json` |
+| **Scenario** | Clinical logic (WHAT to detect) | Clinician/Author | PSDL spec — see the [PSDL repo](https://github.com/Chesterguan/PSDL) |
+| **terminologyAnchors** | Standard vocabulary binding (OMOP) | Inspector (auto) | [`backend/app/models/schemas.py`](https://github.com/Chesterguan/psdl-inspector/blob/main/backend/app/models/schemas.py) (`TerminologyAnchors`) |
+| **datasetSpec** | Physical data binding (WHERE data lives) | Site data analyst | PSDL dataset spec — see the [PSDL repo](https://github.com/Chesterguan/PSDL) |
 
 ## Scenario Layer
 
-Defined by `spec/schema.json`. Contains:
+Defined by the PSDL spec (in the [PSDL repo](https://github.com/Chesterguan/PSDL)). Contains:
 
 - **signals**: Semantic references (e.g., `ref: creatinine`)
 - **trends**: Computed values from signals
@@ -127,11 +126,11 @@ terminologyAnchors:
 
 ## datasetSpec Layer
 
-Defined by `spec/dataset_schema.json`. Maps semantic refs to physical data:
+Defined by the PSDL dataset spec (see the [PSDL repo](https://github.com/Chesterguan/PSDL)). Maps semantic refs to physical data:
 
 ```yaml
 # Example: omop_cdm_v54.yaml
-psdl_version: "0.3"
+psdl_version: "0.4"
 dataset:
   name: omop_cdm_v54
   version: "1.0.0"
@@ -211,11 +210,11 @@ class TerminologyAnchors(BaseModel):
 
 ```json
 {
-  "bundle_version": "1.1",
+  "bundle_version": "1.2",
   "certified_at": "2026-01-23T12:00:00Z",
   "checksum": "sha256:...",
   "scenario": { ... },
-  "terminologyAnchors": {
+  "terminology_anchors": {
     "anchors": {
       "creatinine": {
         "concept_id": 3016723,
@@ -236,8 +235,6 @@ class TerminologyAnchors(BaseModel):
 
 ## References
 
-- PSDL Scenario Schema: `spec/schema.json`
-- Dataset Spec Schema: `spec/dataset_schema.json`
-- Example datasetSpecs: `dataset_specs/omop_cdm_v54.yaml`
-- Example institution mappings: `mappings/hospital_template.yaml`
-- Execution Contract: See [EXECUTION_CONTRACT.md](EXECUTION_CONTRACT.md) for how execution platforms consume bundles
+- PSDL Scenario & Dataset Spec schemas — the [PSDL spec repo](https://github.com/Chesterguan/PSDL)
+- [Execution contract](EXECUTION_CONTRACT.md) — how execution platforms consume certified bundles
+- [API & bundle reference](reference.md) — the canonical certified-bundle schema

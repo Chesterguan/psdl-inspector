@@ -1,6 +1,5 @@
 # PSDL Export Bundle: The Execution Contract
 
-*Last updated: 2026-01-27*
 
 ## Overview
 
@@ -28,7 +27,7 @@ The **Certified Audit Bundle** is the contract between PSDL Inspector (governanc
 
 ```json
 {
-  "bundle_version": "1.1",
+  "bundle_version": "1.2",
   "certified_at": "2026-01-26T10:30:00Z",
   "checksum": "sha256:abc123...",
 
@@ -51,7 +50,7 @@ The **Certified Audit Bundle** is the contract between PSDL Inspector (governanc
   },
 
   "validation": {
-    "psdl_lang_version": "0.3.1",
+    "psdl_lang_version": "0.4.0",
     "valid": true
   },
 

@@ -21,7 +21,7 @@ git clone https://github.com/Chesterguan/psdl-inspector.git
 cd psdl-inspector && docker compose up        # → http://localhost:9806
 ```
 
-**[▶ 13-second demo](docs/demos/aki-preflight.gif) · [5-minute quickstart](QUICKSTART.md) · [Full walkthrough on YouTube](https://youtu.be/j-3UHeCyHDk) · [Docs](docs/)**
+**[▶ 13-second demo](docs/demos/aki-preflight.gif) · [5-minute quickstart](docs/quickstart.md) · [Full walkthrough on YouTube](https://youtu.be/j-3UHeCyHDk) · [Docs](docs/)**
 
 - **Describe it, don't code it** — one sentence → a validated PSDL scenario, AI-generated and auto-checked against `psdl-lang`. No new syntax to learn.
 - **See the logic** — an interactive DAG + semantic outline surface errors at authoring time, not at IRB review.
@@ -77,7 +77,7 @@ cd psdl-inspector && docker compose up        # → http://localhost:9806
 
 The image bundles the OMOP vocabulary for terminology search, so the first build takes a few minutes. **AI generation** needs a key (optional): `cp .env.example .env` and set `OPENAI_API_KEY=sk-...`, or use a local model (`brew install ollama && ollama serve && ollama pull mistral-small`).
 
-Full local (non-Docker) setup → the **[5-minute quickstart](QUICKSTART.md)**. Self-hosting, the anchoring-engine choice, and the wizard walkthrough → **[docs/](docs/)**.
+Full local (non-Docker) setup → the **[5-minute quickstart](docs/quickstart.md)**. Self-hosting, the anchoring-engine choice, and the wizard walkthrough → **[docs/](docs/)**.
 
 ## Features
 
@@ -106,7 +106,7 @@ Two reproducible scenarios ship under [`docs/demos/`](docs/demos/) (sepsis scree
 
 | | |
 |---|---|
-| **[Quickstart](QUICKSTART.md)** | Zero to a certified algorithm in 5 minutes |
+| **[Quickstart](docs/quickstart.md)** | Zero to a certified algorithm in 5 minutes |
 | **[Using Inspector](docs/usage.md)** | Wizard workflow + the BioLORD/legacy anchoring engine choice |
 | **[API & bundle reference](docs/reference.md)** | REST endpoints, certified bundle schema, MEDS preview, compatibility |
 | **[Architecture & scope](docs/architecture.md)** | System design + what Inspector does/doesn't do |

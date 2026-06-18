@@ -1,6 +1,6 @@
 # Quickstart — one sentence to a certified algorithm in 5 minutes
 
-This gets you from zero to a **validated, audit-ready clinical algorithm** without writing any PSDL by hand. For the full feature tour see the [README](README.md).
+This gets you from zero to a **validated, audit-ready clinical algorithm** without writing any PSDL by hand. For the full feature tour see the [overview](index.md).
 
 ## 1. Run it (2 min)
 
@@ -9,7 +9,7 @@ git clone https://github.com/Chesterguan/psdl-inspector.git
 cd psdl-inspector && docker compose up        # → http://localhost:9806
 ```
 
-The image bundles the OMOP vocabulary (~1GB), so the **first** build takes a few minutes. When the logs settle, open **http://localhost:9806**.
+The image bundles the OMOP vocabulary, so the **first** build takes a few minutes. When the logs settle, open **http://localhost:9806**.
 
 > No Docker? Jump to [Local setup](#local-setup-for-contributors) below.
 
@@ -59,8 +59,8 @@ A "Live plan (local DB)" toggle appears in the Preflight panel.
 
 ## What's next
 
-- **Reproduce the demos** — [`docs/demos/`](docs/demos/) ships two full scenarios (sepsis, T2D nephropathy) with narrator cue sheets.
-- **Self-host** — see the [Deployment Guide](docs/DEPLOYMENT.md) (Vercel / Render / Docker).
+- **Reproduce the demos** — [`docs/demos/`](https://github.com/Chesterguan/psdl-inspector/tree/main/docs/demos) ships two full scenarios (sepsis, T2D nephropathy) with narrator cue sheets.
+- **Self-host** — see the [Deployment guide](DEPLOYMENT.md) (Vercel / Render / Docker).
 - **Working as a team?** Inspector is single-user. A scenario **registry**, role-based review/approval, IRB templates, and SSO live in **PSDL Workbench** *(commercial)* — [request access or info](mailto:chesterfield199512@gmail.com?subject=PSDL%20Workbench%20inquiry).
 
 ## Local setup (for contributors)
@@ -83,4 +83,4 @@ npm run dev
 
 Confirm the backend is healthy: `curl -s http://localhost:8200/api/version` → `{"inspector": "0.2.0", "psdl_lang": "0.4.x"}`.
 
-Contribution guidelines: [CONTRIBUTING.md](CONTRIBUTING.md).
+Contribution guidelines: [CONTRIBUTING.md](https://github.com/Chesterguan/psdl-inspector/blob/main/CONTRIBUTING.md).

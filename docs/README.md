@@ -11,7 +11,6 @@ New here? Start with the **[5-minute quickstart](../QUICKSTART.md)**, then come 
 - **[Architecture & scope](architecture.md)** — system design + what Inspector does and doesn't do
 - **[Execution contract](EXECUTION_CONTRACT.md)** — how an execution platform consumes the certified bundle
 - **[Execution architecture](ARCHITECTURE_EXECUTION.md)** — the author → certify → execute chain
-- **[OMOP vocabulary notes](OMOP_VOCABULARY_KNOWLEDGE.md)** — vocabulary/anchoring background
 
 ## More
 - **[Demos](demos/)** — reproducible scenarios (sepsis, T2D nephropathy) + the recording kit

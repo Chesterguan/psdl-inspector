@@ -1,10 +1,9 @@
 # OMOP Vocabulary Knowledge Base
 
-*Last updated: 2026-01-27*
 
 ## Source
 
-- **File**: `/Volumes/extraSupply/Projects/vocabulary_download_v5.zip`
+- **File**: Athena v5 vocabulary download archive (local)
 - **Version**: Athena v5 (downloaded 2025-10-16)
 - **Total size**: ~4.8GB uncompressed
 
