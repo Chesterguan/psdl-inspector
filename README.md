@@ -14,7 +14,7 @@
 
 PSDL Inspector turns plain English into a **checked clinical scenario**: a visual DAG, OMOP terminology anchoring, a checksummed *certified bundle*, and a real-database **cost preflight** — without writing a line of [PSDL](https://github.com/Chesterguan/PSDL) by hand.
 
-![One sentence → AI-generated, validated PSDL scenario → DAG → certified bundle → live preflight 🟢 GO](assets/aki-preflight-walkthrough.gif)
+![One sentence → AI-generated, validated PSDL scenario → DAG → certified bundle → live preflight 🟢 GO](docs/img/aki-preflight-walkthrough.gif)
 
 ```bash
 git clone https://github.com/Chesterguan/psdl-inspector.git

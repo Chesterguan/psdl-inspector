@@ -4,6 +4,8 @@
 
 PSDL Inspector turns plain English into a **checked clinical scenario**: a visual DAG, OMOP terminology anchoring, a checksummed *certified bundle*, and a real-database **SQL cost preflight** — without writing a line of PSDL by hand.
 
+![One sentence → AI-generated, validated PSDL scenario → DAG → certified bundle → live preflight GO](img/aki-preflight-walkthrough.gif)
+
 [Get started in 5 minutes](quickstart.md){ .md-button .md-button--primary }
 [View on GitHub](https://github.com/Chesterguan/psdl-inspector){ .md-button }
 

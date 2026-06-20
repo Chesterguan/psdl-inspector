@@ -67,6 +67,5 @@ prototype/
 
 # generated demo recordings (regenerable via docs/demos/aki.tape)
 docs/demos/aki-preflight.mp4
-docs/demos/aki-preflight.gif
 # full-length UI walkthrough source (14MB) — host on YouTube/landing, not in git
 docs/demos/aki-walkthrough.mp4
